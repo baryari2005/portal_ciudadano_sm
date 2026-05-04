@@ -2,7 +2,6 @@
 
 import { WelcomeBanner } from "@/features/dashboard/components/WelcomeBanner";
 import { QuoteBannerSmart } from "@/features/dashboard/components/QuoteBannerSmart";
-import { CalendarPanel } from "@/features/dashboard/components/calendar/CalendarPanel";
 import { useDashboardStats } from "../../features/dashboard/hooks/useDashboardStats";
 import { getDisplayName } from "../../features/dashboard/utils/dashboardFormat";
 import { StatsPanel } from "@/features/dashboard/components/stats-panel/StatsPanel";
@@ -37,7 +36,6 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <StatsPanel stats={stats} density="compact" />
-        <CalendarPanel />
       </div>
     </div>
   );

@@ -1,8 +1,10 @@
 import { PrismaClient } from "@prisma/client";
+import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 const PERMISOS = [
+  // Legajo
   {
     modulo: "legajo",
     accion: "ver",
@@ -16,62 +18,7 @@ const PERMISOS = [
     icono: "pencil",
   },
 
-  {
-    modulo: "licencias",
-    accion: "ver",
-    descripcion: "Permite visualizar solicitudes y datos de licencias.",
-    icono: "eye",
-  },
-  {
-    modulo: "licencias",
-    accion: "aprobar",
-    descripcion: "Permite aprobar solicitudes de licencia.",
-    icono: "checkCircle",
-  },
-  {
-    modulo: "licencias",
-    accion: "rechazar",
-    descripcion: "Permite rechazar solicitudes de licencia.",
-    icono: "xCircle",
-  },
-  {
-    modulo: "licencias",
-    accion: "cargar",
-    descripcion: "Permite cargar una nueva solicitud de licencia.",
-    icono: "plus",
-  },
-  {
-    modulo: "licencias",
-    accion: "cancelar",
-    descripcion: "Permite cancelar solicitudes de licencia.",
-    icono: "ban",
-  },
-
-  {
-    modulo: "recibos",
-    accion: "ver",
-    descripcion: "Permite visualizar recibos cargados en el sistema.",
-    icono: "eye",
-  },
-  {
-    modulo: "recibos",
-    accion: "subir",
-    descripcion: "Permite subir recibos al sistema.",
-    icono: "upload",
-  },
-  {
-    modulo: "recibos",
-    accion: "seguimiento",
-    descripcion: "Permite hacer seguimiento del estado de los recibos.",
-    icono: "search",
-  },
-  {
-    modulo: "recibos",
-    accion: "firmar",
-    descripcion: "Permite firmar recibos digitalmente.",
-    icono: "fileSignature",
-  },
-
+  // Roles
   {
     modulo: "roles",
     accion: "ver",
@@ -97,31 +44,7 @@ const PERMISOS = [
     icono: "trash",
   },
 
-  {
-    modulo: "tipo_licencia",
-    accion: "ver",
-    descripcion: "Permite visualizar el catálogo de tipos de licencia.",
-    icono: "eye",
-  },
-  {
-    modulo: "tipo_licencia",
-    accion: "crear",
-    descripcion: "Permite crear nuevos tipos de licencia.",
-    icono: "plus",
-  },
-  {
-    modulo: "tipo_licencia",
-    accion: "editar",
-    descripcion: "Permite modificar tipos de licencia existentes.",
-    icono: "pencil",
-  },
-  {
-    modulo: "tipo_licencia",
-    accion: "eliminar",
-    descripcion: "Permite eliminar tipos de licencia del sistema.",
-    icono: "trash",
-  },
-
+  // Usuarios
   {
     modulo: "usuarios",
     accion: "ver",
@@ -158,46 +81,30 @@ const PERMISOS = [
     descripcion: "Permite exportar usuarios a un archivo.",
     icono: "download",
   },
+];
 
+const ROLES = [
   {
-    modulo: "vacaciones",
-    accion: "ver",
-    descripcion: "Permite visualizar solicitudes y datos de vacaciones.",
-    icono: "eye",
+    nombre: "admin",
+    descripcion: "Administrador del sistema con acceso completo",
+    permisos: PERMISOS.map(p => `${p.modulo}:${p.accion}`), // Todos los permisos
   },
   {
-    modulo: "vacaciones",
-    accion: "aprobar",
-    descripcion: "Permite aprobar solicitudes de vacaciones.",
-    icono: "checkCircle",
-  },
-  {
-    modulo: "vacaciones",
-    accion: "rechazar",
-    descripcion: "Permite rechazar solicitudes de vacaciones.",
-    icono: "xCircle",
-  },
-  {
-    modulo: "vacaciones",
-    accion: "cargar",
-    descripcion: "Permite cargar una nueva solicitud de vacaciones.",
-    icono: "plus",
-  },
-  {
-    modulo: "vacaciones",
-    accion: "cancelar",
-    descripcion: "Permite cancelar solicitudes de vacaciones.",
-    icono: "ban",
-  },
-  {
-    modulo: "vacaciones",
-    accion: "asignar",
-    descripcion: "Permite asignar vacaciones a un usuario.",
-    icono: "calendarPlus",
+    nombre: "user",
+    descripcion: "Usuario estándar con permisos limitados",
+    permisos: [
+      "legajo:ver",
+      "usuarios:ver",
+      "usuarios:editar", // Solo editar su propio perfil
+    ],
   },
 ];
 
 async function main() {
+  console.log("🌱 Iniciando seed de permisos, roles y usuario admin...");
+
+  // 1. Crear permisos
+  console.log("📝 Creando permisos...");
   for (const p of PERMISOS) {
     await prisma.permiso.upsert({
       where: {
@@ -219,37 +126,87 @@ async function main() {
       },
     });
   }
+  console.log(`✅ ${PERMISOS.length} permisos creados/actualizados`);
 
-  const adminRole = await prisma.rol.findFirst({
-    where: {
-      nombre: {
-        equals: "administrador",
-        mode: "insensitive",
+  // 2. Crear roles y asignar permisos
+  console.log("👥 Creando roles...");
+  for (const roleData of ROLES) {
+    const role = await prisma.rol.upsert({
+      where: { nombre: roleData.nombre },
+      update: { descripcion: roleData.descripcion },
+      create: {
+        nombre: roleData.nombre,
+        descripcion: roleData.descripcion,
       },
-    },
-  });
-
-  if (adminRole) {
-    const permisos = await prisma.permiso.findMany();
-
-    await prisma.rolPermiso.deleteMany({
-      where: { rolId: adminRole.id },
     });
 
+    // Limpiar permisos existentes del rol
+    await prisma.rolPermiso.deleteMany({
+      where: { rolId: role.id },
+    });
+
+    // Obtener permisos a asignar
+    const permisosToAssign = await prisma.permiso.findMany({
+      where: {
+        OR: roleData.permisos.map(permisoStr => {
+          const [modulo, accion] = permisoStr.split(":");
+          return { modulo, accion };
+        }),
+      },
+    });
+
+    // Crear asociaciones rol-permiso
     await prisma.rolPermiso.createMany({
-      data: permisos.map((permiso) => ({
-        rolId: adminRole.id,
+      data: permisosToAssign.map((permiso) => ({
+        rolId: role.id,
         permisoId: permiso.id,
       })),
       skipDuplicates: true,
     });
+
+    console.log(`✅ Rol "${role.nombre}" creado con ${permisosToAssign.length} permisos`);
   }
+
+  // 3. Crear usuario admin si no existe
+  console.log("👤 Verificando usuario admin...");
+  const adminRole = await prisma.rol.findFirst({
+    where: { nombre: "admin" },
+  });
+
+  if (!adminRole) {
+    throw new Error("Rol 'admin' no encontrado. Verifica que el seed se ejecutó correctamente.");
+  }
+
+  const existingAdmin = await prisma.usuario.findFirst({
+    where: { userId: "admin" },
+  });
+
+  if (!existingAdmin) {
+    const hashedPassword = await hash("admin123", 10);
+
+    await prisma.usuario.create({
+      data: {
+        userId: "admin",
+        email: "admin@local",
+        password: hashedPassword,
+        nombre: "Administrador",
+        apellido: "Sistema",
+        rolId: adminRole.id,
+        mustChangePassword: false,
+      },
+    });
+    console.log("✅ Usuario admin creado (userId: admin, password: admin123)");
+  } else {
+    console.log("ℹ️ Usuario admin ya existe");
+  }
+
+  console.log("🎉 Seed completado exitosamente!");
 }
 
 main()
   .then(() => prisma.$disconnect())
   .catch(async (e) => {
-    console.error(e);
+    console.error("❌ Error en el seed:", e);
     await prisma.$disconnect();
     process.exit(1);
   });

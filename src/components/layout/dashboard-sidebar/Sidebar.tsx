@@ -7,7 +7,6 @@ import { HelpCircle, Menu } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { SidebarNavIcon } from "./SidebarNavIcon";
 import { SidebarSection } from "./SidebarSection";
-import { usePendingLeaves } from "@/features/leaves/hooks/usePendingLeaves";
 import { SIDEBAR_CONFIG } from "@/config/sidebar.config";
 import { useAuth } from "@/stores/auth";
 import { hasPermission } from "@/features/auth/libs/permissions";
@@ -21,12 +20,9 @@ export function Sidebar({ collapsed, setCollapsed }: Props) {
   const pathname = usePathname();
   const permissions = useAuth((state) => state.user?.permisos ?? []);
 
-  const { count: pendingVacation } = usePendingLeaves({ type: "VACACIONES" });
-  const { count: pendingLicenses } = usePendingLeaves({ type: "OTHER" });
-
   const badgeMap: Record<string, number> = {
-    pendingVacation,
-    pendingLicenses,
+    pendingVacation: 0,
+    pendingLicenses: 0,
   };
 
   const visibleItems = useMemo(() => {
@@ -99,6 +95,8 @@ export function Sidebar({ collapsed, setCollapsed }: Props) {
         <SidebarNavIcon
           Icon={HelpCircle}
           title="Ayuda"
+          href="/soporte"
+          active={pathname === "/soporte"}
           collapsed={collapsed}
         />
       </div>

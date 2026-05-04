@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type DragEvent } from "react";
 import {
   CircleFadingArrowUp,
   Loader2,
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -63,6 +64,7 @@ export default function PdfUploader({
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [period, setPeriod] = useState<string>(
     new Date().toISOString().slice(0, 7)
@@ -74,16 +76,52 @@ export default function PdfUploader({
 
   const pick = () => inputRef.current?.click();
 
+  const selectFile = (nextFile: File | null) => {
+    if (!nextFile) return;
+
+    const isPdf =
+      nextFile.type === "application/pdf" ||
+      nextFile.name.toLowerCase().endsWith(".pdf");
+
+    if (!isPdf) {
+      toast.error("Solo se permiten archivos PDF.");
+      return;
+    }
+
+    if (nextFile.size > 16 * 1024 * 1024) {
+      toast.error("Maximo 16MB");
+      return;
+    }
+
+    setFile(nextFile);
+  };
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+    selectFile(event.dataTransfer.files?.[0] ?? null);
+  };
+
   const upload = async () => {
     if (!file) return;
 
     if (!token) {
-      toast.error("No tenés sesión iniciada.");
+      toast.error("No tenes sesion iniciada.");
       return;
     }
 
     if (file.size > 16 * 1024 * 1024) {
-      toast.error("Máximo 16MB");
+      toast.error("Maximo 16MB");
       return;
     }
 
@@ -112,13 +150,13 @@ export default function PdfUploader({
       }
 
       if (!uploadData?.path || !uploadData?.url) {
-        throw new Error("La respuesta de upload es inválida");
+        throw new Error("La respuesta de upload es invalida");
       }
 
       toast.success("PDF subido correctamente");
       onUploaded?.(uploadData);
 
-      const splitMsg = toast.loading(`Procesando período ${period}...`);
+      const splitMsg = toast.loading(`Procesando periodo ${period}...`);
 
       const splitRes = await fetch("/api/admin/payroll/split", {
         method: "POST",
@@ -141,7 +179,7 @@ export default function PdfUploader({
       }
 
       if (!splitData) {
-        throw new Error("La respuesta del procesamiento es inválida");
+        throw new Error("La respuesta del procesamiento es invalida");
       }
 
       setStats(splitData);
@@ -172,7 +210,7 @@ export default function PdfUploader({
         <CardContent className="space-y-4 p-4">
           <div className="space-y-2">
             <Label>
-              Período
+              Periodo
               <p className="text-xs text-muted-foreground">Formato YYYY-MM.</p>
             </Label>
 
@@ -214,7 +252,7 @@ export default function PdfUploader({
             <Label>
               Archivo PDF
               <p className="text-xs text-muted-foreground">
-                Formato PDF, máx. 16MB
+                Formato PDF, max. 16MB
               </p>
             </Label>
 
@@ -223,22 +261,44 @@ export default function PdfUploader({
               type="file"
               accept="application/pdf"
               className="hidden"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => selectFile(e.target.files?.[0] ?? null)}
             />
 
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                className="h-11 rounded bg-[#008C93] hover:bg-[#007381]"
-                onClick={pick}
-              >
-                <Upload className="h-4 w-4" />
-                Elegir archivo
-              </Button>
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={cn(
+                "rounded-xl border border-dashed p-4 transition-colors",
+                isDragging
+                  ? "border-[#008C93] bg-[#008C93]/5"
+                  : "border-slate-300 bg-slate-50"
+              )}
+            >
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-slate-900">
+                    Arrastra y suelta el PDF aqui
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Tambien puedes seleccionarlo manualmente desde el boton.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {file
+                      ? `Archivo seleccionado: ${file.name}`
+                      : "Ningun archivo seleccionado"}
+                  </p>
+                </div>
 
-              <span className="text-xs text-muted-foreground">
-                {file ? file.name : "Ningún archivo seleccionado"}
-              </span>
+                <Button
+                  type="button"
+                  className="h-11 rounded bg-[#008C93] hover:bg-[#007381]"
+                  onClick={pick}
+                >
+                  <Upload className="h-4 w-4" />
+                  Elegir archivo
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -256,7 +316,7 @@ export default function PdfUploader({
               ) : (
                 <span className="inline-flex items-center gap-2">
                   <UploadCloud className="h-4 w-4" />
-                  Subir y Procesar Recibos
+                  Subir y procesar recibos
                 </span>
               )}
             </Button>
@@ -270,16 +330,16 @@ export default function PdfUploader({
             <div className="text-sm font-medium">Resumen del procesamiento</div>
 
             <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
-              <Stat label="Período" value={stats.period} />
-              <Stat label="Páginas totales" value={stats.totalPages} />
+              <Stat label="Periodo" value={stats.period} />
+              <Stat label="Paginas totales" value={stats.totalPages} />
               <Stat
-                label="Páginas con CUIL"
+                label="Paginas con CUIL"
                 value={stats.detectedPagesWithCuil}
               />
-              <Stat label="CUIL únicos" value={stats.uniqueCuils} />
+              <Stat label="CUIL unicos" value={stats.uniqueCuils} />
               <Stat label="Archivos subidos" value={stats.uploaded} />
               <Stat label="Duplicados (CUIL)" value={stats.duplicates.count} />
-              <Stat label="Páginas sin CUIL" value={stats.unmatched.count} />
+              <Stat label="Paginas sin CUIL" value={stats.unmatched.count} />
               <Stat label="Tiempo" value={`${Math.round(stats.durationMs)} ms`} />
             </div>
 
@@ -297,10 +357,8 @@ export default function PdfUploader({
             )}
 
             <div className="text-xs text-muted-foreground">
-              Carpeta destino:{" "}
-              <span className="font-mono">{stats.prefixPath}</span>
-              {" "}(
-              bucket: <span className="font-mono">{stats.bucket}</span>)
+              Carpeta destino: <span className="font-mono">{stats.prefixPath}</span>{" "}
+              (bucket: <span className="font-mono">{stats.bucket}</span>)
             </div>
           </CardContent>
         </Card>

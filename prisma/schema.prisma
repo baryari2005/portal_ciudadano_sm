@@ -36,9 +36,6 @@ model Usuario {
 
   legajo Legajo?
 
-  leaveRequests    LeaveRequest[]
-  vacationBalances VacationBalance[]
-
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -96,77 +93,36 @@ model PasswordResetToken {
   @@index([expiresAt])
 }
 
-model PayrollReceipt {
-  id                 String   @id @default(cuid())
-  cuil               String
-  period             String
-  periodDate         DateTime @db.Timestamptz(6)
-  filePath           String
-  fileUrl            String
-  signed             Boolean  @default(false)
-  signedDisagreement Boolean  @default(false)
-  observations       String?
-  createdAt          DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt          DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+model Permiso {
+  id          Int     @id @default(autoincrement())
+  modulo      String
+  accion      String
+  nombre      String?
+  descripcion String?
+  icono       String?
+  activo      Boolean @default(true)
 
-  @@unique([cuil, period])
-  @@index([cuil, periodDate])
-  @@map("payroll_receipts")
-}
+  roles RolPermiso[]
 
-model LeaveRequest {
-  id     String  @id @default(cuid())
-  userId String
-  user   Usuario @relation(fields: [userId], references: [id])
-
-  status     LeaveStatus @default(PENDIENTE)
-  startYmd   String
-  endYmd     String
-  daysCount  Int
-  note       String?
-  approverId String?
-  decidedAt  DateTime?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-
-  typeCatalogId Int
-  typeCatalog   LeaveTypeCatalog @relation(fields: [typeCatalogId], references: [id])
-
-  attachments LeaveAttachment[]
-
-  @@index([userId, createdAt])
-  @@index([status, createdAt])
-  @@index([userId, startYmd])
-  @@index([userId, endYmd])
-  @@index([typeCatalogId])
-}
-
-model LeaveAttachment {
-  id             String       @id @default(cuid())
-  leaveRequestId String
-  leaveRequest   LeaveRequest @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
-
-  fileName String
-  fileUrl  String
-  filePath String
-  mimeType String
-  size     Int?
-
-  createdAt DateTime @default(now())
-
-  @@index([leaveRequestId])
-}
-
-model LeaveTypeCatalog {
-  id        Int      @id @default(autoincrement())
-  code      String   @unique
-  label     String
-  colorHex  String?
-  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  requests LeaveRequest[]
+  @@unique([modulo, accion])
+  @@index([modulo])
+  @@index([activo])
+}
+
+model RolPermiso {
+  rolId     Int
+  permisoId Int
+
+  rol     Rol     @relation(fields: [rolId], references: [id], onDelete: Cascade)
+  permiso Permiso @relation(fields: [permisoId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([rolId, permisoId])
+  @@index([permisoId])
 }
 
 enum Genero {
@@ -259,60 +215,4 @@ enum TipoDocumento {
   LE
   LC
   CI
-}
-
-enum LeaveStatus {
-  PENDIENTE
-  APROBADO
-  RECHAZADO
-  CANCELADO
-}
-
-model VacationBalance {
-  id     String  @id @default(uuid()) @db.Uuid
-  userId String  @db.Uuid
-  user   Usuario @relation(fields: [userId], references: [id])
-
-  year      Int
-  totalDays Int
-  usedDays  Int @default(0)
-
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  @@unique([userId, year])
-  @@index([userId])
-}
-
-model Permiso {
-  id          Int     @id @default(autoincrement())
-  modulo      String
-  accion      String
-  nombre      String?
-  descripcion String?
-  icono       String?
-  activo      Boolean @default(true)
-
-  roles RolPermiso[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([modulo, accion])
-  @@index([modulo])
-  @@index([activo])
-}
-
-model RolPermiso {
-  rolId     Int
-  permisoId Int
-
-  rol     Rol     @relation(fields: [rolId], references: [id], onDelete: Cascade)
-  permiso Permiso @relation(fields: [permisoId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@id([rolId, permisoId])
-  @@index([permisoId])
 }

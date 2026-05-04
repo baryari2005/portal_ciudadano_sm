@@ -35,6 +35,25 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
+## Asistente de ayuda IA
+
+El proyecto ahora incluye un MVP de asistente en `/soporte` que responde en base
+a las guias visibles para el usuario actual.
+
+Variables de entorno necesarias:
+
+```bash
+OPENAI_API_KEY=tu_api_key
+OPENAI_ASSISTANT_MODEL=gpt-4.1-mini
+```
+
+Notas:
+
+- El endpoint es `POST /api/assistant`.
+- El asistente reutiliza las guias de `src/features/support/lib/help-guides.ts`.
+- En esta primera version no usa chunks, embeddings ni base vectorial. El contexto
+  se construye en cada consulta con las guias permitidas para ese usuario.
+
 
 
 
