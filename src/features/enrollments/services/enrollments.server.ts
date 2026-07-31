@@ -31,7 +31,7 @@ export async function createEnrollment(input: CreateEnrollmentInput) {
     });
     if (!user) throw new CatalogValidationError("El usuario no existe o fue eliminado.");
     if (user.estadoParticipacion !== "HABILITADO") throw new CatalogValidationError("Tu participación está en revisión administrativa y no podés realizar nuevas inscripciones.");
-    let requestedSlots = input.horariosSeleccionados ?? [];
+    const requestedSlots = input.horariosSeleccionados ?? [];
     let requestedScheduleIds = requestedSlots.length ? requestedSlots.map(item=>item.horarioActividadId) : input.horarioActividadIds ?? (input.horarioActividadId ? [input.horarioActividadId] : []);
     let activityId = input.actividadId;
     const classId = input.claseActividadId;
