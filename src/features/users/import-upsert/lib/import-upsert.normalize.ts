@@ -89,7 +89,7 @@ export const formatCuil = (v?: string | null): string | null => {
 
 export const toYMD = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate()
+    d.getDate(),
   ).padStart(2, "0")}`;
 
 export const fromYMDorISO = (s?: string | null): Date | null => {
@@ -118,15 +118,12 @@ export const titleCase = (raw?: string | null): string | null => {
       .map((p) => (p ? p[0].toUpperCase() + p.slice(1) : p))
       .join("-");
 
-  return s
-    .split(/\s+/)
-    .map(cap)
-    .join(" ");
+  return s.split(/\s+/).map(cap).join(" ");
 };
 
 export const ensureMatriculaPrefix = (
   raw?: string | null,
-  prefix: "MP" | "MN" = "MP"
+  prefix: "MP" | "MN" = "MP",
 ): string | null => {
   if (!raw) return null;
   const up = String(raw).toUpperCase().trim();

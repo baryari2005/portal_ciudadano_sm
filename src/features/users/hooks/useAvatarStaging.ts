@@ -14,11 +14,15 @@ export function useAvatarStaging() {
     fd.append("file", file);
 
     // Endpoint de subida temporal (ajustá si ya tenés otro)
-    const res = await fetch("/api/uploads/avatar/tmp", { method: "POST", body: fd });
+    const res = await fetch("/api/uploads/avatar/tmp", {
+      method: "POST",
+      body: fd,
+    });
     const data = await res.json();
-    if (!res.ok) throw new Error(data?.error || "Error subiendo avatar temporal");
+    if (!res.ok)
+      throw new Error(data?.error || "Error subiendo avatar temporal");
     setTmpPath(data.path); // ej: "avatars/tmp/abcd.png"
-    return data;           // { path, url? }
+    return data; // { path, url? }
   }
 
   // Mueve de tmp -> finalPrefix y borra la tmp. Devuelve publicUrl.
@@ -30,7 +34,7 @@ export function useAvatarStaging() {
       {
         withCredentials: true,
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      }
+      },
     );
     setTmpPath(null);
     return data as { publicUrl: string; path: string };

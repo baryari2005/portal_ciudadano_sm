@@ -1,237 +1,56 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
-import {
-  ArrowRight,
-  BookOpen,
-  ClipboardList,
-  FileSearch2,
-  FileSignature,
-  Headset,
-  Settings2,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
+import { ChevronRight, CircleAlert, Search } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/stores/auth";
-import { getVisibleHelpGuides } from "../lib/visible-help-guides";
-import { type HelpGuide } from "../lib/help-guides";
+import { HELP_CATEGORY_META, type HelpCategory, type HelpGuide } from "../lib/help-guides";
+import { getVisibleHelpGuides, getVisibleHelpLinks } from "../lib/visible-help-guides";
 import { SupportAssistant } from "./SupportAssistant";
 
-const categoryMeta = {
-  solicitudes: {
-    label: "Solicitudes",
-    icon: ClipboardList,
-    description: "Vacaciones y licencias paso a paso.",
-  },
-  documentos: {
-    label: "Documentos",
-    icon: FileSignature,
-    description: "Recibos, firmas y seguimiento.",
-  },
-  gestion: {
-    label: "Gestion",
-    icon: Settings2,
-    description: "Usuarios, catalogos y administracion.",
-  },
-} as const;
-
 function GuideCard({ guide }: { guide: HelpGuide }) {
+  const permissions = useAuth((state) => state.user?.permisos ?? []);
+  const links = getVisibleHelpLinks(permissions, guide);
   return (
-    <Card className="h-full border border-slate-200 bg-white shadow-sm">
-      <CardHeader className="space-y-2">
-        <CardTitle className="text-lg">{guide.title}</CardTitle>
-        <p className="text-sm text-muted-foreground">{guide.description}</p>
+    <Card id={guide.id} className="scroll-mt-24 border-[#DDE8D7] bg-white shadow-sm">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-xl font-extrabold text-[#1D4F36]">{guide.title}</CardTitle>
+        <p className="text-sm leading-6 text-[#5F6F68]">{guide.description}</p>
       </CardHeader>
-
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          {guide.steps.map((step, index) => (
-            <div key={`${guide.id}-${index}`} className="flex items-start gap-3">
-              <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#008C93]/10 text-xs font-semibold text-[#008C93]">
-                {index + 1}
-              </div>
-              <p className="text-sm leading-6 text-slate-700">{step}</p>
-            </div>
-          ))}
-        </div>
-
-        {guide.href ? (
-          <Link href={guide.href}>
-            <Button className="h-10 rounded bg-[#008C93] hover:bg-[#007381]">
-              {guide.ctaLabel ?? "Abrir seccion"}
-            </Button>
-          </Link>
-        ) : null}
+      <CardContent className="space-y-5">
+        <ol className="space-y-3">
+          {guide.steps.map((step, index) => <li key={`${guide.id}-${index}`} className="flex gap-3 text-sm leading-6 text-[#294B3B]"><span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#DDEED2] text-xs font-extrabold text-[#1D4F36]">{index + 1}</span><span>{step}</span></li>)}
+        </ol>
+        {guide.warnings?.length ? <div className="rounded-2xl border border-[#819B56]/30 bg-[#F3F8EF] p-4"><div className="flex items-center gap-2 font-bold text-[#1D4F36]"><CircleAlert className="size-4"/>Tené en cuenta</div><ul className="mt-2 space-y-1 text-sm leading-6 text-[#496557]">{guide.warnings.map((warning) => <li key={warning}>• {warning}</li>)}</ul></div> : null}
+        {links.length ? <div className="flex flex-wrap gap-2">{links.map((link) => <Button key={link.href} asChild variant="outline" className="border-[#819B56]/40 text-[#1D4F36] hover:bg-[#EEF6E9]"><Link href={link.href}>{link.label}<ChevronRight className="size-4"/></Link></Button>)}</div> : null}
       </CardContent>
     </Card>
   );
 }
 
 export function SupportPageClient() {
+  const pathname = usePathname();
   const permissions = useAuth((state) => state.user?.permisos ?? []);
+  const [query, setQuery] = useState("");
+  const category: HelpCategory = pathname.startsWith("/citizen") ? "citizen" : pathname.startsWith("/teacher") ? "teacher" : pathname.startsWith("/access") ? "reception" : "administration";
+  const visible = useMemo(() => getVisibleHelpGuides(permissions, category), [category, permissions]);
+  const guides = useMemo(() => { const normalized = query.trim().toLocaleLowerCase("es"); return visible.filter((guide) => !normalized || [guide.title, guide.description, ...guide.keywords, ...guide.steps].join(" ").toLocaleLowerCase("es").includes(normalized)); }, [query, visible]);
+  const categoryMeta = HELP_CATEGORY_META[category];
 
-  const visibleGuides = useMemo(() => {
-    return getVisibleHelpGuides(permissions);
-  }, [permissions]);
+  return <main className="min-h-full bg-[#F7FBF5] p-4 sm:p-6 lg:p-8">
+    <section className="overflow-hidden rounded-3xl bg-[#1D4F36] px-6 py-8 text-white shadow-lg sm:px-8">
+      <Badge className="bg-[#819B56] text-white">Centro de ayuda</Badge>
+      <h1 className="mt-4 max-w-3xl text-3xl font-extrabold sm:text-4xl">Ayuda de {categoryMeta.label}</h1>
+      <p className="mt-3 max-w-3xl text-sm leading-6 text-white/80">{categoryMeta.description} Acá sólo vas a ver las tareas de la experiencia actual.</p>
+      <div className="relative mt-6 max-w-2xl"><Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[#5F6F68]"/><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por tarea, pantalla o tema..." className="h-12 border-white/20 bg-white pl-12 text-[#173C2A] placeholder:text-[#718078]"/></div>
+    </section>
 
-  const groupedGuides = useMemo(() => {
-    return {
-      solicitudes: visibleGuides.filter((guide) => guide.category === "solicitudes"),
-      documentos: visibleGuides.filter((guide) => guide.category === "documentos"),
-      gestion: visibleGuides.filter((guide) => guide.category === "gestion"),
-    };
-  }, [visibleGuides]);
-
-  const featuredRequestGuides = useMemo(() => {
-    return visibleGuides.filter((guide) =>
-      ["load-vacation-request", "load-license-request", "review-request-history"].includes(
-        guide.id
-      )
-    );
-  }, [visibleGuides]);
-
-  return (
-    <div className="space-y-6">
-      <Card className="overflow-hidden border-0 bg-gradient-to-br from-[#008C93] via-[#007381] to-[#0f172a] text-white shadow-lg">
-        <CardContent className="grid gap-6 px-6 py-8 md:grid-cols-[1.5fr_1fr] md:px-8">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-wide">
-              <Headset className="h-3.5 w-3.5" />
-              Centro de ayuda
-            </div>
-
-            <div className="space-y-2">
-              <h1 className="text-3xl font-semibold">Como hacer cada tarea dentro del sistema</h1>
-              <p className="max-w-2xl text-sm leading-6 text-white/85">
-                Aca tenes guias cortas para las acciones mas comunes: cargar solicitudes,
-                pedir vacaciones, ver documentos, revisar recibos o administrar
-                configuraciones.
-              </p>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur-sm">
-            <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
-              <BookOpen className="h-4 w-4" />
-              Recomendacion
-            </div>
-            <p className="text-sm leading-6 text-white/85">
-              Si estas arrancando, empieza por las guias de Solicitudes o Documentos.
-              Son las mas usadas y te van a orientar rapido dentro de cada pantalla.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {featuredRequestGuides.length > 0 ? (
-        <Card className="border border-slate-200 shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <ClipboardList className="h-5 w-5 text-[#008C93]" />
-              Acciones frecuentes para cargar solicitudes
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Esta seccion resume las tareas mas comunes para pedir vacaciones, licencias
-              y revisar el historial desde el mismo lugar.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 lg:grid-cols-3">
-              {featuredRequestGuides.map((guide) => (
-                <div
-                  key={guide.id}
-                  className="flex h-full flex-col justify-between rounded-xl border border-slate-200 bg-slate-50 p-4"
-                >
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-semibold text-slate-900">{guide.title}</h3>
-                    <p className="text-sm leading-6 text-muted-foreground">
-                      {guide.description}
-                    </p>
-                  </div>
-
-                  {guide.href ? (
-                    <Link href={guide.href} className="mt-4">
-                      <Button
-                        variant="outline"
-                        className="w-full justify-between border-[#008C93]/25 bg-white text-[#008C93] hover:bg-[#008C93]/5 hover:text-[#007381]"
-                      >
-                        {guide.ctaLabel ?? "Abrir seccion"}
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      <SupportAssistant />
-
-      <Tabs defaultValue="solicitudes" className="space-y-4">
-        <TabsList className="grid h-11 w-full grid-cols-3">
-          <TabsTrigger value="solicitudes">Solicitudes</TabsTrigger>
-          <TabsTrigger value="documentos">Documentos</TabsTrigger>
-          <TabsTrigger value="gestion">Gestion</TabsTrigger>
-        </TabsList>
-
-        {(["solicitudes", "documentos", "gestion"] as const).map((category) => {
-          const meta = categoryMeta[category];
-          const Icon = meta.icon;
-          const guides = groupedGuides[category];
-
-          return (
-            <TabsContent key={category} value={category} className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Icon className="h-5 w-5 text-[#008C93]" />
-                    {meta.label}
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">{meta.description}</p>
-                </CardHeader>
-              </Card>
-
-              {guides.length === 0 ? (
-                <Card>
-                  <CardContent className="py-8 text-sm text-muted-foreground">
-                    No hay guias visibles para esta categoria con tus permisos actuales.
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid gap-4 xl:grid-cols-2">
-                  {guides.map((guide) => (
-                    <GuideCard key={guide.id} guide={guide} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          );
-        })}
-      </Tabs>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <FileSearch2 className="h-5 w-5 text-[#008C93]" />
-            No encuentras lo que necesitas?
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
-          <p>
-            Podemos seguir ampliando esta ayuda con mas guias, tours guiados por pantalla
-            o incluso un asistente paso a paso segun el modulo.
-          </p>
-          <Link href="/">
-            <Button variant="outline" className="h-10 rounded">
-              Volver al inicio
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
-    </div>
-  );
+    {guides.length ? <div className="mt-6 grid items-start gap-5 xl:grid-cols-2">{guides.map((guide) => <GuideCard key={guide.id} guide={guide}/>)}</div> : <Card className="mt-6 border-[#DDE8D7]"><CardContent className="py-10 text-center text-[#5F6F68]">No encontramos guías de esta experiencia que coincidan con tu búsqueda y tus permisos.</CardContent></Card>}
+    <div className="mt-8"><SupportAssistant /></div>
+  </main>;
 }

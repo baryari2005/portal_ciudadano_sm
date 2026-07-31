@@ -1,0 +1,1 @@
+import { TeacherAttendanceScanPage } from "@/features/teacher/components/TeacherAttendanceScanPage"; export default async function Page({params}:{params:Promise<{sessionId:string}>}){return <TeacherAttendanceScanPage sessionId={(await params).sessionId}/>}

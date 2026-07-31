@@ -2,18 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star, UserPen } from "lucide-react";
 import { useCan } from "@/hooks/useCan";
 import AccessDenied403Page from "../../403/page";
 import { UserForm } from "@/features/users/components/UserForm";
 import { UserFormValues } from "@/features/users/types/types";
 import Loading from "../../loading";
-
+import { UserCog } from "lucide-react";
 
 type EditUserInitialValues = Partial<UserFormValues> & {
   id?: string;
-  rol?: { id: number };
+  rol?: { id: number; codigo?: string; nombre?: string };
 };
 
 export default function EditUserPage() {
@@ -31,6 +29,7 @@ function EditUserContent({ id }: { id: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [initial, setInitial] = useState<EditUserInitialValues | null>(null);
+  const [fixedRoleCode, setFixedRoleCode] = useState<string>();
 
   useEffect(() => {
     (async () => {
@@ -44,6 +43,11 @@ function EditUserContent({ id }: { id: string }) {
 
       const data = await res.json();
 
+      const roleCode = data.rol?.codigo?.toLowerCase();
+      const roleName = data.rol?.nombre?.toLowerCase();
+      const isCitizen = ["user", "usuario", "citizen", "ciudadano"].includes(roleCode ?? "") || ["user", "usuario", "citizen", "ciudadano"].includes(roleName ?? "");
+      setFixedRoleCode(isCitizen ? (roleCode || "user") : undefined);
+
       setInitial({
         id,
         userId: data.userId,
@@ -51,13 +55,20 @@ function EditUserContent({ id }: { id: string }) {
         nombre: data.nombre ?? "",
         apellido: data.apellido ?? "",
         avatarUrl: data.avatarUrl ?? "",
-        rol: data.rol?.id ? { id: data.rol.id } : undefined,
+        fotoPerfilUrl: data.fotoPerfilUrl ?? "",
+        rol: data.rol?.id ? { id: data.rol.id, codigo: data.rol.codigo, nombre: data.rol.nombre } : undefined,
         tipoDocumento: data.tipoDocumento ?? undefined,
         documento: data.documento ?? "",
         cuil: data.cuil ?? "",
         celular: data.celular ?? "",
         domicilio: data.domicilio ?? "",
+        localidad: data.localidad ?? "",
+        provincia: data.provincia ?? "",
         codigoPostal: data.codigoPostal ?? "",
+        contactoEmergenciaNombre: data.contactoEmergenciaNombre ?? "",
+        contactoEmergenciaTelefono: data.contactoEmergenciaTelefono ?? "",
+        coberturaMedicaId: data.coberturaMedicaId ?? data.coberturaMedica?.id ?? null,
+        numeroAfiliado: data.numeroAfiliado ?? "",
         fechaNacimiento: data.fechaNacimiento ?? null,
         genero: data.genero ?? undefined,
         estadoCivil: data.estadoCivil ?? undefined,
@@ -73,23 +84,18 @@ function EditUserContent({ id }: { id: string }) {
   }
 
   return (
-    <div className="grid gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl flex items-center">
-            <UserPen className="mr-2" />
-            Editar usuario <Star className="ml-4 w-4 h-4" />
-            Id: {initial.userId}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <UserForm
-            mode="edit"
-            defaultValues={initial}
-            onSuccess={(uid) => router.replace(`/users/${uid}`)}
-          />
-        </CardContent>
-      </Card>
+    <div className="min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full overflow-y-auto bg-[#F7FBF5] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:p-8">
+      <div className="pr-2">
+        <UserForm
+          mode="edit"
+          defaultValues={initial}
+          fixedRoleCode={fixedRoleCode}
+          title="Editar usuario"
+          description="Actualizá y validá cada sección antes de guardar los cambios."
+          headerIcon={UserCog}
+          onSuccess={(uid) => router.replace(`/users/${uid}`)}
+        />
+      </div>
     </div>
   );
 }

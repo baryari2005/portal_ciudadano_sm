@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
-import { verifyJwt } from "@/lib/jwt";
-import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
+
+import { getUserAccessStatus } from "@/features/auth/libs/access-state";
+import { prisma } from "@/lib/db";
+import { verifyJwt } from "@/lib/jwt";
 
 type UserWithPermissions = Prisma.UsuarioGetPayload<{
   include: {
@@ -32,7 +34,7 @@ type PermissionDTO = {
   accion: string;
 };
 
-type ServerUser = UserWithPermissions & {
+type ServerUser = Omit<UserWithPermissions, "password"> & {
   permisos: PermissionDTO[];
 };
 
@@ -51,11 +53,11 @@ export async function getBearer(req: NextRequest) {
 export function requirePermission(
   user: Pick<ServerUser, "permisos">,
   modulo: string,
-  accion: string
+  accion: string,
 ) {
   const has = user.permisos?.some(
     (permission: PermissionDTO) =>
-      permission.modulo === modulo && permission.accion === accion
+      permission.modulo === modulo && permission.accion === accion,
   );
 
   if (!has) {
@@ -64,7 +66,7 @@ export function requirePermission(
 }
 
 export async function getServerMe(
-  req: NextRequest
+  req: NextRequest,
 ): Promise<{ user: ServerUser | null }> {
   const token = await getBearer(req);
 
@@ -100,6 +102,10 @@ export async function getServerMe(
 
     if (!user) return { user: null };
 
+    const safeUser = Object.fromEntries(
+      Object.entries(user).filter(([key]) => key !== "password"),
+    ) as Omit<UserWithPermissions, "password">;
+
     const permisos: PermissionDTO[] =
       user.rol?.permisos.map((rp) => ({
         modulo: rp.permiso.modulo,
@@ -108,7 +114,7 @@ export async function getServerMe(
 
     return {
       user: {
-        ...user,
+        ...safeUser,
         permisos,
       },
     };
@@ -122,6 +128,10 @@ export async function requireAuth(req: NextRequest): Promise<ServerUser> {
 
   if (!me.user) {
     throw new Error("UNAUTHORIZED");
+  }
+
+  if (getUserAccessStatus(me.user)) {
+    throw new Error("ACCOUNT_NOT_ALLOWED");
   }
 
   return me.user;

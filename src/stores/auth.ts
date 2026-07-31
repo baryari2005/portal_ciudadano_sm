@@ -10,6 +10,7 @@ import {
 } from "@/features/auth/libs/auth-session";
 import type {
   LoginBody,
+  LoginResult,
   UserDTO,
 } from "@/features/auth/types/auth.types";
 
@@ -26,12 +27,31 @@ type Actions = {
   setUser: (user: UserDTO | null) => void;
   setHasHydrated: (value: boolean) => void;
   fetchMe: (force?: boolean) => Promise<void>;
-  login: (body: LoginBody) => Promise<boolean>;
+  login: (body: LoginBody) => Promise<LoginResult>;
   logout: (redirectTo?: string) => void;
 };
 
 let mePromise: Promise<void> | null = null;
 let mePromiseToken: string | null = null;
+
+function getApiErrorMessage(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "data" in error.response &&
+    typeof error.response.data === "object" &&
+    error.response.data !== null &&
+    "error" in error.response.data &&
+    typeof error.response.data.error === "string"
+  ) {
+    return error.response.data.error;
+  }
+
+  return "No pudimos iniciar sesión.";
+}
 
 export const useAuth = create<State & Actions>()(
   persist(
@@ -127,7 +147,7 @@ export const useAuth = create<State & Actions>()(
               loading: false,
               triedMe: true,
             });
-            return false;
+            return { ok: false, message: data.error };
           }
 
           get().setToken(token);
@@ -137,7 +157,7 @@ export const useAuth = create<State & Actions>()(
 
           if (!user) {
             set({ loading: false });
-            return false;
+            return { ok: false };
           }
 
           if (user.mustChangePassword) {
@@ -147,12 +167,22 @@ export const useAuth = create<State & Actions>()(
               window.location.replace("/change-password?first=1");
             }
 
-            return true;
+            return { ok: true };
+          }
+
+          if (data.redirectTo) {
+            set({ loading: false });
+
+            if (typeof window !== "undefined") {
+              window.location.replace(data.redirectTo);
+            }
+
+            return { ok: true };
           }
 
           set({ loading: false });
-          return true;
-        } catch {
+          return { ok: true };
+        } catch (error) {
           clearStoredToken();
           set({
             user: null,
@@ -160,7 +190,7 @@ export const useAuth = create<State & Actions>()(
             loading: false,
             triedMe: true,
           });
-          return false;
+          return { ok: false, message: getApiErrorMessage(error) };
         }
       },
 
@@ -185,20 +215,20 @@ export const useAuth = create<State & Actions>()(
         token: state.token,
         user: state.user,
       }),
-      onRehydrateStorage: () => (state) => {
+      onRehydrateStorage: () => (state, error) => {
         if (!state) {
           return;
         }
 
-        const token = getStoredToken();
+        const token = error ? null : getStoredToken();
         setStoredToken(token);
-
+        state.setToken(token);
         state.setHasHydrated(true);
 
         if (!token) {
           state.setUser(null);
         }
       },
-    }
-  )
+    },
+  ),
 );

@@ -44,7 +44,6 @@ export type HolidayStatParams = {
   } | null;
 };
 
-
 export type DashboardStatsParams = {
   documents: DocumentsStatParams;
   vacations: VacationsStatParams;

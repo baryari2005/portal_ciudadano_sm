@@ -1,0 +1,2 @@
+-- Migration file restored because the migration directory existed without SQL.
+-- No database changes are required for this historical migration.

@@ -1,0 +1,1 @@
+"use client";import{use}from"react";import{CitizenActivityDetail}from"@/features/citizen/components/CitizenActivityDetail";export default function Page({params}:{params:Promise<{id:string}>}){return <CitizenActivityDetail id={use(params).id}/>}

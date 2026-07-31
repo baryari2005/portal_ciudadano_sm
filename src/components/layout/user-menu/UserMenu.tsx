@@ -37,16 +37,13 @@ export function UserMenu() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <UserMenuTriggerButton
-            avatarUrl={avatarUrl}
-            fullName={fullName}
-          />
+          <UserMenuTriggerButton avatarUrl={avatarUrl} fullName={fullName} />
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
           align="end"
           sideOffset={8}
-          className="w-72 rounded border p-0 shadow-xl"
+          className="w-72 overflow-hidden rounded-2xl border border-[#DDE5D8] bg-white p-0 text-[#1D4F36] shadow-[0_18px_45px_rgba(0,58,34,0.16)]"
         >
           <UserMenuHeader
             avatarUrl={avatarUrl}
@@ -54,7 +51,7 @@ export function UserMenu() {
             email={email}
           />
 
-          <DropdownMenuSeparator className="m-0" />
+          <DropdownMenuSeparator className="mx-3 my-1 bg-[#E4E9E3]" />
 
           <MenuItemWithSubtitle
             icon={LockKeyhole}
@@ -75,14 +72,14 @@ export function UserMenu() {
             onClick={() => setOpenAvatar(true)}
           />
 
-          <DropdownMenuSeparator className="m-0" />
+          <DropdownMenuSeparator className="mx-3 my-1 bg-[#E4E9E3]" />
 
           <DropdownMenuItem
             onClick={() => logout()}
-            className="cursor-pointer py-3"
+            className="mx-2 mb-2 mt-1 cursor-pointer rounded-xl px-3 py-3 text-[#1D4F36] transition-colors focus:bg-[#F1F7EA] focus:text-[#1D4F36]"
           >
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Salir</span>
+            <LogOut className="mr-3 h-4 w-4 text-[#1D4F36]" />
+            <span className="text-sm font-medium">Salir</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -93,10 +90,7 @@ export function UserMenu() {
         open={openEmail}
         onOpenChange={setOpenEmail}
       />
-      <ChangeAvatarDialog
-        open={openAvatar}
-        onOpenChange={setOpenAvatar}
-      />
+      <ChangeAvatarDialog open={openAvatar} onOpenChange={setOpenAvatar} />
     </>
   );
 }

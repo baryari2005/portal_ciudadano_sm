@@ -11,7 +11,10 @@ export async function POST(req: NextRequest) {
     const { avatarUrl } = await req.json();
 
     if (!avatarUrl || typeof avatarUrl !== "string") {
-      return NextResponse.json({ error: "avatarUrl requerido" }, { status: 400 });
+      return NextResponse.json(
+        { error: "avatarUrl requerido" },
+        { status: 400 },
+      );
     }
 
     const user = await prisma.usuario.findUnique({
@@ -19,7 +22,10 @@ export async function POST(req: NextRequest) {
       select: { id: true, deletedAt: true },
     });
     if (!user || user.deletedAt) {
-      return NextResponse.json({ error: "Usuario no encontrado." }, { status: 404 });
+      return NextResponse.json(
+        { error: "Usuario no encontrado." },
+        { status: 404 },
+      );
     }
 
     const updated = await prisma.usuario.update({
@@ -29,16 +35,12 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(updated);
-  }   
-   catch (error: unknown) {
-    if (error instanceof Error) {      
+  } catch (error: unknown) {
+    if (error instanceof Error) {
       if (error?.message === "UNAUTHORIZED") {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 401 }
-        );
+        return NextResponse.json({ error: error.message }, { status: 401 });
       }
       return NextResponse.json({ error: "Server error" }, { status: 500 });
-    }    
-  }  
+    }
+  }
 }

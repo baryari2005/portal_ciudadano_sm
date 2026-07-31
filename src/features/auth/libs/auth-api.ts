@@ -19,7 +19,7 @@ export async function postLogin(body: LoginBody) {
     body,
     {
       skipAuthRedirect: true,
-    }
+    },
   );
 
   return data;

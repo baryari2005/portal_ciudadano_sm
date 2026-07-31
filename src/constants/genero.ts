@@ -5,4 +5,4 @@ export const GENERO_OPCIONES = [
   "OTRO",
   "PREFIERE_NO_DECIR",
 ] as const;
-export type Genero = typeof GENERO_OPCIONES[number];
+export type Genero = (typeof GENERO_OPCIONES)[number];

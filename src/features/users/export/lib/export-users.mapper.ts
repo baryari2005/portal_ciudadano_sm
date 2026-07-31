@@ -1,4 +1,8 @@
-import type { LegajoExportRow, UserExportRow, UserWithLegajo } from "../types/export-users.types";
+import type {
+  LegajoExportRow,
+  UserExportRow,
+  UserWithLegajo,
+} from "../types/export-users.types";
 import { formatCuil, titleCase, toYMD } from "./export-users.format";
 
 export function toUserExportRow(u: UserWithLegajo): UserExportRow {

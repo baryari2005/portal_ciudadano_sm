@@ -1,0 +1,7 @@
+import { z } from "zod";
+export const notificationTypes=["INSCRIPCION_CONFIRMADA","LISTA_ESPERA","PROMOCION_LISTA_ESPERA","INSCRIPCION_CANCELADA","INSCRIPCION_RECHAZADA","INSCRIPCION_BAJA","CLASE_MODIFICADA","CLASE_SUSPENDIDA","CLASE_CANCELADA","DOCUMENTO_APROBADO","DOCUMENTO_RECHAZADO","QR_EMITIDO","QR_REVOCADO","GENERAL"] as const;
+export const notificationPriorities=["BAJA","NORMAL","ALTA"] as const;
+const internalUrl=z.string().trim().refine((value)=>value.startsWith("/")&&!value.startsWith("//")&&!/^[a-z]+:/i.test(value),"La acción debe utilizar una ruta interna").optional().nullable();
+export const createNotificationSchema=z.object({userId:z.string().uuid(),title:z.string().trim().min(1).max(120),message:z.string().trim().min(1).max(1000),priority:z.enum(notificationPriorities).default("NORMAL"),actionUrl:internalUrl,actionLabel:z.string().trim().max(80).optional().nullable()});
+export const ownNotificationActionSchema=z.object({action:z.enum(["markAsRead","markAsUnread","archive"])});
+export const notificationFiltersSchema=z.object({status:z.enum(["NO_LEIDA","LEIDA","ARCHIVADA"]).optional(),type:z.enum(notificationTypes).optional(),priority:z.enum(notificationPriorities).optional(),unreadOnly:z.coerce.boolean().optional(),includeArchived:z.coerce.boolean().optional(),page:z.coerce.number().int().min(1).default(1),pageSize:z.coerce.number().int().min(1).max(100).default(20)});

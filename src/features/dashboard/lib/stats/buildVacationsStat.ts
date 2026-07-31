@@ -12,13 +12,13 @@ export function buildVacationsStat({
 }: VacationsStatParams): Stat {
   return {
     id: "vacations",
-    labelTop: "Vacaciones",    
+    labelTop: "Vacaciones",
     disabled: !canLoad && !canApprove,
     disabledHint:
       !canLoad && !canApprove
         ? "No tenés permisos para ver esta sección.\n Si creés que esto es un error, pedile acceso a un administrador."
         : "",
-    labelBottom: canLoad    
+    labelBottom: canLoad
       ? "Días disponibles"
       : loadingVacationLeaves
         ? "Cargando…"
@@ -26,7 +26,9 @@ export function buildVacationsStat({
           ? "Vacaciones pendientes de aprobación"
           : "Sin pendientes",
     value: canLoad
-      ? (loadingBalance ? "—" : availableDays)
+      ? loadingBalance
+        ? "—"
+        : availableDays
       : pendingVacationLeaves,
     iconName: "Sunrise",
     highlight: canApprove && pendingVacationLeaves > 0,

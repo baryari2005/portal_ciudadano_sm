@@ -17,9 +17,9 @@ export default function SourceSelector({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <Label className="text-sm">Fuente:</Label>
+      <Label className="text-sm font-extrabold text-[#173C2A]">Fuente:</Label>
 
-      <div className="inline-flex h-11 rounded-md overflow-hidden border">
+      <div className="inline-flex h-11 overflow-hidden rounded-xl border border-[#C9D9C3] bg-white/60">
         <Button
           type="button"
           variant="ghost"
@@ -29,10 +29,10 @@ export default function SourceSelector({
           }}
           aria-pressed={source === "pdf"}
           className={cn(
-            "h-full rounded-none px-4 font-medium focus-visible:ring-2 focus-visible:ring-[#008C93]",
+            "h-full rounded-none px-5 font-bold focus-visible:ring-2 focus-visible:ring-[#1D4F36]",
             source === "pdf"
-              ? "bg-[#008C93] text-white hover:bg-[#008C93] hover:text-white"
-              : "text-[#008C93] hover:bg-[#008C93]/10 hover:text-[#008C93]"
+              ? "bg-[#00522C] text-white hover:bg-[#003A22] hover:text-white"
+              : "text-[#00522C] hover:bg-[#EEF6E9] hover:text-[#003A22]",
           )}
         >
           PDF
@@ -47,10 +47,10 @@ export default function SourceSelector({
           }}
           aria-pressed={source === "excel"}
           className={cn(
-            "h-full rounded-none px-4 font-medium -ml-px border-l border-black focus-visible:ring-2 focus-visible:ring-[#008C93]",
+            "h-full -ml-px rounded-none border-l border-[#C9D9C3] px-5 font-bold focus-visible:ring-2 focus-visible:ring-[#1D4F36]",
             source === "excel"
-              ? "bg-[#008C93] text-white hover:bg-[#008C93] hover:text-white"
-              : "text-[#008C93] hover:bg-[#008C93]/10 hover:text-[#008C93]"
+              ? "bg-[#00522C] text-white hover:bg-[#003A22] hover:text-white"
+              : "text-[#00522C] hover:bg-[#EEF6E9] hover:text-[#003A22]",
           )}
         >
           Excel / CSV

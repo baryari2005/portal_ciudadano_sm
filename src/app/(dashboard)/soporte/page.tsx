@@ -1,5 +1,5 @@
-import { SupportPageClient } from "@/features/support/components/SupportPageClient";
+import { permanentRedirect } from "next/navigation";
 
-export default function SupportPage() {
-  return <SupportPageClient />;
+export default function LegacySupportPage() {
+  permanentRedirect("/help");
 }

@@ -50,7 +50,7 @@
 //     const { error: moveErr } = await supabaseAdmin.storage
 //       .from(BUCKET)
 //       .move(fromKey, toKey);
-// // 
+// //
 //     if (moveErr) {
 //       // Si no existe tmp/filename o permisos
 //       const msg = moveErr.message || "No se pudo mover el archivo.";

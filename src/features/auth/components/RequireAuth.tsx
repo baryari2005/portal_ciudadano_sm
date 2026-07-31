@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/stores/auth";
 import Loading from "@/app/(dashboard)/loading";
+import { getUserAccessRedirect } from "@/features/auth/libs/access-state";
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -27,10 +28,24 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (!user && !triedMe && !loading) {
+    if (!triedMe && !loading) {
       void fetchMe();
     }
   }, [hasHydrated, token, user, triedMe, loading, fetchMe, pathname, router]);
+
+  useEffect(() => {
+    if (!hasHydrated) {
+      return;
+    }
+
+    if (token && triedMe && !loading && user) {
+      const redirectTo = getUserAccessRedirect(user);
+
+      if (redirectTo && pathname !== redirectTo) {
+        router.replace(redirectTo);
+      }
+    }
+  }, [hasHydrated, token, triedMe, loading, user, pathname, router]);
 
   useEffect(() => {
     if (!hasHydrated) {
@@ -51,12 +66,20 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     return <Loading />;
   }
 
+  if (!triedMe) {
+    return <Loading />;
+  }
+
   if (!user && (!triedMe || loading)) {
     return <Loading />;
   }
 
   if (!user) {
     return null;
+  }
+
+  if (getUserAccessRedirect(user)) {
+    return <Loading />;
   }
 
   return <>{children}</>;

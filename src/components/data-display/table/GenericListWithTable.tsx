@@ -11,15 +11,18 @@ export interface DataTableProps<T> {
   data: T[];
   loading: boolean;
   page: number;
+  pageSize: number;
+  totalItems: number;
   totalPages: number;
   onPageChange: (page: number) => void;
   onSearchChange: (query: string) => void;
   columns: ColumnDef<T, unknown>[];
   sorting: SortingState;
   onSortingChange: (
-    updater: SortingState | ((old: SortingState) => SortingState)
+    updater: SortingState | ((old: SortingState) => SortingState),
   ) => void;
   searchPlaceholder?: string;
+  toolbarActions?: React.ReactNode;
 }
 
 interface GenericListWithTableProps<T> {
@@ -38,13 +41,12 @@ interface GenericListWithTableProps<T> {
     sortBy?: string;
     sortDir?: string;
   };
-  responseAdapter?: (
-    raw: unknown
-  ) => {
+  responseAdapter?: (raw: unknown) => {
     items: T[];
     total: number;
     pageCount?: number;
   };
+  toolbarActions?: React.ReactNode;
 }
 
 function useDebounce<T>(value: T, delay = 300) {
@@ -90,10 +92,12 @@ export function GenericListWithTable<T>({
   clientData,
   paramNames,
   responseAdapter,
+  toolbarActions,
 }: GenericListWithTableProps<T>) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
+  const [totalItems, setTotalItems] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [searchDraft, setSearchDraft] = useState<string>(externalSearch);
@@ -115,7 +119,7 @@ export function GenericListWithTable<T>({
       sortDir: "sortDir",
       ...(paramNames ?? {}),
     }),
-    [paramNames]
+    [paramNames],
   );
 
   const stableFilters = useMemo<UnknownRecord>(() => filters ?? {}, [filters]);
@@ -147,6 +151,7 @@ export function GenericListWithTable<T>({
     async (signal: AbortSignal) => {
       if (clientData) {
         setData(clientData);
+        setTotalItems(clientData.length);
         setTotalPages(1);
         setLoading(false);
         return;
@@ -213,10 +218,11 @@ export function GenericListWithTable<T>({
         }
 
         setData(items);
+        setTotalItems(total || items.length);
 
         const pages = Math.max(
           1,
-          pageCount ?? Math.ceil((total || 0) / pageSize)
+          pageCount ?? Math.ceil((total || 0) / pageSize),
         );
 
         setTotalPages(pages);
@@ -234,7 +240,7 @@ export function GenericListWithTable<T>({
         setLoading(false);
       }
     },
-    [clientData, endpoint, pageSize, params, responseAdapter]
+    [clientData, endpoint, pageSize, params, responseAdapter],
   );
 
   useEffect(() => {
@@ -258,6 +264,8 @@ export function GenericListWithTable<T>({
         data={data}
         loading={uiLoading}
         page={page}
+        pageSize={pageSize}
+        totalItems={totalItems}
         totalPages={totalPages}
         onPageChange={(newPage) => setPage(newPage)}
         onSearchChange={(value) => {
@@ -268,9 +276,10 @@ export function GenericListWithTable<T>({
         sorting={sorting}
         onSortingChange={(updater) =>
           setSorting((old) =>
-            typeof updater === "function" ? updater(old) : updater
+            typeof updater === "function" ? updater(old) : updater,
           )
         }
+        toolbarActions={toolbarActions}
       />
     </div>
   );

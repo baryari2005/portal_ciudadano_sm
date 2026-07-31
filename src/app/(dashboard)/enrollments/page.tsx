@@ -1,0 +1,1 @@
+"use client";import AccessDenied403Page from "../403/page";import { useCan } from "@/hooks/useCan";import { EnrollmentsPage } from "@/features/enrollments/components/EnrollmentsPage";export default function Page(){return useCan("enrollments","ver")?<EnrollmentsPage/>:<AccessDenied403Page/>}

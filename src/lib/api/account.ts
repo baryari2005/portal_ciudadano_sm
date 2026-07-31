@@ -17,7 +17,7 @@ export async function changePassword(payload: {
   const { data } = await axiosInstance.post(
     "/auth/change-password",
     payload,
-    authSafeConfig
+    authSafeConfig,
   );
 
   return data;
@@ -30,7 +30,7 @@ export async function changeEmail(payload: {
   const { data } = await axiosInstance.post(
     "/auth/change-email",
     payload,
-    authSafeConfig
+    authSafeConfig,
   );
 
   return data;
@@ -40,7 +40,7 @@ export async function changeMyAvatar(payload: { avatarUrl: string }) {
   const { data } = await axiosInstance.post(
     "/auth/change-avatar",
     payload,
-    authSafeConfig
+    authSafeConfig,
   );
 
   return data;

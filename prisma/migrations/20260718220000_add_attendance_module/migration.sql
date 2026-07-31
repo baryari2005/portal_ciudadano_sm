@@ -1,0 +1,14 @@
+CREATE TYPE "AsistenciaEstado" AS ENUM ('PRESENTE', 'AUSENTE', 'JUSTIFICADA');
+CREATE TYPE "AsistenciaOrigen" AS ENUM ('MANUAL', 'QR');
+ALTER TABLE "ClaseActividad" ADD COLUMN "asistenciaCerradaAt" TIMESTAMP(3), ADD COLUMN "asistenciaCerradaPorId" UUID;
+CREATE TABLE "Asistencia" ("id" TEXT NOT NULL,"claseActividadId" TEXT NOT NULL,"inscripcionId" TEXT NOT NULL,"estado" "AsistenciaEstado" NOT NULL,"origen" "AsistenciaOrigen" NOT NULL DEFAULT 'MANUAL',"horaRegistro" TIMESTAMP(3),"motivoJustificacion" TEXT,"observaciones" TEXT,"registradoPorId" UUID,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL,CONSTRAINT "Asistencia_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "Asistencia_claseActividadId_inscripcionId_key" ON "Asistencia"("claseActividadId","inscripcionId");
+CREATE INDEX "Asistencia_claseActividadId_idx" ON "Asistencia"("claseActividadId");
+CREATE INDEX "Asistencia_inscripcionId_idx" ON "Asistencia"("inscripcionId");
+CREATE INDEX "Asistencia_estado_idx" ON "Asistencia"("estado");
+CREATE INDEX "Asistencia_registradoPorId_idx" ON "Asistencia"("registradoPorId");
+ALTER TABLE "ClaseActividad" ADD CONSTRAINT "ClaseActividad_asistenciaCerradaPorId_fkey" FOREIGN KEY ("asistenciaCerradaPorId") REFERENCES "Usuario"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Asistencia" ADD CONSTRAINT "Asistencia_claseActividadId_fkey" FOREIGN KEY ("claseActividadId") REFERENCES "ClaseActividad"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Asistencia" ADD CONSTRAINT "Asistencia_inscripcionId_fkey" FOREIGN KEY ("inscripcionId") REFERENCES "Inscripcion"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Asistencia" ADD CONSTRAINT "Asistencia_registradoPorId_fkey" FOREIGN KEY ("registradoPorId") REFERENCES "Usuario"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+INSERT INTO "Permiso" ("modulo","accion","nombre","descripcion","activo","createdAt","updatedAt") VALUES ('attendance','ver','attendance:ver','Permite visualizar asistencias.',true,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),('attendance','crear','attendance:crear','Permite registrar asistencias.',true,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),('attendance','editar','attendance:editar','Permite modificar asistencias.',true,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),('attendance','eliminar','attendance:eliminar','Permite reabrir asistencias.',true,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),('attendance','asignar','attendance:asignar','Permite registrar en lote y cerrar asistencias.',true,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT ("modulo","accion") DO UPDATE SET "nombre"=EXCLUDED."nombre","descripcion"=EXCLUDED."descripcion","activo"=true,"updatedAt"=CURRENT_TIMESTAMP;

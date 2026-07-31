@@ -1,0 +1,7 @@
+import { z } from "zod";
+const text = (max: number) => z.string().trim().max(max).optional().nullable().transform((value) => value || null);
+export const enrollmentDocumentFiltersSchema = z.object({ search: z.string().trim().optional(), status: z.enum(["PENDIENTE", "APROBADO", "RECHAZADO"]).optional(), activityId: z.string().optional(), activityScheduleId: z.string().optional(), enrollmentId: z.string().optional(), requirementId: z.string().uuid().optional(), userId: z.string().uuid().optional(), dateFrom: z.coerce.date().optional(), dateTo: z.coerce.date().optional() });
+export const uploadMetadataSchema = z.object({ requirementId: z.string().uuid(), observations: text(1000) });
+export const reviewEnrollmentDocumentSchema = z.object({ status: z.enum(["APROBADO", "RECHAZADO"]), rejectionReason: text(500), reviewObservations: text(1000) }).superRefine((value, context) => { if (value.status === "RECHAZADO" && !value.rejectionReason) context.addIssue({ code: "custom", path: ["rejectionReason"], message: "Indicá el motivo del rechazo" }); });
+export const updateEnrollmentDocumentSchema = z.object({ reviewObservations: text(1000) }).refine((value) => value.reviewObservations !== undefined, "El PATCH debe incluir cambios");
+export type EnrollmentDocumentFilters = z.infer<typeof enrollmentDocumentFiltersSchema>; export type ReviewEnrollmentDocumentInput = z.infer<typeof reviewEnrollmentDocumentSchema>;

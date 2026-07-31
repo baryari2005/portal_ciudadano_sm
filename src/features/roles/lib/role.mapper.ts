@@ -1,5 +1,6 @@
 type RoleWithCount = {
   id: number;
+  codigo: string;
   nombre: string;
   descripcion: string | null;
   activo: boolean;
@@ -12,6 +13,7 @@ type RoleWithCount = {
 export function toRoleListItem(role: RoleWithCount) {
   return {
     id: role.id,
+    codigo: role.codigo,
     nombre: role.nombre,
     descripcion: role.descripcion,
     activo: role.activo,

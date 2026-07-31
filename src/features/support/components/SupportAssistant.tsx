@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Bot, Loader2, SendHorizontal, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/stores/auth";
 import { cn } from "@/lib/utils";
+import { getVisibleHelpGuides } from "../lib/visible-help-guides";
+import type { HelpCategory } from "../lib/help-guides";
 
 type ChatMessage = {
   id: string;
@@ -21,16 +23,24 @@ type AssistantResponse = {
   error?: string;
 };
 
-const starterQuestions = [
-  "Como apruebo una licencia?",
-  "Donde cargo el balance de vacaciones?",
-  "Que permiso necesito para exportar usuarios?",
-  "Como subo PDF de recibos?",
-];
-
 export function SupportAssistant() {
   const pathname = usePathname();
   const token = useAuth((state) => state.token);
+  const permissions = useAuth((state) => state.user?.permisos ?? []);
+  const category: HelpCategory = pathname.startsWith("/citizen") ? "citizen" : pathname.startsWith("/teacher") ? "teacher" : pathname.startsWith("/access") ? "reception" : "administration";
+  const starterQuestions = useMemo(() => {
+    const categories = new Set(
+      getVisibleHelpGuides(permissions, category).map((guide) => guide.category),
+    );
+    return [
+      "¿Cómo me inscribo a una actividad?",
+      ...(categories.has("teacher") ? ["¿Cómo tomo asistencia?"] : []),
+      ...(categories.has("reception") ? ["¿Cómo valido un ingreso por QR?"] : []),
+      ...(categories.has("administration")
+        ? ["¿Cómo creo una actividad completa?"]
+        : []),
+    ];
+  }, [category, permissions]);
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -52,7 +62,8 @@ export function SupportAssistant() {
         {
           id: crypto.randomUUID(),
           role: "assistant",
-          content: "No encuentro una sesion activa para consultar el asistente.",
+          content:
+            "No encuentro una sesion activa para consultar el asistente.",
         },
       ]);
       return;
@@ -95,7 +106,8 @@ export function SupportAssistant() {
           id: crypto.randomUUID(),
           role: "assistant",
           content:
-            data.answer || "No pude generar una respuesta util en este momento.",
+            data.answer ||
+            "No pude generar una respuesta util en este momento.",
         },
       ]);
     } catch (error) {
@@ -116,22 +128,21 @@ export function SupportAssistant() {
   };
 
   return (
-    <Card className="border border-slate-200 shadow-sm">
+    <Card className="border border-[#DDE8D7] shadow-sm">
       <CardHeader className="space-y-3">
-        <div className="inline-flex w-fit items-center gap-2 rounded-full bg-[#008C93]/10 px-3 py-1 text-xs font-medium text-[#007381]">
+        <div className="inline-flex w-fit items-center gap-2 rounded-full bg-[#DDEED2] px-3 py-1 text-xs font-medium text-[#1D4F36]">
           <Sparkles className="h-3.5 w-3.5" />
           Asistente IA
         </div>
 
         <div className="space-y-2">
           <CardTitle className="flex items-center gap-2 text-xl">
-            <Bot className="h-5 w-5 text-[#008C93]" />
+            <Bot className="h-5 w-5 text-[#1D4F36]" />
             Preguntale al sistema como hacer una tarea
           </CardTitle>
           <p className="text-sm leading-6 text-muted-foreground">
-            Este primer MVP responde usando las guias del sistema y tus permisos
-            actuales. No usa chunks ni indexacion todavia: cada consulta se arma
-            con el contexto visible para tu usuario.
+            Responde usando únicamente las guías visibles para los permisos
+            actuales de tu cuenta.
           </p>
         </div>
       </CardHeader>
@@ -152,7 +163,7 @@ export function SupportAssistant() {
           ))}
         </div>
 
-        <ScrollArea className="h-80 rounded-xl border border-slate-200 bg-slate-50">
+        <ScrollArea className="h-80 rounded-xl border border-[#DDE8D7] bg-[#F7FBF5]">
           <div className="space-y-3 p-4">
             {messages.map((message) => (
               <div
@@ -161,7 +172,7 @@ export function SupportAssistant() {
                   "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm",
                   message.role === "assistant"
                     ? "bg-white text-slate-800"
-                    : "ml-auto bg-[#008C93] text-white"
+                    : "ml-auto bg-[#1D4F36] text-white",
                 )}
               >
                 <div className="mb-1 text-xs font-medium uppercase tracking-wide opacity-70">
@@ -184,7 +195,7 @@ export function SupportAssistant() {
           <Textarea
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
-            placeholder="Ejemplo: Como apruebo una licencia con adjuntos?"
+            placeholder="Ejemplo: ¿Cómo genero las clases de un horario?"
             className="min-h-28 rounded-xl bg-white"
           />
 
@@ -193,7 +204,7 @@ export function SupportAssistant() {
               type="button"
               onClick={() => askAssistant(question)}
               disabled={loading || !question.trim()}
-              className="h-11 rounded bg-[#008C93] hover:bg-[#007381]"
+              className="h-11 rounded bg-[#1D4F36] hover:bg-[#163D2A]"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">

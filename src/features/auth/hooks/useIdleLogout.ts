@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const IDLE_TIME_MS = 10 * 60 * 1000; // 10 minutos sin actividad
-const COUNTDOWN_SECONDS = 15;       // segundos del modal
+const COUNTDOWN_SECONDS = 15; // segundos del modal
 
 export function useIdleLogout(onLogout: () => void) {
   // ✅ SIEMPRE con valor inicial

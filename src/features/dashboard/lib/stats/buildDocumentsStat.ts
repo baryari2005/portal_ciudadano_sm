@@ -18,10 +18,9 @@ export function buildDocumentsStat({
     value: pendingDocs,
     iconName: "FileSignature",
     disabled: !canView,
-    disabledHint:
-      !canView
-        ? "No tenés permisos para ver esta sección.\n Si creés que esto es un error, pedile acceso a un administrador."
-        : "",
+    disabledHint: !canView
+      ? "No tenés permisos para ver esta sección.\n Si creés que esto es un error, pedile acceso a un administrador."
+      : "",
     onClick: onGoReceipts,
   };
 }

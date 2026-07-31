@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 
   const supa = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
   const { data, error } = await supa.storage
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
   if (error || !data?.signedUrl) {
     return NextResponse.json(
       { error: error?.message || "No se pudo firmar URL" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 

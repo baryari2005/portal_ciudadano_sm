@@ -21,31 +21,40 @@ export async function POST(req: NextRequest) {
     });
 
     if (!rec) {
-      return NextResponse.json({ error: "Token inválido o vencido" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Token inválido o vencido" },
+        { status: 401 },
+      );
     }
 
     const passwordHash = await bcrypt.hash(dto.newPassword, 12);
 
     await prisma.$transaction([
-      prisma.usuario.update({ where: { id: rec.userId }, data: { password: passwordHash } }),
-      prisma.passwordResetToken.update({ where: { id: rec.id }, data: { usedAt: new Date() } }),
+      prisma.usuario.update({
+        where: { id: rec.userId },
+        data: { password: passwordHash },
+      }),
+      prisma.passwordResetToken.update({
+        where: { id: rec.id },
+        data: { usedAt: new Date() },
+      }),
       prisma.passwordResetToken.updateMany({
-        where: { userId: rec.userId, usedAt: null, expiresAt: { gt: new Date() } },
+        where: {
+          userId: rec.userId,
+          usedAt: null,
+          expiresAt: { gt: new Date() },
+        },
         data: { usedAt: new Date() },
       }),
     ]);
 
     return NextResponse.json({ ok: true });
-  } 
-   catch (error: unknown) {
-    if (error instanceof Error) {      
+  } catch (error: unknown) {
+    if (error instanceof Error) {
       if (error?.message === "UNAUTHORIZED") {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 401 }
-        );
+        return NextResponse.json({ error: error.message }, { status: 401 });
       }
       return NextResponse.json({ error: "Server error" }, { status: 500 });
-    }    
-  }  
+    }
+  }
 }

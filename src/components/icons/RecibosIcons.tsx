@@ -1,9 +1,7 @@
 // src/components/icons/RecibosIcons.tsx
 import * as React from "react";
 
-export const IconImportarUsuarios = (
-  props: React.SVGProps<SVGSVGElement>
-) => (
+export const IconImportarUsuarios = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
     xmlns="http://www.w3.org/2000/svg"
@@ -21,9 +19,7 @@ export const IconImportarUsuarios = (
   </svg>
 );
 
-export const IconExportarUsuarios = (
-  props: React.SVGProps<SVGSVGElement>
-) => (
+export const IconExportarUsuarios = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
     xmlns="http://www.w3.org/2000/svg"
@@ -41,9 +37,7 @@ export const IconExportarUsuarios = (
   </svg>
 );
 
-export const IconSubirPdfRecibos = (
-  props: React.SVGProps<SVGSVGElement>
-) => (
+export const IconSubirPdfRecibos = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
     xmlns="http://www.w3.org/2000/svg"
@@ -66,7 +60,7 @@ export const IconSubirPdfRecibos = (
 );
 
 export const IconSeguimientoRecibos = (
-  props: React.SVGProps<SVGSVGElement>
+  props: React.SVGProps<SVGSVGElement>,
 ) => (
   <svg
     {...props}

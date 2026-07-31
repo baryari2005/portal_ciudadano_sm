@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { verifyResetToken } from "@/lib/api/password";
 import { ResetPasswordForm } from "./ResetPasswordForm";
 
-
 type Props = { token: string };
 
 export function ResetPasswordGate({ token }: Props) {
@@ -25,7 +24,9 @@ export function ResetPasswordGate({ token }: Props) {
       }
     })();
 
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [token]);
 
   if (!token) return <div className="p-6">Falta token.</div>;

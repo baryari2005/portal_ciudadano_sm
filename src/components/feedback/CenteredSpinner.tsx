@@ -15,9 +15,10 @@ export function CenteredSpinner({ label = "Cargando…" }: { label?: string }) {
 export function LoadingInTable({ label = "Cargando..." }: { label?: string }) {
   return (
     <div className="flex min-h-[10vh] items-center justify-center">
-    <div className="text-xl text-muted-foreground flex items-center ">
-      <Loader2 className="h-6 w-6 mr-4 animate-spin" />{label}
-    </div>
+      <div className="text-xl text-muted-foreground flex items-center ">
+        <Loader2 className="h-6 w-6 mr-4 animate-spin" />
+        {label}
+      </div>
     </div>
   );
 }

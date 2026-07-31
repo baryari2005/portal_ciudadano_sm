@@ -6,7 +6,7 @@ export default function MobileUnsupported() {
     <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center gap-5 px-6 text-center bg-white">
       {/* Logo arriba */}
       <Image
-        src="/logoentero.png"  // /public/recibodigital-logo.svg
+        src="/logoentero.png" // /public/recibodigital-logo.svg
         alt="ReciboDigital"
         width={160}
         height={80}
@@ -19,8 +19,8 @@ export default function MobileUnsupported() {
       </h1>
 
       <p className="text-muted-foreground max-w-md">
-        Esta aplicación aún no está optimizada para pantallas pequeñas. 
-        Por favor, usala desde una computadora o ampliá la ventana del navegador.
+        Esta aplicación aún no está optimizada para pantallas pequeñas. Por
+        favor, usala desde una computadora o ampliá la ventana del navegador.
       </p>
     </div>
   );

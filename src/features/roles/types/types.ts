@@ -1,5 +1,6 @@
 export type Role = {
   id: number;
+  codigo: string;
   nombre: string;
   descripcion: string | null;
   activo: boolean;
@@ -18,7 +19,6 @@ export interface RolesListProps {
   refresh?: string | number;
 }
 
-
 export type Permiso = {
   id: number;
   modulo: string;
@@ -34,6 +34,7 @@ export type PermisosGrupo = {
 
 export type RoleUpdate = {
   id: number;
+  codigo: string;
   nombre: string;
   descripcion: string | null;
   activo: boolean;

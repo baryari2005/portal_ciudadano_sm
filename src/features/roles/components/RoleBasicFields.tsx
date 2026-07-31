@@ -2,6 +2,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type Props = {
   nombre: string;
@@ -17,31 +18,29 @@ export function RoleBasicFields({
   onDescripcionChange,
 }: Props) {
   return (
-    <>
-      <div className="space-y-2 max-w-xl">
-        <Label>
-          Nombre{" "}
-          <p className="text-xs text-muted-foreground">
-            ID único de rol.
-          </p>
-        </Label>
+    <div className="grid gap-6">
+      <div className="space-y-1">
+        <Label className="font-extrabold text-[#173C2A]">Nombre *</Label>
         <Input
           value={nombre}
-          className="h-11 rounded border pr-10"
-          onChange={(e) => onNombreChange(e.target.value)}
+          className="h-11 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A]"
+          onChange={(event) => onNombreChange(event.target.value)}
+          placeholder="Ej: Supervisor"
         />
       </div>
 
-      <div className="space-y-2 max-w-xl">
-         <Label>
-          Descripción
+      <div className="space-y-1">
+        <Label className="font-extrabold text-[#173C2A]">
+          Descripcion corta
         </Label>
-        <Input
+        <Textarea
           value={descripcion}
-          className="h-11 rounded border pr-10"
-          onChange={(e) => onDescripcionChange(e.target.value)}
+          rows={3}
+          className="min-h-28 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A]"
+          onChange={(event) => onDescripcionChange(event.target.value)}
+          placeholder="Ej: Gestioná usuarios y configuracion"
         />
       </div>
-    </>
+    </div>
   );
 }

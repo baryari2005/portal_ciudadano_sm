@@ -1,0 +1,3 @@
+import { PrismaClient } from "./generated/requirements-seed-client";
+const prisma = new PrismaClient();
+async function main(){for(const accion of["ver","crear","editar","eliminar","asignar"])await prisma.permiso.upsert({where:{modulo_accion:{modulo:"enrollment_documents",accion}},update:{activo:true},create:{modulo:"enrollment_documents",accion,nombre:`Documentación de inscripciones: ${accion}`,activo:true}});console.log(`Permisos: ${await prisma.permiso.count({where:{modulo:"enrollment_documents"}})}; asignaciones: ${await prisma.rolPermiso.count({where:{permiso:{modulo:"enrollment_documents"}}})}`)}main().finally(()=>prisma.$disconnect());

@@ -1,0 +1,13 @@
+CREATE TYPE "NotificacionTipo" AS ENUM ('INSCRIPCION_CONFIRMADA','LISTA_ESPERA','PROMOCION_LISTA_ESPERA','INSCRIPCION_CANCELADA','INSCRIPCION_RECHAZADA','INSCRIPCION_BAJA','CLASE_MODIFICADA','CLASE_SUSPENDIDA','CLASE_CANCELADA','DOCUMENTO_APROBADO','DOCUMENTO_RECHAZADO','QR_EMITIDO','QR_REVOCADO','GENERAL');
+CREATE TYPE "NotificacionEstado" AS ENUM ('NO_LEIDA','LEIDA','ARCHIVADA');
+CREATE TYPE "NotificacionPrioridad" AS ENUM ('BAJA','NORMAL','ALTA');
+CREATE TABLE "Notificacion" ("id" TEXT NOT NULL,"usuarioId" UUID NOT NULL,"tipo" "NotificacionTipo" NOT NULL,"titulo" TEXT NOT NULL,"mensaje" TEXT NOT NULL,"estado" "NotificacionEstado" NOT NULL DEFAULT 'NO_LEIDA',"prioridad" "NotificacionPrioridad" NOT NULL DEFAULT 'NORMAL',"actionUrl" TEXT,"actionLabel" TEXT,"entidadTipo" TEXT,"entidadId" TEXT,"metadata" JSONB,"deduplicationKey" TEXT,"leidaAt" TIMESTAMP(3),"archivadaAt" TIMESTAMP(3),"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL,CONSTRAINT "Notificacion_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "Notificacion_deduplicationKey_key" ON "Notificacion"("deduplicationKey");
+CREATE INDEX "Notificacion_usuarioId_idx" ON "Notificacion"("usuarioId");
+CREATE INDEX "Notificacion_estado_idx" ON "Notificacion"("estado");
+CREATE INDEX "Notificacion_tipo_idx" ON "Notificacion"("tipo");
+CREATE INDEX "Notificacion_prioridad_idx" ON "Notificacion"("prioridad");
+CREATE INDEX "Notificacion_createdAt_idx" ON "Notificacion"("createdAt");
+CREATE INDEX "Notificacion_leidaAt_idx" ON "Notificacion"("leidaAt");
+CREATE INDEX "Notificacion_deduplicationKey_idx" ON "Notificacion"("deduplicationKey");
+ALTER TABLE "Notificacion" ADD CONSTRAINT "Notificacion_usuarioId_fkey" FOREIGN KEY ("usuarioId") REFERENCES "Usuario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

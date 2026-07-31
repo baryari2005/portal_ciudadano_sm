@@ -1,6 +1,11 @@
 "use client";
 
-import { useForm, type SubmitHandler, type Resolver, Controller } from "react-hook-form";
+import {
+  useForm,
+  type SubmitHandler,
+  type Resolver,
+  Controller,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
@@ -13,15 +18,24 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { formatMessage } from "@/utils/formatters";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCan } from "@/hooks/useCan";
-
 
 /** Acepta "YYYY-MM-DD", ISO, o vacío y devuelve "YYYY-MM-DD" o "" (local) */
 const toInputDate = (v?: string | null) => {
@@ -44,8 +58,8 @@ const toYMD = (d: Date) => {
 };
 
 /** "YYYY-MM-DD" -> Date en **hora local** (evitar 'Z'); usar las 12:00 para esquivar DST */
-const ymdToLocalDate = (s?: string | null) => (s ? new Date(`${s}T12:00:00`) : null);
-
+const ymdToLocalDate = (s?: string | null) =>
+  s ? new Date(`${s}T12:00:00`) : null;
 
 const toTitle = (s: string) =>
   s
@@ -53,13 +67,31 @@ const toTitle = (s: string) =>
     .replace(/_/g, " ")
     .replace(/\b\p{L}/gu, (c) => c.toUpperCase());
 
-const SMALL = new Set(["de", "del", "la", "las", "los", "y", "o", "u", "a", "en", "para", "por", "con", "sin", "al"]);
+const SMALL = new Set([
+  "de",
+  "del",
+  "la",
+  "las",
+  "los",
+  "y",
+  "o",
+  "u",
+  "a",
+  "en",
+  "para",
+  "por",
+  "con",
+  "sin",
+  "al",
+]);
 const smartTitleCase = (raw: string) => {
   const s = (raw ?? "").trim().toLowerCase().replace(/\s+/g, " ");
   if (!s) return "";
   return s
     .split(" ")
-    .map((w, i) => (i > 0 && SMALL.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)))
+    .map((w, i) =>
+      i > 0 && SMALL.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1),
+    )
     .join(" ");
 };
 
@@ -118,7 +150,7 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
       console.log("Errores detectados:", errs);
       console.log("Primer campo con error:", Object.keys(errs)[0]);
       console.groupEnd();
-    }
+    },
   );
 
   const canEdit = useCan("legajo", "editar");
@@ -133,7 +165,6 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
       }}
       className="grid gap-4 md:grid-cols-2"
     >
-
       {/* N° Legajo */}
       <div className="space-y-1">
         <Label>Legajo</Label>
@@ -141,11 +172,14 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
           type="number"
           className="h-11 rounded border pr-3"
           {...register("employeeNumber", {
-            setValueAs: (v) => (v === "" || v === null || v === undefined ? undefined : Number(v)),
+            setValueAs: (v) =>
+              v === "" || v === null || v === undefined ? undefined : Number(v),
           })}
         />
         {errors.employeeNumber && (
-          <p className="text-xs text-red-600">{String(errors.employeeNumber.message)}</p>
+          <p className="text-xs text-red-600">
+            {String(errors.employeeNumber.message)}
+          </p>
         )}
       </div>
 
@@ -161,10 +195,18 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
             return (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" type="button" className="w-full justify-start h-11 rounded border">
+                  <Button
+                    variant="outline"
+                    type="button"
+                    className="w-full justify-start h-11 rounded border"
+                  >
                     <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                    {selected ? format(selected, "dd/MM/yyyy", { locale: es }) : (
-                      <span className="text-muted-foreground">Seleccionar fecha</span>
+                    {selected ? (
+                      format(selected, "dd/MM/yyyy", { locale: es })
+                    ) : (
+                      <span className="text-muted-foreground">
+                        Seleccionar fecha
+                      </span>
                     )}
                   </Button>
                 </PopoverTrigger>
@@ -184,7 +226,11 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
             );
           }}
         />
-        {errors.admissionDate && <p className="text-xs text-red-600">{String(errors.admissionDate.message)}</p>}
+        {errors.admissionDate && (
+          <p className="text-xs text-red-600">
+            {String(errors.admissionDate.message)}
+          </p>
+        )}
       </div>
 
       <div className="space-y-1">
@@ -198,10 +244,18 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
             return (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" type="button" className="w-full justify-start h-11 rounded border">
+                  <Button
+                    variant="outline"
+                    type="button"
+                    className="w-full justify-start h-11 rounded border"
+                  >
                     <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                    {selected ? format(selected, "dd/MM/yyyy", { locale: es }) : (
-                      <span className="text-muted-foreground">Seleccionar fecha</span>
+                    {selected ? (
+                      format(selected, "dd/MM/yyyy", { locale: es })
+                    ) : (
+                      <span className="text-muted-foreground">
+                        Seleccionar fecha
+                      </span>
                     )}
                   </Button>
                 </PopoverTrigger>
@@ -220,7 +274,11 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
             );
           }}
         />
-        {errors.terminationDate && <p className="text-xs text-red-600">{String(errors.terminationDate.message)}</p>}
+        {errors.terminationDate && (
+          <p className="text-xs text-red-600">
+            {String(errors.terminationDate.message)}
+          </p>
+        )}
       </div>
 
       {/* Estado */}
@@ -229,9 +287,13 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
         <Select
           value={watch("employmentStatus")}
           onValueChange={(val) =>
-            setValue("employmentStatus", val as LegajoValues["employmentStatus"], {
-              shouldValidate: true,
-            })
+            setValue(
+              "employmentStatus",
+              val as LegajoValues["employmentStatus"],
+              {
+                shouldValidate: true,
+              },
+            )
           }
         >
           <SelectTrigger className="w-full h-11 rounded border px-3 text-sm">
@@ -246,7 +308,9 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
           </SelectContent>
         </Select>
         {errors.employmentStatus && (
-          <p className="text-xs text-red-600">{String(errors.employmentStatus.message)}</p>
+          <p className="text-xs text-red-600">
+            {String(errors.employmentStatus.message)}
+          </p>
         )}
       </div>
 
@@ -256,9 +320,13 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
         <Select
           value={watch("contractType") ?? ""}
           onValueChange={(val) =>
-            setValue("contractType", (val || null) as LegajoValues["contractType"], {
-              shouldValidate: true,
-            })
+            setValue(
+              "contractType",
+              (val || null) as LegajoValues["contractType"],
+              {
+                shouldValidate: true,
+              },
+            )
           }
         >
           <SelectTrigger className="w-full h-11 rounded border px-3 text-sm">
@@ -273,7 +341,9 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
           </SelectContent>
         </Select>
         {errors.contractType && (
-          <p className="text-xs text-red-600">{String(errors.contractType.message)}</p>
+          <p className="text-xs text-red-600">
+            {String(errors.contractType.message)}
+          </p>
         )}
       </div>
 
@@ -282,8 +352,15 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
         <Label>Cargo / Puesto</Label>
         <Input
           className="h-11 rounded border pr-3"
-          {...register("position", { setValueAs: (v) => smartTitleCase(String(v ?? "")) })}
-          onBlur={(e) => setValue("position", smartTitleCase(e.target.value), { shouldDirty: true, shouldValidate: true })}
+          {...register("position", {
+            setValueAs: (v) => smartTitleCase(String(v ?? "")),
+          })}
+          onBlur={(e) =>
+            setValue("position", smartTitleCase(e.target.value), {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+          }
         />
       </div>
 
@@ -291,8 +368,15 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
         <Label>Área</Label>
         <Input
           className="h-11 rounded border pr-3"
-          {...register("area", { setValueAs: (v) => smartTitleCase(String(v ?? "")) })}
-          onBlur={(e) => setValue("area", smartTitleCase(e.target.value), { shouldDirty: true, shouldValidate: true })}
+          {...register("area", {
+            setValueAs: (v) => smartTitleCase(String(v ?? "")),
+          })}
+          onBlur={(e) =>
+            setValue("area", smartTitleCase(e.target.value), {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+          }
         />
       </div>
 
@@ -300,8 +384,15 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
         <Label>Departamento</Label>
         <Input
           className="h-11 rounded border pr-3"
-          {...register("department", { setValueAs: (v) => smartTitleCase(String(v ?? "")) })}
-          onBlur={(e) => setValue("department", smartTitleCase(e.target.value), { shouldDirty: true, shouldValidate: true })}
+          {...register("department", {
+            setValueAs: (v) => smartTitleCase(String(v ?? "")),
+          })}
+          onBlur={(e) =>
+            setValue("department", smartTitleCase(e.target.value), {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+          }
         />
       </div>
 
@@ -309,8 +400,15 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
         <Label>Categoría</Label>
         <Input
           className="h-11 rounded border pr-3"
-          {...register("category", { setValueAs: (v) => smartTitleCase(String(v ?? "")) })}
-          onBlur={(e) => setValue("category", smartTitleCase(e.target.value), { shouldDirty: true, shouldValidate: true })}
+          {...register("category", {
+            setValueAs: (v) => smartTitleCase(String(v ?? "")),
+          })}
+          onBlur={(e) =>
+            setValue("category", smartTitleCase(e.target.value), {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+          }
         />
       </div>
 
@@ -319,14 +417,21 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
         <Label>Matrícula provincial</Label>
         <Input
           className="h-11 rounded border pr-3"
-          {...register("matriculaProvincial", { setValueAs: (v) => toUpper(String(v ?? "")) })}
+          {...register("matriculaProvincial", {
+            setValueAs: (v) => toUpper(String(v ?? "")),
+          })}
           onBlur={(e) =>
-            setValue("matriculaProvincial", toUpper(e.target.value), { shouldDirty: true, shouldValidate: true })
+            setValue("matriculaProvincial", toUpper(e.target.value), {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
           }
           placeholder="Ej: MP 1234"
         />
         {errors.matriculaProvincial && (
-          <p className="text-xs text-red-600">{String(errors.matriculaProvincial.message)}</p>
+          <p className="text-xs text-red-600">
+            {String(errors.matriculaProvincial.message)}
+          </p>
         )}
       </div>
 
@@ -334,42 +439,51 @@ export function LegajoForm({ defaultValues, onSubmit }: Props) {
         <Label>Matrícula nacional</Label>
         <Input
           className="h-11 rounded border pr-3"
-          {...register("matriculaNacional", { setValueAs: (v) => toUpper(String(v ?? "")) })}
+          {...register("matriculaNacional", {
+            setValueAs: (v) => toUpper(String(v ?? "")),
+          })}
           onBlur={(e) =>
-            setValue("matriculaNacional", toUpper(e.target.value), { shouldDirty: true, shouldValidate: true })
+            setValue("matriculaNacional", toUpper(e.target.value), {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
           }
           placeholder="Ej: MN 5678"
         />
         {errors.matriculaNacional && (
-          <p className="text-xs text-red-600">{String(errors.matriculaNacional.message)}</p>
+          <p className="text-xs text-red-600">
+            {String(errors.matriculaNacional.message)}
+          </p>
         )}
       </div>
 
       <div className="md:col-span-2 space-y-1">
         <Label>Observaciones</Label>
-        <Textarea rows={4} className="rounded border pr-3" {...register("notes")} />
+        <Textarea
+          rows={4}
+          className="rounded border pr-3"
+          {...register("notes")}
+        />
       </div>
 
-      {
-        canEdit && (
-          <div className="md:col-span-2">
-            <Button
-              type="submit"
-              className="w-full h-11 rounded bg-[#008C93] hover:bg-[#007381] cursor-pointer"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <span className="inline-flex items-center gap-2">
-                  <Loader2 className="animate-spin" size={18} />
-                  {formatMessage("Guardando...")}
-                </span>
-              ) : (
-                "Guardar cambios"
-              )}
-            </Button>
-          </div>
-        )
-      }
+      {canEdit && (
+        <div className="md:col-span-2">
+          <Button
+            type="submit"
+            className="w-full h-11 rounded bg-[#008C93] hover:bg-[#007381] cursor-pointer"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="animate-spin" size={18} />
+                {formatMessage("Guardando...")}
+              </span>
+            ) : (
+              "Guardar cambios"
+            )}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

@@ -106,7 +106,7 @@ function formatValidationIssues(issues: unknown): string | null {
 
 export function getImportErrorMessage(
   error: unknown,
-  fallback: string
+  fallback: string,
 ): string {
   if (!axios.isAxiosError(error)) {
     return error instanceof Error ? error.message : fallback;
@@ -127,7 +127,7 @@ export function getImportErrorMessage(
 
     if (Array.isArray(data.message)) {
       const messages = data.message.filter(
-        (value): value is string => typeof value === "string"
+        (value): value is string => typeof value === "string",
       );
       if (messages.length) {
         return messages.join(" | ");
@@ -170,9 +170,7 @@ function buildPdfImportPayload(row: PdfRow): PdfPayload {
 
   const baseId =
     apellido && nombre
-      ? `${apellido}.${nombre}`
-          .toLowerCase()
-          .replace(/[^a-zñáéíóú0-9]+/g, ".")
+      ? `${apellido}.${nombre}`.toLowerCase().replace(/[^a-zñáéíóú0-9]+/g, ".")
       : row.legajo || row.cuil || `u_${Date.now()}`;
 
   return {
@@ -251,11 +249,11 @@ function toCred(data: ImportUpsertResponse): Cred | null {
 }
 
 async function importSingleRow(
-  payload: PdfPayload | ExcelPayload
+  payload: PdfPayload | ExcelPayload,
 ): Promise<ImportUpsertResponse> {
   const { data } = await axiosInstance.post<ImportUpsertResponse>(
     "/users/import-upsert?setTemp=1",
-    payload
+    payload,
   );
   return data;
 }
@@ -264,7 +262,7 @@ async function executeImport<T>(
   rows: T[],
   source: "pdf" | "excel",
   buildPayload: (row: T) => PdfPayload | ExcelPayload,
-  buildRowRef: (row: T) => string
+  buildRowRef: (row: T) => string,
 ): Promise<ImportExecutionResult> {
   const creds: Cred[] = [];
   const errors: ImportRowError[] = [];
@@ -290,9 +288,7 @@ async function executeImport<T>(
         source,
         rowRef: buildRowRef(row),
         message: getImportErrorMessage(error, "Import failed"),
-        status: axios.isAxiosError(error)
-          ? error.response?.status
-          : undefined,
+        status: axios.isAxiosError(error) ? error.response?.status : undefined,
       });
     }
   }
@@ -306,13 +302,18 @@ async function executeImport<T>(
 }
 
 export async function importPdfRows(
-  rows: PdfRow[]
+  rows: PdfRow[],
 ): Promise<ImportExecutionResult> {
   return executeImport(rows, "pdf", buildPdfImportPayload, createPdfRowRef);
 }
 
 export async function importExcelRows(
-  rows: ExcelRow[]
+  rows: ExcelRow[],
 ): Promise<ImportExecutionResult> {
-  return executeImport(rows, "excel", buildExcelImportPayload, createExcelRowRef);
+  return executeImport(
+    rows,
+    "excel",
+    buildExcelImportPayload,
+    createExcelRowRef,
+  );
 }

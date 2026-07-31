@@ -1,0 +1,7 @@
+import { NextRequest, NextResponse } from "next/server";
+import { resourceSchema } from "@/features/resources/schemas/resource.schema";
+import { createResource, listResources } from "@/features/resources/services/resources.server";
+import { mapApiRouteError } from "@/lib/api/route-error";
+import { requireAuth, requirePermission } from "@/lib/server-auth";
+export async function GET(req: NextRequest) { try { const user = await requireAuth(req); requirePermission(user, "resources", "ver"); const status = req.nextUrl.searchParams.get("status") as "ACTIVO" | "MANTENIMIENTO" | "INACTIVO" | null; return NextResponse.json({ data: await listResources({ search: req.nextUrl.searchParams.get("search") ?? undefined, establishmentId: req.nextUrl.searchParams.get("establishmentId") ?? undefined, status: status ?? undefined }) }); } catch (error) { return mapApiRouteError(error, "No pudimos cargar los recursos."); } }
+export async function POST(req: NextRequest) { try { const user = await requireAuth(req); requirePermission(user, "resources", "crear"); const parsed = resourceSchema.safeParse(await req.json()); if (!parsed.success) return NextResponse.json({ message: "Revisá los datos.", details: parsed.error.flatten() }, { status: 400 }); return NextResponse.json({ data: await createResource(parsed.data) }, { status: 201 }); } catch (error) { return mapApiRouteError(error, "No pudimos crear el recurso."); } }

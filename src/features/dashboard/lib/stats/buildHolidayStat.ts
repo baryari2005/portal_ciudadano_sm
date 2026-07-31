@@ -21,7 +21,6 @@ export function buildHolidayStat({
     labelTop: "Próximo feriado",
     labelBottom: holidayLabelBottom,
     value: loadingHoliday ? 0 : (nextHoliday?.daysUntilNonWorking ?? 0),
-    iconName:
-      nextHoliday?.nonWorking?.type === "puente" ? "Palmtree" : "Gift",
+    iconName: nextHoliday?.nonWorking?.type === "puente" ? "Palmtree" : "Gift",
   };
 }

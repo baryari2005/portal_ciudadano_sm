@@ -20,7 +20,7 @@ export function useEditRole({ enabled }: UseEditRoleParams) {
   const rawId = params?.id;
   const id = useMemo(
     () => (Array.isArray(rawId) ? rawId[0] : rawId)?.toString() ?? "",
-    [rawId]
+    [rawId],
   );
 
   const [role, setRole] = useState<RoleUpdate | null>(null);
@@ -28,6 +28,8 @@ export function useEditRole({ enabled }: UseEditRoleParams) {
   const [selectedPermisos, setSelectedPermisos] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -40,10 +42,15 @@ export function useEditRole({ enabled }: UseEditRoleParams) {
     }
 
     const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+
       try {
         const [roleRes, permisosRes] = await Promise.all([
           axiosInstance.get(`/roles/${id}`),
-          axiosInstance.get("/permisos"),
+          axiosInstance.get("/permissions", {
+            params: { grouped: true },
+          }),
         ]);
 
         const roleData = roleRes.data.data;
@@ -57,26 +64,40 @@ export function useEditRole({ enabled }: UseEditRoleParams) {
         setActivo(Boolean(roleData.activo));
 
         const assignedIds = roleData.permisos.map(
-          (rp: { permiso: { id: number } }) => rp.permiso.id
+          (rp: { permiso: { id: number } }) => rp.permiso.id,
         );
 
         setSelectedPermisos(assignedIds);
       } catch (error) {
         console.error("Error cargando rol:", error);
+        setRole(null);
+        setPermisos([]);
+        setSelectedPermisos([]);
+        setError("No pudimos cargar el rol y los permisos disponibles.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [enabled, id]);
+  }, [enabled, id, reloadKey]);
 
   const togglePermiso = (permisoId: number) => {
     setSelectedPermisos((prev) =>
       prev.includes(permisoId)
         ? prev.filter((id) => id !== permisoId)
-        : [...prev, permisoId]
+        : [...prev, permisoId],
     );
+  };
+
+  const toggleAllPermisos = () => {
+    const allIds = permisos.flatMap((group) =>
+      group.permisos.map((permission) => permission.id),
+    );
+    const allSelected =
+      allIds.length > 0 &&
+      allIds.every((permissionId) => selectedPermisos.includes(permissionId));
+    setSelectedPermisos(allSelected ? [] : allIds);
   };
 
   const handleCancel = () => {
@@ -121,6 +142,7 @@ export function useEditRole({ enabled }: UseEditRoleParams) {
     selectedPermisos,
     loading,
     saving,
+    error,
     nombre,
     descripcion,
     activo,
@@ -128,7 +150,9 @@ export function useEditRole({ enabled }: UseEditRoleParams) {
     setDescripcion,
     setActivo,
     togglePermiso,
+    toggleAllPermisos,
     handleSave,
     handleCancel,
+    retry: () => setReloadKey((current) => current + 1),
   };
 }

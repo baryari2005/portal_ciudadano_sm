@@ -1,48 +1,130 @@
 "use client";
 
+import type { Dispatch, SetStateAction } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Bell, CalendarClock, Menu } from "lucide-react";
 
-import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { UserMenu } from "@/components/layout/user-menu";
-import { Logo } from "@/components/ui/logo";
+import { ExperienceBar } from "@/components/layout/ExperienceBar";
+import { useAuth } from "@/stores/auth";
+import { usePendingUsersAlert } from "./usePendingUsersAlert";
+import { useServerClock } from "./useServerClock";
 
-export function Topbar() {
+type TopbarProps = {
+  collapsed: boolean;
+  setCollapsed: Dispatch<SetStateAction<boolean>>;
+};
+
+export function Topbar({ collapsed, setCollapsed }: TopbarProps) {
+  const pathname = usePathname();
+  const serverClock = useServerClock();
+  const { notificationItems, totalActions } = usePendingUsersAlert();
+  const user = useAuth((state) => state.user);
+  const displayName =
+    [user?.nombre, user?.apellido].filter(Boolean).join(" ") ||
+    user?.userId ||
+    "Administrador";
+
   return (
-    <header
-      className="
-        h-[var(--topbar-h)] bg-white border-b
-        px-[var(--content-pad)]
-        w-full flex items-center justify-between
-      "
-    >
-      <div className="flex items-center gap-3">
-        <Logo />
+    <header className="flex h-[var(--topbar-h)] w-full flex-col border-l border-white/15 bg-primary text-white">
+      <div className="flex min-h-0 flex-1 items-center justify-between px-[var(--content-pad)]">
+      <div className="flex min-w-0 items-center gap-5">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-[60px] w-[60px] rounded-lg text-white hover:bg-[#ddef8f] hover:text-primary"
+          onClick={() => setCollapsed((value) => !value)}
+          aria-label={
+            collapsed ? "Mostrar iconos y texto" : "Mostrar solo iconos"
+          }
+          aria-pressed={collapsed}
+        >
+          <Menu className="!h-8 !w-8" />
+        </Button>
+
+        <div className="min-w-0 py-1">
+          <h1 className="truncate text-xl font-bold leading-6 text-white">
+            Portal ciudadano
+          </h1>
+          <div className="text-base  leading-5 text-[#ddef8f]">
+            <p className="truncate">Sistema de Ayuda</p>
+            <p className="truncate">y Actividades</p>
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center gap-3 w-full flex-1 justify-end">
-        <div className="flex items-center gap-2">
-          <Image
-            src="/coi.png"
-            alt="Centro de Ojos Ituzaingó"
-            width={30}
-            height={30}
-            className="rounded"
-            priority
-          /> 
-          <span className="font-medium text-right">
-            Centro de Ojos Ituzaingó S.A.
-          </span>
-          {/* <Image
-            src="/centrodeojos.png"
-            alt="Centro de Ojos Ituzaingó"
-            width={400}
-            height={50}
-            className="rounded"
-            priority
-          /> */}
+      <div className="flex items-center gap-3">
+        <div className="hidden min-w-0 text-right lg:block">
+          <p className="truncate text-sm font-bold text-white">
+            Hola, {displayName}
+          </p>
+          <div className="mt-0.5 flex items-center justify-end gap-2 text-xs font-semibold text-[#ddef8f]">
+            <CalendarClock className="h-4 w-4 shrink-0 text-[#ddef8f]" />
+            <span className="whitespace-nowrap">{serverClock.label}</span>
+          </div>
         </div>
+
+        <TooltipProvider delayDuration={150}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                asChild
+                variant="ghost"
+                size="icon"
+                className="relative h-11 w-11 rounded-lg bg-[#e9f3d8] text-primary hover:bg-[#ddef8f] hover:text-primary"
+              >
+                <Link
+                  href="/notifications"
+                  aria-label={
+                    totalActions > 0
+                      ? `${totalActions} notificaciones o acciones pendientes`
+                      : "Notificaciones"
+                  }
+                >
+                  <Bell className="h-5 w-5" />
+                  {totalActions > 0 ? (
+                    <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-primary bg-[#DDEF8F] px-1 text-[11px] font-extrabold leading-none text-primary">
+                      {totalActions > 9 ? "9+" : totalActions}
+                    </span>
+                  ) : null}
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent
+              align="end"
+              className="rounded-lg border border-[#C9D9C3] bg-white px-3 py-2 text-[#173C2A] shadow-lg"
+            >
+              <div className="grid gap-1">
+                <p className="text-xs font-extrabold uppercase tracking-normal text-[#003A22]">
+                  Notificaciones
+                </p>
+                {notificationItems.length > 0 ? (
+                  notificationItems.map((item) => (
+                    <p key={item.key} className="text-sm font-medium">
+                      {item.label}
+                    </p>
+                  ))
+                ) : (
+                  <p className="text-sm font-medium">Sin acciones pendientes</p>
+                )}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         <UserMenu />
       </div>
+      </div>
+      <ExperienceBar experience={pathname.startsWith("/access") ? "reception" : "administration"} />
     </header>
   );
 }

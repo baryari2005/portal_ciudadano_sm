@@ -6,7 +6,7 @@ import PdfUploader from "@/features/admin/components/PdfUploader";
 
 export default function AdminDocsPage() {
   const canAccess = useCan("recibos", "subir");
-  
+
   if (!canAccess) {
     return <AccessDenied403Page />;
   }

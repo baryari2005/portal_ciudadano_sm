@@ -22,7 +22,11 @@ export default function ChangePasswordClient() {
     newPassword: "",
     confirm: "",
   });
-  const [show, setShow] = useState({ current: false, next: false, confirm: false });
+  const [show, setShow] = useState({
+    current: false,
+    next: false,
+    confirm: false,
+  });
   const [loading, setLoading] = useState(false);
 
   const errors = useMemo(() => {
@@ -30,7 +34,11 @@ export default function ChangePasswordClient() {
     if (values.newPassword && values.newPassword.length < MIN_LEN) {
       e.new = `La nueva contraseña debe tener al menos ${MIN_LEN} caracteres.`;
     }
-    if (values.newPassword && values.currentPassword && values.newPassword === values.currentPassword) {
+    if (
+      values.newPassword &&
+      values.currentPassword &&
+      values.newPassword === values.currentPassword
+    ) {
       e.new = "La nueva contraseña no puede ser igual a la actual.";
     }
     if (values.confirm && values.confirm !== values.newPassword) {
@@ -61,9 +69,13 @@ export default function ChangePasswordClient() {
       router.replace("/");
     } catch (e: unknown) {
       const msg = isAxiosError(e)
-        ? e.response?.data?.message ?? e.response?.data?.error
+        ? (e.response?.data?.message ?? e.response?.data?.error)
         : undefined;
-      toast.error(Array.isArray(msg) ? msg.join(", ") : msg ?? "No se pudo actualizar la contraseña");
+      toast.error(
+        Array.isArray(msg)
+          ? msg.join(", ")
+          : (msg ?? "No se pudo actualizar la contraseña"),
+      );
     } finally {
       setLoading(false);
     }
@@ -97,18 +109,26 @@ export default function ChangePasswordClient() {
                 type={show.current ? "text" : "password"}
                 placeholder="Contraseña actual"
                 value={values.currentPassword}
-                onChange={(e) => setValues((s) => ({ ...s, currentPassword: e.target.value }))}
+                onChange={(e) =>
+                  setValues((s) => ({ ...s, currentPassword: e.target.value }))
+                }
                 onKeyDown={onEnter}
                 className="pr-10 h-11 rounded"
               />
               <button
                 type="button"
-                aria-label={show.current ? "Ocultar contraseña" : "Mostrar contraseña"}
+                aria-label={
+                  show.current ? "Ocultar contraseña" : "Mostrar contraseña"
+                }
                 onClick={() => setShow((s) => ({ ...s, current: !s.current }))}
                 className="absolute inset-y-0 right-2 my-auto h-8 w-8 grid place-items-center rounded hover:bg-muted/60"
                 tabIndex={-1}
               >
-                {show.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {show.current ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
@@ -121,24 +141,34 @@ export default function ChangePasswordClient() {
                 type={show.next ? "text" : "password"}
                 placeholder="Nueva contraseña"
                 value={values.newPassword}
-                onChange={(e) => setValues((s) => ({ ...s, newPassword: e.target.value }))}
+                onChange={(e) =>
+                  setValues((s) => ({ ...s, newPassword: e.target.value }))
+                }
                 onKeyDown={onEnter}
                 className="pr-10 h-11 rounded"
               />
               <button
                 type="button"
-                aria-label={show.next ? "Ocultar contraseña" : "Mostrar contraseña"}
+                aria-label={
+                  show.next ? "Ocultar contraseña" : "Mostrar contraseña"
+                }
                 onClick={() => setShow((s) => ({ ...s, next: !s.next }))}
                 className="absolute inset-y-0 right-2 my-auto h-8 w-8 grid place-items-center rounded hover:bg-muted/60"
                 tabIndex={-1}
               >
-                {show.next ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {show.next ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
             <p className="text-[11px] text-muted-foreground">
               Mínimo {MIN_LEN} caracteres.
             </p>
-            {errors.new && <p className="text-[11px] text-red-600">{errors.new}</p>}
+            {errors.new && (
+              <p className="text-[11px] text-red-600">{errors.new}</p>
+            )}
           </div>
 
           {/* Confirmación */}
@@ -149,21 +179,31 @@ export default function ChangePasswordClient() {
                 type={show.confirm ? "text" : "password"}
                 placeholder="Repetir nueva contraseña"
                 value={values.confirm}
-                onChange={(e) => setValues((s) => ({ ...s, confirm: e.target.value }))}
+                onChange={(e) =>
+                  setValues((s) => ({ ...s, confirm: e.target.value }))
+                }
                 onKeyDown={onEnter}
                 className="pr-10 h-11 rounded"
               />
               <button
                 type="button"
-                aria-label={show.confirm ? "Ocultar contraseña" : "Mostrar contraseña"}
+                aria-label={
+                  show.confirm ? "Ocultar contraseña" : "Mostrar contraseña"
+                }
                 onClick={() => setShow((s) => ({ ...s, confirm: !s.confirm }))}
                 className="absolute inset-y-0 right-2 my-auto h-8 w-8 grid place-items-center rounded hover:bg-muted/60 "
                 tabIndex={-1}
               >
-                {show.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {show.confirm ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
-            {errors.confirm && <p className="text-[11px] text-red-600">{errors.confirm}</p>}
+            {errors.confirm && (
+              <p className="text-[11px] text-red-600">{errors.confirm}</p>
+            )}
           </div>
 
           <div className="pt-2">

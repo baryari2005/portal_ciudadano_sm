@@ -10,6 +10,7 @@ type UpsertUserDto = {
   nombre?: string | null;
   apellido?: string | null;
   avatarUrl?: string | null;
+  fotoPerfilUrl?: string | null;
 
   tipoDocumento?: UserFormValues["tipoDocumento"] | null;
   documento?: string | null;
@@ -17,7 +18,16 @@ type UpsertUserDto = {
 
   celular?: string | null;
   domicilio?: string | null;
+  localidad?: string | null;
+  provincia?: string | null;
+  domicilioPlaceId?: string | null;
+  domicilioLat?: number | null;
+  domicilioLng?: number | null;
   codigoPostal?: string | null;
+  contactoEmergenciaNombre?: string | null;
+  contactoEmergenciaTelefono?: string | null;
+  coberturaMedicaId?: string | null;
+  numeroAfiliado?: string | null;
 
   fechaNacimiento?: string | null;
   genero?: UserFormValues["genero"] | null;
@@ -26,7 +36,9 @@ type UpsertUserDto = {
 };
 
 export async function listRoles(): Promise<Role[]> {
-  const { data } = await axiosInstance.get("/roles");
+  const { data } = await axiosInstance.get("/roles", {
+    params: { page: 1, pageSize: 100, activo: true, sortBy: "nombre", sortDir: "asc" },
+  });
   return data?.data ?? data ?? [];
 }
 
@@ -42,7 +54,7 @@ export async function createUser(dto: UpsertUserDto): Promise<UserDTO> {
 
 export async function updateUser(
   id: string,
-  dto: Partial<UpsertUserDto>
+  dto: Partial<UpsertUserDto>,
 ): Promise<UserDTO> {
   const { data } = await axiosInstance.patch(`/users/${id}`, dto);
   return data;

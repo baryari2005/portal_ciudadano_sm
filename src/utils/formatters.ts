@@ -12,11 +12,7 @@ export function capitalize(str: string): string {
  * Capitaliza la primera letra de cada palabra.
  */
 export function capitalizeEachWord(str: string): string {
-  return str
-    .toLowerCase()
-    .split(" ")
-    .map(capitalize)
-    .join(" ");
+  return str.toLowerCase().split(" ").map(capitalize).join(" ");
 }
 
 /**
@@ -65,7 +61,9 @@ export function formatApiMessage(path: string): string {
 
   for (const part of parts) {
     if (!isRecord(current) || !(part in current)) {
-      console.warn(`[formatMessage] Mensaje no encontrado para la ruta: ${path}`);
+      console.warn(
+        `[formatMessage] Mensaje no encontrado para la ruta: ${path}`,
+      );
       return path;
     }
 

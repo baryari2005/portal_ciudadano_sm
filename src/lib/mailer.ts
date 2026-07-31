@@ -18,12 +18,22 @@ const TEXT = "#2D3135";
 const MUTED = "#6B7280";
 const BORDER = "#E5E7EB";
 
-const transporter = nodemailer.createTransport({ host, port, secure, auth: { user, pass } });
+const transporter = nodemailer.createTransport({
+  host,
+  port,
+  secure,
+  auth: { user, pass },
+});
 
-function buildHtml(name: string | undefined, resetLink: string, withLogoCid: boolean) {
+function buildHtml(
+  name: string | undefined,
+  resetLink: string,
+  withLogoCid: boolean,
+) {
   const safeName = name ?? "👋";
-  const preheader = "Restablecé tu contraseña. Si no fuiste vos, ignorá este correo.";
-  
+  const preheader =
+    "Restablecé tu contraseña. Si no fuiste vos, ignorá este correo.";
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -57,10 +67,11 @@ function buildHtml(name: string | undefined, resetLink: string, withLogoCid: boo
               ${
                 BRAND_LOGO_URL
                   ? `<td style="vertical-align:middle;">
-                       ${withLogoCid
-                         ? `<img src="cid:brand-logo" alt="${BRAND_NAME}" width="44" height="44"
+                       ${
+                         withLogoCid
+                           ? `<img src="cid:brand-logo" alt="${BRAND_NAME}" width="44" height="44"
                                  style="display:block;border:0;outline:none;text-decoration:none;">`
-                         : `<img src="${BRAND_LOGO_URL}" alt="${BRAND_NAME}" width="44" height="44"
+                           : `<img src="${BRAND_LOGO_URL}" alt="${BRAND_NAME}" width="44" height="44"
                                  style="display:block;border:0;outline:none;text-decoration:none;">`
                        }
                      </td>
@@ -158,14 +169,18 @@ Si no solicitaste este cambio, ignorá este correo.
 ¿Ayuda? Escribinos a ${SUPPORT_EMAIL}.`;
 }
 
-export async function sendPasswordReset(to: string, resetLink: string, name?: string) {
+export async function sendPasswordReset(
+  to: string,
+  resetLink: string,
+  name?: string,
+) {
   const useCid = Boolean(BRAND_LOGO_URL); // si hay logo, lo incrustamos por CID
   const html = buildHtml(name, resetLink, useCid);
   const text = buildText(name, resetLink);
 
   await transporter.sendMail({
     to,
-    from,                            // igual que tu versión que funciona
+    from, // igual que tu versión que funciona
     subject: "Restablecer contraseña", // ASCII simple
     html,
     text,

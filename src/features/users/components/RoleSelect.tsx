@@ -1,6 +1,12 @@
 "use client";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils"; // si usás shadcn
 
 type Props = {
@@ -11,13 +17,19 @@ type Props = {
   triggerClassName?: string; // opcional
 };
 
-export function RoleSelect({ value, onChange, roles, disabled, triggerClassName }: Props) {
+export function RoleSelect({
+  value,
+  onChange,
+  roles,
+  disabled,
+  triggerClassName,
+}: Props) {
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger
         className={cn(
           "w-full h-11 rounded border px-3 text-sm", // ⬅️ igual que el Input
-          triggerClassName
+          triggerClassName,
         )}
       >
         <SelectValue placeholder="Seleccionar rol" />

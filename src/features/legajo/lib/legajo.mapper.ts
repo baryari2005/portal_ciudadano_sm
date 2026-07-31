@@ -47,8 +47,7 @@ function isEmploymentStatus(value: unknown): value is EmploymentStatus {
 
 function isContractType(value: unknown): value is ContractType {
   return (
-    typeof value === "string" &&
-    CONTRACT_TYPES.includes(value as ContractType)
+    typeof value === "string" && CONTRACT_TYPES.includes(value as ContractType)
   );
 }
 

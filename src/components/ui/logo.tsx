@@ -64,7 +64,7 @@ export function Logo({ size = "md", className }: LogoProps) {
         "w-full flex items-center justify-center cursor-pointer",
         config.container,
         config.gap,
-        className
+        className,
       )}
       onClick={() => router.push("/")}
     >

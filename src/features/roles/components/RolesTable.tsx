@@ -1,12 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
+import { ShieldPlus } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 import { getRoleColumns } from "@/features/roles/components/columns";
 import { useCan } from "@/hooks/useCan";
 import { GenericListWithTable } from "@/components/data-display/table/GenericListWithTable";
 import { GenericDataTable } from "@/components/data-display/table/GenericDataTable";
 import { Role, RolesListProps } from "../types/types";
-
 
 type RoleResponse = {
   data?: Role[];
@@ -14,17 +17,15 @@ type RoleResponse = {
     total?: number;
     pageCount?: number;
   };
-}
+};
 
 export function RolesList({ search = "", refresh }: RolesListProps) {
   const endPoint = "/roles";
 
   const canEdit = useCan("roles", "editar");
+  const canCreate = useCan("roles", "crear");
 
-  const columns = useMemo(
-    () => getRoleColumns(canEdit),
-    [canEdit]
-  );
+  const columns = useMemo(() => getRoleColumns(canEdit), [canEdit]);
 
   if (process.env.NODE_ENV !== "production") {
     console.log("[RolesList] endpoint →", endPoint);
@@ -53,6 +54,20 @@ export function RolesList({ search = "", refresh }: RolesListProps) {
           pageCount: typed.meta?.pageCount,
         };
       }}
+      toolbarActions={
+        canCreate ? (
+          <Button
+            asChild
+            size="lg"
+            className="h-12 rounded-xl bg-[#00522C] px-6 font-bold text-white shadow-sm hover:bg-[#003A22]"
+          >
+            <Link href="/roles/new">
+              <ShieldPlus className="h-4 w-4" />
+              Nuevo rol
+            </Link>
+          </Button>
+        ) : undefined
+      }
       DataTableComponent={(props) => (
         <GenericDataTable
           {...props}

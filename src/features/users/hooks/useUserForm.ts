@@ -13,23 +13,11 @@ import {
 import { normalize, pathFromPublicUrl } from "@/features/users/lib/utils";
 import { useRoles } from "@/features/users/hooks/useRoles";
 import { useAvatarStaging } from "@/features/users/hooks/useAvatarStaging";
-import {
-  createUser,
-  updateUser,
-} from "@/features/users/services/api.service";
+import { createUser, updateUser } from "@/features/users/services/api.service";
+import { toYmdLocal } from "@/features/users/lib/user-form.helpers";
 import { UserFormValues } from "../types/types";
 
 type Mode = "create" | "edit";
-
-function toYmdLocal(d?: Date | null): string | null {
-  if (!d) return null;
-
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-
-  return `${y}-${m}-${day}`;
-}
 
 function isDateValue(v: unknown): v is Date {
   return v instanceof Date && !Number.isNaN(v.getTime());
@@ -56,7 +44,16 @@ type UserPayload = {
   cuil: string | null;
   celular: string | null;
   domicilio: string | null;
+  localidad: string | null;
+  provincia: string | null;
+  domicilioPlaceId: string | null;
+  domicilioLat: number | null;
+  domicilioLng: number | null;
   codigoPostal: string | null;
+  contactoEmergenciaNombre: string | null;
+  contactoEmergenciaTelefono: string | null;
+  coberturaMedicaId: string | null;
+  numeroAfiliado: string | null;
 };
 
 export function useUserForm({
@@ -92,18 +89,27 @@ export function useUserForm({
       nombre: defaultValues?.nombre ?? "",
       apellido: defaultValues?.apellido ?? "",
       avatarUrl: defaultValues?.avatarUrl ?? "",
-      rolId: defaultValues?.rolId ?? defaultValues?.rol?.id ?? 1,
+      fotoPerfilUrl: defaultValues?.fotoPerfilUrl ?? "",
+      rolId: defaultValues?.rolId ?? defaultValues?.rol?.id ?? 0,
       tipoDocumento:
         (defaultValues?.tipoDocumento as UserFormValues["tipoDocumento"]) ??
-        undefined,
+        (mode === "create" ? "DNI" : undefined),
       documento: defaultValues?.documento ?? "",
       cuil: defaultValues?.cuil ?? "",
       celular: defaultValues?.celular ?? "",
       domicilio: defaultValues?.domicilio ?? "",
+      localidad: defaultValues?.localidad ?? "",
+      provincia: defaultValues?.provincia ?? "",
+      domicilioPlaceId: defaultValues?.domicilioPlaceId ?? null,
+      domicilioLat: defaultValues?.domicilioLat ?? null,
+      domicilioLng: defaultValues?.domicilioLng ?? null,
       codigoPostal: defaultValues?.codigoPostal ?? "",
+      contactoEmergenciaNombre: defaultValues?.contactoEmergenciaNombre ?? "",
+      contactoEmergenciaTelefono: defaultValues?.contactoEmergenciaTelefono ?? "",
+      coberturaMedicaId: defaultValues?.coberturaMedicaId ?? null,
+      numeroAfiliado: defaultValues?.numeroAfiliado ?? "",
       fechaNacimiento,
-      genero:
-        (defaultValues?.genero as UserFormValues["genero"]) ?? undefined,
+      genero: (defaultValues?.genero as UserFormValues["genero"]) ?? undefined,
       estadoCivil:
         (defaultValues?.estadoCivil as UserFormValues["estadoCivil"]) ??
         undefined,
@@ -111,7 +117,7 @@ export function useUserForm({
         (defaultValues?.nacionalidad as UserFormValues["nacionalidad"]) ??
         undefined,
     };
-  }, [defaultValues]);
+  }, [defaultValues, mode]);
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(schema) as Resolver<UserFormValues>,
@@ -125,9 +131,12 @@ export function useUserForm({
 
   const submitting = form.formState.isSubmitting;
   const { roles, loading: loadingRoles } = useRoles();
-  const { tmpPath, setTmpPath, commit } = useAvatarStaging();
+  const identityPhoto = useAvatarStaging();
+  const avatar = useAvatarStaging();
 
-  const oldAvatarPath = pathFromPublicUrl(defaultValues?.avatarUrl || undefined);
+  const oldProfilePhotoPath = pathFromPublicUrl(
+    defaultValues?.fotoPerfilUrl || undefined,
+  );
 
   const onSubmit = async (values: UserFormValues) => {
     try {
@@ -137,7 +146,7 @@ export function useUserForm({
         password: values.password,
         nombre: normalize(values.nombre),
         apellido: normalize(values.apellido),
-        rolId: Number(values.rolId) || 1,
+        rolId: Number(values.rolId),
         fechaNacimiento: values.fechaNacimiento ?? null,
         genero: values.genero ?? null,
         estadoCivil: values.estadoCivil ?? null,
@@ -147,10 +156,17 @@ export function useUserForm({
         cuil: toNullableString(values.cuil),
         celular: toNullableString(values.celular),
         domicilio: toNullableString(values.domicilio),
+        localidad: toNullableString(values.localidad),
+        provincia: toNullableString(values.provincia),
+        domicilioPlaceId: values.domicilioPlaceId ?? null,
+        domicilioLat: values.domicilioLat ?? null,
+        domicilioLng: values.domicilioLng ?? null,
         codigoPostal: toNullableString(values.codigoPostal),
+        contactoEmergenciaNombre: toNullableString(values.contactoEmergenciaNombre),
+        contactoEmergenciaTelefono: toNullableString(values.contactoEmergenciaTelefono),
+        coberturaMedicaId: values.coberturaMedicaId??null,
+        numeroAfiliado: toNullableString(values.numeroAfiliado),
       };
-
-      console.log(values);
 
       if (mode === "edit" && !payload.password?.trim()) {
         delete payload.password;
@@ -159,11 +175,17 @@ export function useUserForm({
       if (mode === "create") {
         const created = await createUser(payload);
 
-        if (tmpPath) {
+        if (identityPhoto.tmpPath) {
           try {
-            const r = await commit(`users/${created.id}`);
+            const r = await identityPhoto.commit(`identity-photos/${created.id}`);
+            await updateUser(created.id, { fotoPerfilUrl: r.publicUrl });
+          } catch {}
+        }
+        if (avatar.tmpPath) {
+          try {
+            const r = await avatar.commit(`users/${created.id}`);
             await updateUser(created.id, { avatarUrl: r.publicUrl });
-          } catch { }
+          } catch {}
         }
 
         toast.success("Usuario creado correctamente");
@@ -179,11 +201,17 @@ export function useUserForm({
 
       await updateUser(id, payload);
 
-      if (tmpPath) {
+      if (identityPhoto.tmpPath) {
         try {
-          const r = await commit(`users/${id}`, oldAvatarPath);
+          const r = await identityPhoto.commit(`identity-photos/${id}`, oldProfilePhotoPath);
+          await updateUser(id, { fotoPerfilUrl: r.publicUrl });
+        } catch {}
+      }
+      if (avatar.tmpPath) {
+        try {
+          const r = await avatar.commit(`users/${id}`);
           await updateUser(id, { avatarUrl: r.publicUrl });
-        } catch { }
+        } catch {}
       }
 
       toast.success("Usuario actualizado correctamente");
@@ -238,6 +266,9 @@ export function useUserForm({
     submitting,
     roles,
     loadingRoles,
-    setTmpPath: (p: string) => setTmpPath(p),
+    identityTmpPath: identityPhoto.tmpPath,
+    avatarTmpPath: avatar.tmpPath,
+    setIdentityTmpPath: identityPhoto.setTmpPath,
+    setAvatarTmpPath: avatar.setTmpPath,
   };
 }

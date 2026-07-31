@@ -1,0 +1,1 @@
+import{MedicalCoverageFormPage}from"@/features/medical-coverages/components/MedicalCoverageFormPage";export default async function Page({params}:{params:Promise<{id:string}>}){return <MedicalCoverageFormPage id={(await params).id}/>}

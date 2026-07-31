@@ -1,0 +1,9 @@
+import { NextRequest, NextResponse } from "next/server";
+import { saveActivityDraftSchema } from "@/features/activity-workflow/schemas/activity-draft.schema";
+import { deleteActivityDraft, getActivityDraft, saveActivityDraft } from "@/features/activity-workflow/services/activity-drafts.server";
+import { mapApiRouteError } from "@/lib/api/route-error";
+import { requireAuth, requirePermission } from "@/lib/server-auth";
+type Params = { params: Promise<{ id: string }> };
+export async function GET(req: NextRequest, { params }: Params) { try { const user = await requireAuth(req); requirePermission(user, "actividades", "ver"); const data = await getActivityDraft((await params).id); return data ? NextResponse.json({ data }) : NextResponse.json({ message: "Borrador no encontrado." }, { status: 404 }); } catch (error) { return mapApiRouteError(error, "No pudimos cargar el borrador."); } }
+export async function PATCH(req: NextRequest, { params }: Params) { try { const user = await requireAuth(req); requirePermission(user, "actividades", "editar"); const parsed = saveActivityDraftSchema.safeParse(await req.json()); if (!parsed.success) return NextResponse.json({ message: "Revisá los datos.", details: parsed.error.flatten() }, { status: 400 }); return NextResponse.json({ data: await saveActivityDraft((await params).id, user.id, parsed.data.payload, parsed.data.pasoActual) }); } catch (error) { return mapApiRouteError(error, "No pudimos guardar el borrador."); } }
+export async function DELETE(req: NextRequest, { params }: Params) { try { const user = await requireAuth(req), id=(await params).id, draft=await getActivityDraft(id); if(!draft)return NextResponse.json({message:"Borrador no encontrado."},{status:404});requirePermission(user,"actividades",draft.activityId?"editar":"crear");await deleteActivityDraft(id);return NextResponse.json({data:{deleted:true}});} catch (error) { return mapApiRouteError(error, "No pudimos descartar el borrador."); } }

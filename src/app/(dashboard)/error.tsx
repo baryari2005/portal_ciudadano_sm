@@ -8,7 +8,7 @@ export default function DashboardError() {
       code="404"
       title="Ups, algo falló"
       description="Ocurrió un error inesperado en el dashboard."
-      imageSrc="/robot-404.png"
+      imageSrc="/404.png"
       primaryAction={{ label: "Volver al inicio", href: "/" }}
     />
   );

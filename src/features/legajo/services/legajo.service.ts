@@ -60,8 +60,10 @@ export function mapLegajoError(error: unknown) {
     const issues = (error as { issues: { message?: string }[] }).issues;
     return {
       message:
-        issues.map((i) => i.message).filter(Boolean).join(", ") ||
-        "Error de validación",
+        issues
+          .map((i) => i.message)
+          .filter(Boolean)
+          .join(", ") || "Error de validación",
       status: 400,
     };
   }

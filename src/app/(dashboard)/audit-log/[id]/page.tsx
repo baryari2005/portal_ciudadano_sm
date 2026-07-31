@@ -1,0 +1,1 @@
+import{AuditLogEntryPage}from"@/features/audit-log/components/AuditLogEntryPage";export default async function Page({params}:{params:Promise<{id:string}>}){return <AuditLogEntryPage id={(await params).id}/>}

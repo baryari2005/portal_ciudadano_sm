@@ -4,6 +4,7 @@ type SortDir = "asc" | "desc";
 
 const sortWhitelist = new Set([
   "id",
+  "codigo",
   "nombre",
   "descripcion",
   "activo",
@@ -19,7 +20,7 @@ export function parseRoleListParams(url: string) {
 
   const pageSize = Math.min(
     100,
-    Math.max(1, parseInt(searchParams.get("pageSize") || "10", 10))
+    Math.max(1, parseInt(searchParams.get("pageSize") || "8", 10)),
   );
 
   const rawSortBy = searchParams.get("sortBy") || "";
@@ -30,26 +31,27 @@ export function parseRoleListParams(url: string) {
       ? "asc"
       : "desc";
 
-  return { q, page, pageSize, sortBy, sortDir };
+  const activeParam = searchParams.get("activo");
+  const activo =
+    activeParam === "true" ? true : activeParam === "false" ? false : undefined;
+
+  return { q, page, pageSize, sortBy, sortDir, activo };
 }
 
-export function buildRoleWhere(q: string): Prisma.RolWhereInput {
-  if (!q) return {};
-
+export function buildRoleWhere(
+  q: string,
+  activo?: boolean,
+): Prisma.RolWhereInput {
   return {
-    OR: [
-      {
-        nombre: {
-          contains: q,
-          mode: "insensitive",
-        },
-      },
-      {
-        descripcion: {
-          contains: q,
-          mode: "insensitive",
-        },
-      },
-    ],
+    ...(activo === undefined ? {} : { activo }),
+    ...(q
+      ? {
+          OR: [
+            { codigo: { contains: q, mode: "insensitive" as const } },
+            { nombre: { contains: q, mode: "insensitive" as const } },
+            { descripcion: { contains: q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
   };
 }

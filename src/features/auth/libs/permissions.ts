@@ -12,10 +12,7 @@ function isPermission(value: unknown): value is PermissionDTO {
 
   const record = value as Record<string, unknown>;
 
-  return (
-    typeof record.modulo === "string" &&
-    typeof record.accion === "string"
-  );
+  return typeof record.modulo === "string" && typeof record.accion === "string";
 }
 
 export function getPermissions(value: unknown): PermissionDTO[] {
@@ -29,7 +26,7 @@ export function getPermissions(value: unknown): PermissionDTO[] {
 export function hasPermission(
   permissions: PermissionDTO[],
   modulo: string,
-  accion: string
+  accion: string,
 ) {
   const moduloNormalized = normalize(modulo);
   const accionNormalized = normalize(accion);
@@ -37,15 +34,15 @@ export function hasPermission(
   return permissions.some(
     (permission) =>
       normalize(permission.modulo) === moduloNormalized &&
-      normalize(permission.accion) === accionNormalized
+      normalize(permission.accion) === accionNormalized,
   );
 }
 
 export function toPermissionKeys(
-  permissions: PermissionDTO[]
+  permissions: PermissionDTO[],
 ): PermissionKey[] {
   return permissions.map(
     (permission) =>
-      `${permission.modulo}:${permission.accion}` as PermissionKey
+      `${permission.modulo}:${permission.accion}` as PermissionKey,
   );
 }

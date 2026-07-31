@@ -16,7 +16,10 @@ export type UserDTO = {
   permisos: PermissionKey[];
 };
 
-export const can = (perms: PermissionKey[] | undefined, needed: PermissionKey | PermissionKey[]) => {
+export const can = (
+  perms: PermissionKey[] | undefined,
+  needed: PermissionKey | PermissionKey[],
+) => {
   if (!perms) return false;
   const list = Array.isArray(needed) ? needed : [needed];
   const set = new Set(perms);

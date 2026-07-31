@@ -26,21 +26,21 @@ export async function POST(req: NextRequest) {
     const result = await createOrUpdateImportedUser(dto, { setTemp });
 
     return NextResponse.json(
-      toImportUpsertResponse(result.user, result.legajo, result.tempPassword)
+      toImportUpsertResponse(result.user, result.legajo, result.tempPassword),
     );
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === "UNAUTHORIZED") {
         return NextResponse.json(
           { error: "unauthorized", message: "Unauthorized" },
-          { status: 401 }
+          { status: 401 },
         );
       }
 
       if (error.message === "FORBIDDEN") {
         return NextResponse.json(
           { error: "forbidden", message: "Forbidden" },
-          { status: 403 }
+          { status: 403 },
         );
       }
     }
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
           error: "validation_error",
           issues: mapped.issues,
         },
-        { status: mapped.status }
+        { status: mapped.status },
       );
     }
 
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         error: "bad_request",
         message: mapped.message,
       },
-      { status: mapped.status }
+      { status: mapped.status },
     );
   }
 }

@@ -1,0 +1,71 @@
+import type { LucideIcon } from "lucide-react";
+import {
+  Accessibility,
+  Activity,
+  Armchair,
+  BicepsFlexed,
+  BookOpen,
+  Brush,
+  CalendarDays,
+  CircleUserRound,
+  Drama,
+  Dumbbell,
+  Footprints,
+  Flower2,
+  Gamepad2,
+  GraduationCap,
+  HandHeart,
+  HeartPulse,
+  Music,
+  Music2,
+  Palette,
+  PersonStanding,
+  Puzzle,
+  School,
+  Shapes,
+  Smile,
+  Sparkles,
+  Stethoscope,
+  Trophy,
+  Users,
+  Volleyball,
+} from "lucide-react";
+
+export const CATEGORY_ICON_OPTIONS = [
+  { value: "dumbbell", label: "Deportes", icon: Dumbbell },
+  { value: "palette", label: "Cultura", icon: Palette },
+  { value: "book-open", label: "Educación", icon: BookOpen },
+  { value: "heart-pulse", label: "Salud", icon: HeartPulse },
+  { value: "smile", label: "Recreación", icon: Smile },
+  { value: "users", label: "Comunidad", icon: Users },
+  { value: "accessibility", label: "Inclusión", icon: Accessibility },
+  { value: "sparkles", label: "Destacada", icon: Sparkles },
+  { value: "activity", label: "Actividad", icon: Activity },
+  { value: "brush", label: "Arte", icon: Brush },
+  { value: "calendar-days", label: "Eventos", icon: CalendarDays },
+  { value: "circle-user-round", label: "Individual", icon: CircleUserRound },
+  { value: "drama", label: "Teatro", icon: Drama },
+  { value: "footprints", label: "Caminata", icon: Footprints },
+  { value: "gamepad-2", label: "Juegos", icon: Gamepad2 },
+  { value: "graduation-cap", label: "Formación", icon: GraduationCap },
+  { value: "hand-heart", label: "Solidaridad", icon: HandHeart },
+  { value: "music", label: "Música", icon: Music },
+  { value: "person-standing", label: "Bienestar", icon: PersonStanding },
+  { value: "puzzle", label: "Taller", icon: Puzzle },
+  { value: "school", label: "Escuela", icon: School },
+  { value: "trophy", label: "Competencia", icon: Trophy },
+  { value: "volleyball", label: "Deporte en equipo", icon: Volleyball },
+  { value: "stethoscope", label: "Salud y atención", icon: Stethoscope },
+  { value: "biceps-flexed", label: "Juventud", icon: BicepsFlexed },
+  { value: "armchair", label: "Adultos mayores", icon: Armchair },
+  { value: "music-2", label: "Baile", icon: Music2 },
+  { value: "flower-2", label: "Yoga", icon: Flower2 },
+] as const;
+
+const categoryIconMap = new Map<string, LucideIcon>(
+  CATEGORY_ICON_OPTIONS.map((option) => [option.value, option.icon]),
+);
+
+export function getCategoryIcon(value: string | null | undefined) {
+  return (value && categoryIconMap.get(value)) || Shapes;
+}

@@ -11,12 +11,14 @@ export function fmtShortDate(value?: Date | string | null) {
   return format(date, "dd/MM", { locale: es });
 }
 
-export function getDisplayName(user?: {
-  nombre?: string | null;
-  apellido?: string | null;
-  userId?: string | null;
-  email?: string | null;
-} | null) {
+export function getDisplayName(
+  user?: {
+    nombre?: string | null;
+    apellido?: string | null;
+    userId?: string | null;
+    email?: string | null;
+  } | null,
+) {
   const fullName = [user?.nombre, user?.apellido]
     .filter(Boolean)
     .join(" ")

@@ -13,9 +13,9 @@ async function main() {
 
   // 1) Rol admin (upsert)
   const adminRol = await prisma.rol.upsert({
-    where: { nombre: "admin" },
-    update: {},
-    create: { nombre: "admin" },
+    where: { codigo: "admin" },
+    update: { nombre: "Administrador" },
+    create: { codigo: "admin", nombre: "Administrador" },
   });
 
   // 2) Hashear password
@@ -44,7 +44,6 @@ async function main() {
   });
 
   //  await seedLeaveTypes(prisma);
-   
 
   console.log("✅ Seed OK");
   console.log("Rol admin:", adminRol);
@@ -64,4 +63,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

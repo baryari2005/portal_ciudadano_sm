@@ -49,15 +49,13 @@ function getSafeServerMe(value: unknown): ServerMeShape | null {
       const rolRecord = rawRol as Record<string, unknown>;
 
       rol = {
-        nombre:
-          typeof rolRecord.nombre === "string" ? rolRecord.nombre : null,
+        nombre: typeof rolRecord.nombre === "string" ? rolRecord.nombre : null,
       };
     }
 
     user = {
       id: typeof userRecord.id === "string" ? userRecord.id : null,
-      userId:
-        typeof userRecord.userId === "string" ? userRecord.userId : null,
+      userId: typeof userRecord.userId === "string" ? userRecord.userId : null,
       rol,
     };
   }
@@ -76,10 +74,7 @@ export async function POST(req: NextRequest) {
   const isAdmin = roleName === "admin" || roleName === "administrador";
 
   const meId =
-    safeMe?.user?.id ??
-    safeMe?.userId ??
-    safeMe?.user?.userId ??
-    null;
+    safeMe?.user?.id ?? safeMe?.userId ?? safeMe?.user?.userId ?? null;
 
   if (!isAdmin && !meId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -96,7 +91,7 @@ export async function POST(req: NextRequest) {
   if (!tmpPath) {
     return NextResponse.json(
       { error: "Faltan parámetros: tmpPath" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -117,7 +112,7 @@ export async function POST(req: NextRequest) {
 
   const supa = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
   console.log("[commit:A] { BUCKET, tmp, dest, oldNorm } =>", {
@@ -135,7 +130,10 @@ export async function POST(req: NextRequest) {
   }
 
   if (oldNorm && oldNorm !== dest) {
-    await supa.storage.from(BUCKET).remove([oldNorm]).catch(() => {});
+    await supa.storage
+      .from(BUCKET)
+      .remove([oldNorm])
+      .catch(() => {});
   }
 
   const { data } = supa.storage.from(BUCKET).getPublicUrl(dest);

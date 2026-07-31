@@ -1,10 +1,21 @@
-import { EstadoCivil, Genero, Nacionalidad, TipoDocumento } from "@prisma/client";
+import {
+  EstadoCivil,
+  Genero,
+  Nacionalidad,
+  TipoDocumento,
+} from "@prisma/client";
 import { z } from "zod";
+import { EMAIL_VALIDATION_MESSAGE, isValidEmail } from "@/lib/validation/email";
 
 export const importUpsertBodySchema = z.object({
   user: z.object({
     userId: z.string().trim().optional(),
-    email: z.string().email().optional(),
+    email: z
+      .string()
+      .optional()
+      .refine((value) => !value || isValidEmail(value), {
+        message: EMAIL_VALIDATION_MESSAGE,
+      }),
 
     nombre: z.string().optional().nullable(),
     apellido: z.string().optional().nullable(),
@@ -33,9 +44,17 @@ export const importUpsertBodySchema = z.object({
       employeeNumber: z.number().int().positive().optional().nullable(),
       admissionDate: z.string().optional().nullable(),
       terminationDate: z.string().optional().nullable(),
-      employmentStatus: z.enum(["ACTIVO", "SUSPENDIDO", "LICENCIA", "BAJA"]).optional(),
+      employmentStatus: z
+        .enum(["ACTIVO", "SUSPENDIDO", "LICENCIA", "BAJA"])
+        .optional(),
       contractType: z
-        .enum(["INDETERMINADO", "PLAZO_FIJO", "TEMPORAL", "PASANTIA", "MONOTRIBUTO"])
+        .enum([
+          "INDETERMINADO",
+          "PLAZO_FIJO",
+          "TEMPORAL",
+          "PASANTIA",
+          "MONOTRIBUTO",
+        ])
         .optional()
         .nullable(),
       position: z.string().optional().nullable(),

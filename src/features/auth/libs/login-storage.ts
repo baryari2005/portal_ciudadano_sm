@@ -29,7 +29,8 @@ export function readDraft(fallback: LoginDraft = {}): LoginDraft {
     }
 
     return {
-      userId: typeof parsed.userId === "string" ? parsed.userId : fallback.userId,
+      userId:
+        typeof parsed.userId === "string" ? parsed.userId : fallback.userId,
     };
   } catch {
     return fallback;
@@ -46,7 +47,7 @@ export function writeDraft(vals: LoginDraft) {
       STORAGE_KEY,
       JSON.stringify({
         userId: typeof vals.userId === "string" ? vals.userId : "",
-      })
+      }),
     );
   } catch {}
 }

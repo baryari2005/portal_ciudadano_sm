@@ -10,6 +10,6 @@ type SP = Promise<Record<string, string | string[] | undefined>>;
 export default async function Page({ searchParams }: { searchParams?: SP }) {
   const sp = (await searchParams) ?? {};
   const raw = sp.token;
-  const token = Array.isArray(raw) ? raw[0] : raw ?? "";
+  const token = Array.isArray(raw) ? raw[0] : (raw ?? "");
   return <ResetPasswordGate token={token} />;
 }

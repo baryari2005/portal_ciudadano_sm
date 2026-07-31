@@ -10,7 +10,7 @@ import { UserWithRole } from "../lib/user.mapper";
 class HttpError extends Error {
   constructor(
     message: string,
-    public status: number
+    public status: number,
   ) {
     super(message);
     this.name = "HttpError";
@@ -23,10 +23,13 @@ export async function listUsers(params: {
   pageSize: number;
   sortBy: string;
   sortDir: "asc" | "desc";
+  estado?: string;
+  rolId?: string;
+  scope?: "all" | "citizen" | "personnel";
 }) {
-  const { q, page, pageSize, sortBy, sortDir } = params;
+  const { q, page, pageSize, sortBy, sortDir, estado, rolId, scope } = params;
 
-  const where = buildUserWhere(q);
+  const where = buildUserWhere(q, estado, rolId, scope);
 
   const total = await prisma.usuario.count({ where });
 
@@ -67,10 +70,7 @@ export async function createOrReviveUser(dto: CreateUserDto) {
           ? "userId"
           : "usuario";
 
-    throw new HttpError(
-      `Ya existe un ${field} activo con ese valor.`,
-      409
-    );
+    throw new HttpError(`Ya existe un ${field} activo con ese valor.`, 409);
   }
 
   const soft = await prisma.usuario.findFirst({
@@ -86,10 +86,13 @@ export async function createOrReviveUser(dto: CreateUserDto) {
     email,
     password: passwordHash,
     rolId: dto.rolId,
+    estado: "ACTIVO" as const,
+    perfilCompleto: true,
 
     nombre: dto.nombre ?? null,
     apellido: dto.apellido ?? null,
     avatarUrl: dto.avatarUrl ?? null,
+    fotoPerfilUrl: dto.fotoPerfilUrl ?? null,
 
     tipoDocumento: dto.tipoDocumento ?? null,
     documento: dto.documento ?? null,
@@ -97,7 +100,16 @@ export async function createOrReviveUser(dto: CreateUserDto) {
 
     celular: dto.celular ?? null,
     domicilio: dto.domicilio ?? null,
+    localidad: dto.localidad ?? null,
+    provincia: dto.provincia ?? null,
+    domicilioPlaceId: dto.domicilioPlaceId ?? null,
+    domicilioLat: dto.domicilioLat ?? null,
+    domicilioLng: dto.domicilioLng ?? null,
     codigoPostal: dto.codigoPostal ?? null,
+    contactoEmergenciaNombre: dto.contactoEmergenciaNombre ?? null,
+    contactoEmergenciaTelefono: dto.contactoEmergenciaTelefono ?? null,
+    coberturaMedicaId: dto.coberturaMedicaId ?? null,
+    numeroAfiliado: dto.numeroAfiliado ?? null,
 
     fechaNacimiento: dto.fechaNacimiento ?? null,
     genero: dto.genero ?? null,
@@ -131,7 +143,10 @@ export function handleUserError(err: unknown) {
     };
   }
 
-  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+  if (
+    err instanceof Prisma.PrismaClientKnownRequestError &&
+    err.code === "P2002"
+  ) {
     return {
       message: "Ya existe un usuario con ese email/documento/cuil/userId.",
       status: 409,
@@ -143,7 +158,7 @@ export function handleUserError(err: unknown) {
       message: err.message || "Error de validación",
       status: err.status,
     };
-  }  
+  }
 
   return {
     message: "Error creando usuario",

@@ -2,9 +2,11 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
 export type CreateRoleInput = {
+  codigo: string;
   nombre: string;
   descripcion?: string | null;
   activo?: boolean;
+  permisoIds?: number[];
 };
 
 export type UpdateRoleInput = {
@@ -54,12 +56,20 @@ export async function getRoleById(id: number) {
 }
 
 export async function createRole(data: CreateRoleInput) {
-  return prisma.rol.create({
-    data: {
-      nombre: data.nombre,
-      descripcion: data.descripcion ?? null,
-      activo: data.activo ?? true,
-    },
+  return prisma.$transaction(async (tx) => {
+    const [role] = await tx.$queryRaw<Array<{ id: number; codigo: string; nombre: string; descripcion: string | null; activo: boolean; createdAt: Date; updatedAt: Date }>>(Prisma.sql`
+      INSERT INTO "Rol" ("codigo", "nombre", "descripcion", "activo", "createdAt", "updatedAt")
+      VALUES (${data.codigo}, ${data.nombre}, ${data.descripcion ?? null}, ${data.activo ?? true}, NOW(), NOW())
+      RETURNING "id", "codigo", "nombre", "descripcion", "activo", "createdAt", "updatedAt"
+    `);
+
+    if (data.permisoIds?.length) {
+      await tx.rolPermiso.createMany({
+        data: data.permisoIds.map((permisoId) => ({ rolId: role.id, permisoId })),
+      });
+    }
+
+    return role;
   });
 }
 
@@ -76,10 +86,7 @@ export async function updateRole(id: number, data: UpdateRoleInput) {
   });
 }
 
-export async function setRolePermissions(
-  roleId: number,
-  permisoIds: number[]
-) {
+export async function setRolePermissions(roleId: number, permisoIds: number[]) {
   return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     await tx.rolPermiso.deleteMany({
       where: { rolId: roleId },

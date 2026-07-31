@@ -1,0 +1,25 @@
+"use client";
+
+import { BriefcaseBusiness, GraduationCap, ScanLine, UserRound } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export type ExperienceKind = "administration" | "reception" | "teacher" | "citizen";
+
+const meta = {
+  administration: { label: "Portal Ciudadano - Más San Miguel - Experiencia Administrativa", icon: BriefcaseBusiness },
+  reception: { label: "Experiencia de recepción", icon: ScanLine },
+  teacher: { label: "Experiencia docente", icon: GraduationCap },
+  citizen: { label: "Experiencia ciudadana", icon: UserRound },
+} as const;
+
+export function ExperienceBar({ experience, className }: { experience: ExperienceKind; className?: string }) {
+  const { label, icon: Icon } = meta[experience];
+  return (
+    <div className={cn("relative h-7 shrink-0 overflow-hidden border-t border-white/15 bg-[#163D2A] px-[var(--content-pad,24px)] text-[#DDEF8F]", className)}>
+      <span className="experience-bar-track absolute inset-y-0 left-[var(--content-pad,24px)] inline-flex w-max items-center gap-2 text-xs font-bold uppercase tracking-[0.08em]">
+        <Icon className="size-3.5" />
+        {label}
+      </span>
+    </div>
+  );
+}

@@ -39,9 +39,7 @@ type PersonnelFileDTO = {
   notes?: string | null;
 };
 
-type UpsertPersonnelFilePayload = Parameters<
-  typeof upsertUserPersonnelFile
->[1];
+type UpsertPersonnelFilePayload = Parameters<typeof upsertUserPersonnelFile>[1];
 
 export default function UserLegajoPage() {
   const { id } = useParams<{ id: string }>();
@@ -55,22 +53,22 @@ export default function UserLegajoPage() {
 }
 
 function normalizePersonnelFile(
-  pf: PersonnelFileDTO | null | undefined
+  pf: PersonnelFileDTO | null | undefined,
 ): Partial<LegajoValues> {
   const isEmployment = (
-    value: unknown
+    value: unknown,
   ): value is LegajoValues["employmentStatus"] =>
     typeof value === "string" &&
     (EMPLOYMENT_STATUS as readonly string[]).includes(value);
 
   const isContract = (
-    value: unknown
+    value: unknown,
   ): value is NonNullable<LegajoValues["contractType"]> =>
     typeof value === "string" &&
     (CONTRACT_TYPES as readonly string[]).includes(value);
 
   const parseEmployeeNumber = (
-    value: string | null | undefined
+    value: string | null | undefined,
   ): number | null | undefined => {
     if (value === null) return null;
     if (value === undefined || value === "") return undefined;
@@ -86,9 +84,7 @@ function normalizePersonnelFile(
     employmentStatus: isEmployment(pf?.employmentStatus)
       ? pf.employmentStatus
       : "ACTIVO",
-    contractType: isContract(pf?.contractType)
-      ? pf.contractType
-      : undefined,
+    contractType: isContract(pf?.contractType) ? pf.contractType : undefined,
     position: pf?.position ?? "",
     area: pf?.area ?? "",
     department: pf?.department ?? "",
@@ -121,7 +117,7 @@ function LegajoContent({ id }: { id: string }) {
         setUserName(
           [u?.firstName, u?.lastName].filter(Boolean).join(" ") ||
             u?.userId ||
-            ""
+            "",
         );
 
         const personnelFile = f as PersonnelFileDTO | null | undefined;
@@ -168,7 +164,7 @@ function LegajoContent({ id }: { id: string }) {
             onSubmit={async (values) => {
               await upsertUserPersonnelFile(
                 id,
-                values as UpsertPersonnelFilePayload
+                values as UpsertPersonnelFilePayload,
               );
               toast.success("Guardado");
             }}

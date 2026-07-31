@@ -9,6 +9,8 @@ import { IdleLogoutModal } from "@/features/auth/components/IdleLogoutModal";
 import { Sidebar } from "@/components/layout/dashboard-sidebar/Sidebar";
 import { Menu } from "lucide-react";
 import { Topbar } from "@/components/layout/dashboard-topbar/Topbar";
+import { WorkspaceGuard } from "@/features/auth/components/WorkspaceGuard";
+import { usePathname } from "next/navigation";
 
 type Props = {
   children: ReactNode;
@@ -21,6 +23,7 @@ type DashboardLayoutStyle = CSSProperties & {
 };
 
 export default function DashboardRootLayout({ children }: Props) {
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -40,9 +43,9 @@ export default function DashboardRootLayout({ children }: Props) {
   const idle = useIdleLogout(logout);
 
   const layoutStyle: DashboardLayoutStyle = {
-    "--sidebar-w": collapsed ? "72px" : "240px",
-    "--topbar-h": "84px",
-    "--content-pad": "20px",
+    "--sidebar-w": collapsed ? "84px" : "274px",
+    "--topbar-h": "116px",
+    "--content-pad": "24px",
     gridTemplateColumns: "var(--sidebar-w) 1fr",
     gridTemplateRows: "var(--topbar-h) 1fr",
   };
@@ -50,28 +53,29 @@ export default function DashboardRootLayout({ children }: Props) {
   return (
     <RequireAuth>
       <MustChangePasswordGate>
+        <WorkspaceGuard workspace={pathname.startsWith("/access") || pathname === "/validar-qr" || pathname === "/busqueda-manual" ? "access" : "administration"}>
         <div className="lg:hidden fixed bottom-4 right-4 z-50">
           <button
             onClick={() => setCollapsed(false)}
-            className="bg-[#008C93] text-white p-3 rounded-full shadow-lg"
+            className="bg-primary text-primary-foreground p-3 rounded-full shadow-lg"
           >
             <Menu />
           </button>
         </div>
 
         <div
-          className="min-h-screen grid bg-muted/30 transition-all duration-300"
+          className="grid h-[100dvh] min-h-0 overflow-hidden bg-[#FBFBFB] transition-all duration-300"
           style={layoutStyle}
         >
-          <aside className="row-[1/3] col-[1/2] lg:relative fixed z-40">
-            <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+          <aside className="fixed inset-y-0 left-0 z-40 h-[100dvh] min-h-0 w-[var(--sidebar-w)] overflow-hidden transition-[width] duration-300">
+            <Sidebar collapsed={collapsed} />
           </aside>
 
-          <header className="col-[2/3] row-[1/2] sticky top-0 z-30 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <Topbar />
+          <header className="col-[2/3] row-[1/2] sticky top-0 z-30">
+            <Topbar collapsed={collapsed} setCollapsed={setCollapsed} />
           </header>
 
-          <main className="col-[2/3] row-[2/3] min-w-0 transition-all duration-300">
+          <main className="col-[2/3] row-[2/3] min-h-0 min-w-0 overflow-y-auto overscroll-contain transition-all duration-300">
             <div className="p-[var(--content-pad)]">{children}</div>
           </main>
         </div>
@@ -82,6 +86,7 @@ export default function DashboardRootLayout({ children }: Props) {
           onContinue={idle.continueSession}
           onLogout={idle.logoutNow}
         />
+        </WorkspaceGuard>
       </MustChangePasswordGate>
     </RequireAuth>
   );

@@ -1,0 +1,6 @@
+import { NextRequest, NextResponse } from "next/server";
+import { accessFiltersSchema } from "@/features/access/schemas/access.schema";
+import { getAccessHome, listAccessRecords, listActiveEstablishments } from "@/features/access/services/access.server";
+import { mapApiRouteError } from "@/lib/api/route-error";
+import { requireAuth, requirePermission } from "@/lib/server-auth";
+export async function GET(req: NextRequest) { try { const user = await requireAuth(req); requirePermission(user, "access", "ver"); const establishmentId = req.nextUrl.searchParams.get("establishmentId"); if (req.nextUrl.searchParams.get("view") === "options") return NextResponse.json({ data: await listActiveEstablishments() }); if (req.nextUrl.searchParams.get("view") === "home") { if (!establishmentId) return NextResponse.json({ message: "Seleccioná un establecimiento." }, { status: 400 }); return NextResponse.json({ data: await getAccessHome(establishmentId) }); } const parsed = accessFiltersSchema.safeParse(Object.fromEntries(req.nextUrl.searchParams)); if (!parsed.success) return NextResponse.json({ message: "Filtros inválidos", details: parsed.error.flatten() }, { status: 400 }); return NextResponse.json({ data: await listAccessRecords(parsed.data) }); } catch (error) { return mapApiRouteError(error, "No pudimos cargar los accesos."); } }

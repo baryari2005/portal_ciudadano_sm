@@ -16,7 +16,7 @@ function normalizeTrimmedNullable(v: unknown) {
 export async function getUserByIdOrThrow(id: string) {
   const user = await prisma.usuario.findUnique({
     where: { id },
-    include: { rol: true },
+    include: { rol: true, coberturaMedica: true },
   });
 
   if (!user || user.deletedAt) {
@@ -44,6 +44,8 @@ export async function updateUserById(id: string, dto: PatchUserDto) {
   if ("userId" in dto) data.userId = dto.userId?.trim();
   if ("email" in dto) data.email = dto.email?.toLowerCase().trim();
   if ("rolId" in dto) data.rolId = dto.rolId;
+  if ("estado" in dto) data.estado = dto.estado;
+  if ("perfilCompleto" in dto) data.perfilCompleto = dto.perfilCompleto;
   if ("password" in dto && dto.password) {
     data.password = await bcrypt.hash(dto.password, 12);
   }
@@ -51,9 +53,19 @@ export async function updateUserById(id: string, dto: PatchUserDto) {
   if ("nombre" in dto) data.nombre = normalizeTrimmedNullable(dto.nombre);
   if ("apellido" in dto) data.apellido = normalizeTrimmedNullable(dto.apellido);
   if ("avatarUrl" in dto) data.avatarUrl = toNull(dto.avatarUrl);
+  if ("fotoPerfilUrl" in dto) data.fotoPerfilUrl = toNull(dto.fotoPerfilUrl);
   if ("celular" in dto) data.celular = toNull(dto.celular);
   if ("domicilio" in dto) data.domicilio = toNull(dto.domicilio);
+  if ("localidad" in dto) data.localidad = toNull(dto.localidad);
+  if ("provincia" in dto) data.provincia = toNull(dto.provincia);
+  if ("domicilioPlaceId" in dto) data.domicilioPlaceId = toNull(dto.domicilioPlaceId);
+  if ("domicilioLat" in dto) data.domicilioLat = dto.domicilioLat ?? null;
+  if ("domicilioLng" in dto) data.domicilioLng = dto.domicilioLng ?? null;
   if ("codigoPostal" in dto) data.codigoPostal = toNull(dto.codigoPostal);
+  if ("contactoEmergenciaNombre" in dto) data.contactoEmergenciaNombre = toNull(dto.contactoEmergenciaNombre);
+  if ("contactoEmergenciaTelefono" in dto) data.contactoEmergenciaTelefono = toNull(dto.contactoEmergenciaTelefono);
+  if ("coberturaMedicaId" in dto) data.coberturaMedicaId = dto.coberturaMedicaId??null;
+  if ("numeroAfiliado" in dto) data.numeroAfiliado = toNull(dto.numeroAfiliado);
 
   if ("tipoDocumento" in dto) data.tipoDocumento = dto.tipoDocumento ?? null;
   if ("documento" in dto) data.documento = toNull(dto.documento);
@@ -70,7 +82,7 @@ export async function updateUserById(id: string, dto: PatchUserDto) {
   const updated = await prisma.usuario.update({
     where: { id },
     data,
-    include: { rol: true },
+    include: { rol: true, coberturaMedica: true },
   });
 
   return updated;
@@ -103,7 +115,8 @@ export function mapUserDetailError(error: unknown) {
     let message = "Existe otro registro con ese valor.";
     if (target.includes("email")) message = "El email ya está registrado.";
     if (target.includes("userId")) message = "El usuario (userId) ya existe.";
-    if (target.includes("documento")) message = "El documento ya está registrado.";
+    if (target.includes("documento"))
+      message = "El documento ya está registrado.";
     if (target.includes("cuil")) message = "El CUIL ya está registrado.";
 
     return { message, status: 409 };
@@ -117,7 +130,11 @@ export function mapUserDetailError(error: unknown) {
   ) {
     const issues = (error as { issues: { message?: string }[] }).issues;
     return {
-      message: issues.map((i) => i.message).filter(Boolean).join(", ") || "Bad Request",
+      message:
+        issues
+          .map((i) => i.message)
+          .filter(Boolean)
+          .join(", ") || "Bad Request",
       status: 400,
     };
   }
@@ -135,8 +152,7 @@ export function mapUserDetailError(error: unknown) {
   }
 
   return {
-    message:
-      error instanceof Error ? error.message : "Bad Request",
+    message: error instanceof Error ? error.message : "Bad Request",
     status: 400,
   };
 }

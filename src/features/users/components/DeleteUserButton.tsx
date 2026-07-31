@@ -5,8 +5,14 @@ import { useState } from "react";
 import { axiosInstance } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
@@ -44,7 +50,8 @@ export function DeleteUserButton({
         <AlertDialogHeader>
           <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción no se puede deshacer. Se eliminará el usuario de forma permanente.
+            Esta acción no se puede deshacer. Se eliminará el usuario de forma
+            permanente.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

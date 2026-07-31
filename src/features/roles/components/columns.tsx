@@ -27,9 +27,7 @@ export function getRoleColumns(canEdit: boolean): ColumnDef<Role>[] {
     {
       accessorKey: "activo",
       header: "Estado",
-      cell: ({ row }) => (
-        <RoleStatusBadge activo={row.original.activo} />
-      ),
+      cell: ({ row }) => <RoleStatusBadge activo={row.original.activo} />,
     },
     {
       id: "permisos",

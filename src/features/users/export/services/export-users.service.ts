@@ -1,6 +1,9 @@
 import * as XLSX from "xlsx";
 import { prisma } from "@/lib/db";
-import type { ExportUsersResult, UserWithLegajo } from "../types/export-users.types";
+import type {
+  ExportUsersResult,
+  UserWithLegajo,
+} from "../types/export-users.types";
 import { toLegajoExportRow, toUserExportRow } from "../lib/export-users.mapper";
 import { buildExportFilename } from "../lib/export-users.format";
 

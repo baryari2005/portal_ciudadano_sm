@@ -6,4 +6,4 @@ export const ESTADO_CIVIL_OPCIONES = [
   "UNION_CONVIVENCIAL", // 👈 correcto
   "OTRO",
 ] as const;
-export type EstadoCivil = typeof ESTADO_CIVIL_OPCIONES[number];
+export type EstadoCivil = (typeof ESTADO_CIVIL_OPCIONES)[number];

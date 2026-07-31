@@ -6,6 +6,8 @@ import { mapRoleRouteError } from "@/features/roles/lib/role.errors";
 import { parseRoleListParams } from "@/features/roles/lib/role.filters";
 import { listRoles } from "@/features/roles/services/role.service";
 import { toRoleListItem } from "@/features/roles/lib/role.mapper";
+import { createAuditLog } from "@/features/audit-log/services/audit-log.server";
+import { getAuditRequestContext } from "@/features/audit-log/helpers/audit-log.helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,11 +36,12 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid payload", details: parsed.error.flatten() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const role = await createRole(parsed.data);
+    await createAuditLog({actorId:user.id,action:"CREAR",entityType:"ROL",entityId:String(role.id),entityName:role.nombre,origin:"ADMINISTRACION",requestContext:getAuditRequestContext(req.headers)});
 
     return NextResponse.json({ data: role }, { status: 201 });
   } catch (error) {

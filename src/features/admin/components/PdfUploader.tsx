@@ -67,7 +67,7 @@ export default function PdfUploader({
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [period, setPeriod] = useState<string>(
-    new Date().toISOString().slice(0, 7)
+    new Date().toISOString().slice(0, 7),
   );
   const [stats, setStats] = useState<SplitStats | null>(null);
   const [receiptType, setReceiptType] = useState<ReceiptType>("SALARIO");
@@ -142,7 +142,7 @@ export default function PdfUploader({
 
       const uploadTxt = await res.text();
       const uploadData = parseJson<UploadedFileResponse & ErrorResponse>(
-        uploadTxt
+        uploadTxt,
       );
 
       if (!res.ok) {
@@ -186,7 +186,7 @@ export default function PdfUploader({
 
       toast.success(
         `OK: CUIL detectados ${splitData.uniqueCuils}, subidos ${splitData.uploaded} (en ${Math.round(splitData.durationMs)} ms).`,
-        { id: splitMsg }
+        { id: splitMsg },
       );
 
       setFile(null);
@@ -272,7 +272,7 @@ export default function PdfUploader({
                 "rounded-xl border border-dashed p-4 transition-colors",
                 isDragging
                   ? "border-[#008C93] bg-[#008C93]/5"
-                  : "border-slate-300 bg-slate-50"
+                  : "border-slate-300 bg-slate-50",
               )}
             >
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -340,7 +340,10 @@ export default function PdfUploader({
               <Stat label="Archivos subidos" value={stats.uploaded} />
               <Stat label="Duplicados (CUIL)" value={stats.duplicates.count} />
               <Stat label="Paginas sin CUIL" value={stats.unmatched.count} />
-              <Stat label="Tiempo" value={`${Math.round(stats.durationMs)} ms`} />
+              <Stat
+                label="Tiempo"
+                value={`${Math.round(stats.durationMs)} ms`}
+              />
             </div>
 
             {stats.duplicates.count > 0 && (
@@ -357,8 +360,9 @@ export default function PdfUploader({
             )}
 
             <div className="text-xs text-muted-foreground">
-              Carpeta destino: <span className="font-mono">{stats.prefixPath}</span>{" "}
-              (bucket: <span className="font-mono">{stats.bucket}</span>)
+              Carpeta destino:{" "}
+              <span className="font-mono">{stats.prefixPath}</span> (bucket:{" "}
+              <span className="font-mono">{stats.bucket}</span>)
             </div>
           </CardContent>
         </Card>
@@ -367,13 +371,7 @@ export default function PdfUploader({
   );
 }
 
-function Stat({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | number;
-}) {
+function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded border p-3">
       <div className="text-xs text-muted-foreground">{label}</div>

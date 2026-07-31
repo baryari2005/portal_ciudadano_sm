@@ -4,7 +4,7 @@ import { toYMD } from "./import-upsert.normalize";
 export function toImportUpsertResponse(
   user: Usuario,
   savedLegajo: Legajo | null,
-  tempPassword?: string
+  tempPassword?: string,
 ) {
   return {
     user: {
@@ -20,8 +20,12 @@ export function toImportUpsertResponse(
       ? {
           id: savedLegajo.id,
           employeeNumber: savedLegajo.numeroLegajo,
-          admissionDate: savedLegajo.fechaIngreso ? toYMD(savedLegajo.fechaIngreso) : null,
-          terminationDate: savedLegajo.fechaEgreso ? toYMD(savedLegajo.fechaEgreso) : null,
+          admissionDate: savedLegajo.fechaIngreso
+            ? toYMD(savedLegajo.fechaIngreso)
+            : null,
+          terminationDate: savedLegajo.fechaEgreso
+            ? toYMD(savedLegajo.fechaEgreso)
+            : null,
           estadoLaboral: savedLegajo.estadoLaboral,
           tipoContrato: savedLegajo.tipoContrato,
           matriculaProvincial: savedLegajo.matriculaProvincial ?? null,

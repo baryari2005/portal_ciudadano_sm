@@ -1,17 +1,17 @@
 import { prisma } from "@/lib/db";
 import { buildRoleWhere } from "../lib/role.filters";
 
-
 export async function listRoles(params: {
   q: string;
   page: number;
   pageSize: number;
   sortBy: string;
   sortDir: "asc" | "desc";
+  activo?: boolean;
 }) {
-  const { q, page, pageSize, sortBy, sortDir } = params;
+  const { q, page, pageSize, sortBy, sortDir, activo } = params;
 
-  const where = buildRoleWhere(q);
+  const where = buildRoleWhere(q, activo);
 
   const total = await prisma.rol.count({ where });
 

@@ -20,7 +20,8 @@ import { loginSchema } from "../schemas/schemas";
 export type Values = z.infer<typeof loginSchema>;
 
 export function useLogin() {
-  const { login, triedMe, token, user, loading, hasHydrated, fetchMe } = useAuth();
+  const { login, triedMe, token, user, loading, hasHydrated, fetchMe } =
+    useAuth();
 
   const [mounted, setMounted] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -114,13 +115,13 @@ export function useLogin() {
     clearTopError();
 
     try {
-      const ok = await login({
+      const result = await login({
         userId: values.userId,
         password: values.password,
       });
 
-      if (!ok) {
-        const message = messages.errors.loginError;
+      if (!result.ok) {
+        const message = result.message || messages.errors.loginError;
         setAuthError(message);
         writeTopError(message);
         return;

@@ -16,11 +16,20 @@ export async function POST(req: NextRequest) {
   const roleId = me?.user?.rol?.id?.toString() ?? "";
 
   // Permití configurar por env si tu id de admin es numérico distinto
-  const ADMIN_ROLE_NAMES = (process.env.ADMIN_ROLE_NAMES || "admin,administrador")
-    .split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
-  const ADMIN_ROLE_IDS = (process.env.ADMIN_ROLE_IDS || "").split(",").map(s => s.trim()).filter(Boolean);
+  const ADMIN_ROLE_NAMES = (
+    process.env.ADMIN_ROLE_NAMES || "admin,administrador"
+  )
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  const ADMIN_ROLE_IDS = (process.env.ADMIN_ROLE_IDS || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
-  const isAdmin = ADMIN_ROLE_NAMES.includes(roleName) || (ADMIN_ROLE_IDS.length ? ADMIN_ROLE_IDS.includes(roleId) : false);
+  const isAdmin =
+    ADMIN_ROLE_NAMES.includes(roleName) ||
+    (ADMIN_ROLE_IDS.length ? ADMIN_ROLE_IDS.includes(roleId) : false);
 
   if (!isAdmin) {
     console.warn("[upload-pdf] usuario no admin:", { roleName, roleId });
@@ -30,18 +39,22 @@ export async function POST(req: NextRequest) {
   // 2) Leer archivo
   const form = await req.formData();
   const file = form.get("file") as File | null;
-  if (!file) return NextResponse.json({ error: "Falta el archivo" }, { status: 400 });
+  if (!file)
+    return NextResponse.json({ error: "Falta el archivo" }, { status: 400 });
 
-  const isPdf = file.type === "application/pdf" || file.name?.toLowerCase().endsWith(".pdf");
+  const isPdf =
+    file.type === "application/pdf" ||
+    file.name?.toLowerCase().endsWith(".pdf");
   if (!isPdf) return NextResponse.json({ error: "Sólo PDF" }, { status: 400 });
 
   const sizeMB = file.size / (1024 * 1024);
-  if (sizeMB > 16) return NextResponse.json({ error: "Máximo 16MB" }, { status: 400 });
+  if (sizeMB > 16)
+    return NextResponse.json({ error: "Máximo 16MB" }, { status: 400 });
 
   // 3) Subir a Supabase Storage (service role, sólo server)
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
   const bucket = process.env.SUPABASE_BUCKET || "docs";
 

@@ -3,11 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Home, ShieldAlert, Wrench } from "lucide-react";
+import { AlertTriangle, Home, LockKeyhole, ShieldAlert, Wrench } from "lucide-react";
 import { Logo } from "../ui/logo";
 
 type Props = {
-  code: "403" | "404" | "501";
+  code: "401" | "403" | "404" | "501";
   title: string;
   description?: string;
   imageSrc: string;
@@ -17,6 +17,13 @@ type Props = {
 
 function getStatusMeta(code: Props["code"]) {
   switch (code) {
+    case "401":
+      return {
+        label: "Sesión requerida",
+        icon: LockKeyhole,
+        badgeClass:
+          "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300",
+      };
     case "403":
       return {
         label: "Acceso restringido",
@@ -72,7 +79,9 @@ export function StatusPage({
           <div className="w-full max-w-xl rounded-3xl border bg-background/90 p-6 shadow-xl backdrop-blur-sm md:p-8">
             <div className="flex flex-col items-center text-center">
               <Logo size="lg" className="w-auto justify-center px-0" />
-              <div className={`mt-6 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium ${meta.badgeClass}`}>
+              <div
+                className={`mt-6 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium ${meta.badgeClass}`}
+              >
                 <StatusIcon className="h-4 w-4" />
                 <span>
                   Error {code} · {meta.label}
@@ -90,15 +99,29 @@ export function StatusPage({
               ) : null}
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-                <Button asChild className="h-11 rounded bg-[#008C93] hover:bg-[#007381]" >
-                  <Link href={primaryAction.href} className="inline-flex items-center gap-2">
-                    <Home className="w-4 h-4" /> <span>{primaryAction.label}</span>
+                <Button
+                  asChild
+                  className="h-11 rounded bg-[#008C93] hover:bg-[#007381]"
+                >
+                  <Link
+                    href={primaryAction.href}
+                    className="inline-flex items-center gap-2"
+                  >
+                    <Home className="w-4 h-4" />{" "}
+                    <span>{primaryAction.label}</span>
                   </Link>
                 </Button>
 
                 {secondaryAction ? (
-                  <Button asChild variant="outline" size="lg" className="min-w-[180px]">
-                    <Link href={secondaryAction.href}>{secondaryAction.label}</Link>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="lg"
+                    className="min-w-[180px]"
+                  >
+                    <Link href={secondaryAction.href}>
+                      {secondaryAction.label}
+                    </Link>
                   </Button>
                 ) : null}
               </div>

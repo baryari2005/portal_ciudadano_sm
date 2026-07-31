@@ -49,4 +49,4 @@ export const NACIONALIDAD_VALUES = [
   "NUEVA_ZELANDA",
 ] as const;
 
-export type Nacionalidad = typeof NACIONALIDAD_VALUES[number];
+export type Nacionalidad = (typeof NACIONALIDAD_VALUES)[number];

@@ -23,7 +23,7 @@ export const CuilInput = forwardRef<HTMLInputElement, Props>(
         // notifico valor normalizado (si lo quieren guardar sin guiones)
         onValueChange?.(digits, formatted);
       },
-      [onChange, onValueChange]
+      [onChange, onValueChange],
     );
 
     return (
@@ -32,12 +32,12 @@ export const CuilInput = forwardRef<HTMLInputElement, Props>(
         inputMode="numeric"
         autoComplete="off"
         placeholder="##-########-#"
-        maxLength={13}               // 11 dígitos + 2 guiones
+        maxLength={13} // 11 dígitos + 2 guiones
         value={typeof value === "string" ? formatCuil(value) : value}
         onChange={handleChange}
         {...rest}
       />
     );
-  }
+  },
 );
 CuilInput.displayName = "CuilInput";

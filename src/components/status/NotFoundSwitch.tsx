@@ -19,9 +19,7 @@ export function NotFoundSwitch2() {
   }, [router]);
 
   if (!showPublic404) {
-    return (
-    <Loading/>
-    );
+    return <Loading />;
   }
 
   return (
@@ -29,7 +27,7 @@ export function NotFoundSwitch2() {
       code="404"
       title="Página no encontrada"
       description="La URL que ingresaste no existe o todavía no está disponible."
-      imageSrc="/images/robot-404.png"
+      imageSrc="/404.png"
       primaryAction={{ label: "Ir al login", href: "/login" }}
       secondaryAction={{ label: "Volver al inicio", href: "/" }}
     />

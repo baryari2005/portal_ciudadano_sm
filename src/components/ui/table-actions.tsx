@@ -14,24 +14,24 @@ import { ConfirmDialog } from "./ConfirmDialog";
 
 export type TableAction =
   | {
-    label: string;
-    icon: React.ReactNode;
-    href: string;
-  }
+      label: string;
+      icon: React.ReactNode;
+      href: string;
+    }
   | {
-    label: string;
-    icon: React.ReactNode;
-    onClick: () => void;
-  }
+      label: string;
+      icon: React.ReactNode;
+      onClick: () => void;
+    }
   | {
-    label: string;
-    icon: React.ReactNode;
-    onConfirm: () => Promise<void> | void;
-    confirmTitle?: string;
-    confirmDescription?: string;
-    confirmActionLabel?: string;
-    confirmIcon?: React.ReactNode;
-  };
+      label: string;
+      icon: React.ReactNode;
+      onConfirm: () => Promise<void> | void;
+      confirmTitle?: string;
+      confirmDescription?: string;
+      confirmActionLabel?: string;
+      confirmIcon?: React.ReactNode;
+    };
 
 interface TableActionsProps {
   id: string;
@@ -42,8 +42,7 @@ export const TableActions = ({ actions }: TableActionsProps) => {
   const [confirmIndex, setConfirmIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const action =
-    confirmIndex !== null ? actions[confirmIndex] : null;
+  const action = confirmIndex !== null ? actions[confirmIndex] : null;
 
   async function handleConfirm() {
     if (!action || !("onConfirm" in action)) return;
@@ -96,10 +95,7 @@ export const TableActions = ({ actions }: TableActionsProps) => {
 
             if ("onClick" in action) {
               return (
-                <DropdownMenuItem
-                  key={index}
-                  onClick={action.onClick}
-                >
+                <DropdownMenuItem key={index} onClick={action.onClick}>
                   {action.icon}
                   <span className="ml-2">{action.label}</span>
                 </DropdownMenuItem>

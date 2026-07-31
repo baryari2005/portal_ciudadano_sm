@@ -1,32 +1,36 @@
+import { createHash, randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+
 import { prisma } from "@/lib/db";
+import { sendPasswordReset } from "@/lib/mailer";
 import { UsersRepo } from "@/lib/repos/users";
 import { forgotPasswordSchema } from "@/lib/schemas/password";
-import { randomBytes, createHash } from "node:crypto";
-import { sendPasswordReset } from "@/lib/mailer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const GENERIC_RESPONSE = {
+  ok: true,
+  message:
+    "Si el email existe en el sistema, recibirás instrucciones para restablecer tu contraseña.",
+};
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const dto = forgotPasswordSchema.parse(body);
 
-    // Buscamos usuario (idempotente)
     const user = dto.email
-      ? await UsersRepo.findByEmail(dto.email)
+      ? await UsersRepo.findByEmail(dto.email.toLowerCase().trim())
       : dto.userId
-      ? await UsersRepo.findByUserId(dto.userId)
-      : null;
+        ? await UsersRepo.findByUserId(dto.userId.toLowerCase().trim())
+        : null;
 
-    // Siempre respondemos 200 para no filtrar si existe o no
-    if (!user) {
-      return NextResponse.json({ ok: true }); // silencioso
+    if (!user?.password) {
+      return NextResponse.json(GENERIC_RESPONSE);
     }
 
-    // TTL configurable (mins). Default 60 (1 hora)
-    const ttlMin = parseInt(process.env.PASSWORD_RESET_TTL_MIN || "60", 10);
+    const ttlMin = parseInt(process.env.PASSWORD_RESET_TTL_MIN || "30", 10);
     const expiresAt = new Date(Date.now() + ttlMin * 60 * 1000);
 
     const tokenPlain = randomBytes(32).toString("hex");
@@ -41,10 +45,8 @@ export async function POST(req: NextRequest) {
 
     await sendPasswordReset(user.email, resetLink, user.nombre ?? undefined);
 
-    return NextResponse.json({ ok: true });
-  } 
-  catch {
-    // Devolvemos ok igual para no filtrar existencia de email/userId
-    return NextResponse.json({ ok: true });
+    return NextResponse.json(GENERIC_RESPONSE);
+  } catch {
+    return NextResponse.json(GENERIC_RESPONSE);
   }
 }

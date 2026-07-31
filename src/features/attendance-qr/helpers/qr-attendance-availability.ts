@@ -1,0 +1,6 @@
+export const QR_ATTENDANCE_TIME_ZONE="America/Argentina/Buenos_Aires";
+export const QR_ATTENDANCE_EARLY_MINUTES=Number(process.env.NEXT_PUBLIC_QR_ATTENDANCE_EARLY_MINUTES??process.env.QR_ATTENDANCE_EARLY_MINUTES??30);
+export const QR_ATTENDANCE_LATE_MINUTES=Number(process.env.NEXT_PUBLIC_QR_ATTENDANCE_LATE_MINUTES??process.env.QR_ATTENDANCE_LATE_MINUTES??60);
+export type QrAvailabilityInput={date:string;startTime:string;endTime:string;status:string;attendanceClosedAt?:string|Date|null};
+const instant=(date:string,time:string)=>new Date(`${date}T${time}:00-03:00`).getTime();
+export function getQrAttendanceAvailability(input:QrAvailabilityInput,now=new Date(),early=QR_ATTENDANCE_EARLY_MINUTES,late=QR_ATTENDANCE_LATE_MINUTES){if(input.attendanceClosedAt)return{available:false,reason:"La planilla está cerrada."};if(!["PROGRAMADA","EN_CURSO"].includes(input.status))return{available:false,reason:"El estado de la clase no permite escanear QR."};const from=instant(input.date,input.startTime)-early*60000,to=instant(input.date,input.endTime)+late*60000,current=now.getTime();if(current<from||current>to)return{available:false,reason:"El registro por QR está fuera del horario permitido."};return{available:true,reason:null};}

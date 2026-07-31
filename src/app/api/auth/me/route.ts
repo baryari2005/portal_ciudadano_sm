@@ -7,8 +7,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   const me = await getServerMe(req);
 
-  console.log(me);
-
-  if (!me.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!me.user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   return NextResponse.json({ user: me.user });
 }

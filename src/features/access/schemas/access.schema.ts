@@ -1,0 +1,8 @@
+import { z } from "zod";
+export const establishmentSchema = z.string().min(1);
+export const qrAccessSchema = z.object({ establishmentId: establishmentSchema, qrToken: z.string().min(8).max(1000) });
+export const manualSearchSchema = z.object({ establishmentId: establishmentSchema, q: z.string().trim().min(2).max(120), page: z.coerce.number().int().positive().default(1), pageSize: z.coerce.number().int().min(1).max(20).default(8) });
+export const manualRegisterSchema = z.object({ establishmentId: establishmentSchema, userId: z.string().uuid(), decision: z.enum(["ALLOW", "REJECT"]), observation: z.string().trim().min(5).max(500) });
+export const accessFiltersSchema = z.object({ search: z.string().trim().optional(), result: z.enum(["PERMITIDO", "RECHAZADO"]).optional(), reason: z.enum(["USUARIO_HABILITADO", "QR_INVALIDO", "QR_REVOCADO", "QR_USADO", "USUARIO_INACTIVO", "USUARIO_ELIMINADO", "SIN_INSCRIPCION", "INSCRIPCION_NO_CONFIRMADA", "SIN_CLASE_HABILITADA", "FUERA_DE_HORARIO", "CLASE_SUSPENDIDA", "CLASE_CANCELADA", "ESTABLECIMIENTO_INCORRECTO", "ACCESO_MANUAL_AUTORIZADO", "ACCESO_MANUAL_RECHAZADO"]).optional(), origin: z.enum(["QR", "QR_DIGITAL", "CARNET_FISICO", "MANUAL"]).optional(), establishmentId: z.string().optional(), userId: z.string().uuid().optional(), registeredById: z.string().uuid().optional(), dateFrom: z.coerce.date().optional(), dateTo: z.coerce.date().optional(), page: z.coerce.number().int().positive().default(1), pageSize: z.coerce.number().int().min(1).max(100).default(8) });
+export const updateAccessSchema = z.object({ observations: z.string().trim().min(2).max(500) });
+export const annulAccessSchema = z.object({ reason: z.string().trim().min(5).max(500) });

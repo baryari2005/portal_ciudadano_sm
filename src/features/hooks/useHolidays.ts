@@ -18,7 +18,7 @@ export function useHolidays(year: number, country = "AR") {
     async function load() {
       try {
         const res = await fetch(
-          `/api/holidays?year=${year}&country=${country}`
+          `/api/holidays?year=${year}&country=${country}`,
         );
         const data = await res.json();
         if (mounted) setHolidays(data);

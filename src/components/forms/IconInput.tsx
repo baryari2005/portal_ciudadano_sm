@@ -2,7 +2,7 @@
 
 import { ReactNode } from "react";
 
-export function IconInput({  
+export function IconInput({
   leftIcon,
   rightAdornment,
   input,

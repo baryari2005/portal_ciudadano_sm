@@ -1,0 +1,5 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getActivityDraft, publishActivityDraft } from "@/features/activity-workflow/services/activity-drafts.server";
+import { mapApiRouteError } from "@/lib/api/route-error";
+import { requireAuth, requirePermission } from "@/lib/server-auth";
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) { try { const user = await requireAuth(req), id = (await params).id, draft = await getActivityDraft(id); if (!draft) return NextResponse.json({ message: "Borrador no encontrado." }, { status: 404 }); if (draft.activityId) { requirePermission(user, "actividades", "editar"); requirePermission(user, "activity_schedules", "editar"); requirePermission(user, "activity_schedules", "asignar"); } else { requirePermission(user, "actividades", "crear"); requirePermission(user, "activity_schedules", "crear"); requirePermission(user, "activity_sessions", "crear"); } const data = await publishActivityDraft(id, user.id); return NextResponse.json({ data }, { status: draft.activityId ? 200 : 201 }); } catch (error) { return mapApiRouteError(error, "No pudimos publicar la actividad."); } }

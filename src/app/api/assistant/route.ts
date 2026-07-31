@@ -5,6 +5,7 @@ import {
   formatGuidesForAssistant,
   getVisibleHelpGuides,
 } from "@/features/support/lib/visible-help-guides";
+import type { HelpCategory } from "@/features/support/lib/help-guides";
 
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -19,10 +20,10 @@ type HelpAssistantRequest = {
 
 function buildInstructions(context: string) {
   return [
-    "Sos un asistente de ayuda interno para un sistema de RRHH.",
+    "Sos un asistente de ayuda del sistema municipal de actividades.",
     "Responde siempre en espanol claro y concreto.",
     "Solo debes responder en base al contexto provisto sobre pantallas, permisos, rutas y pasos del sistema.",
-    "Si la respuesta no esta sustentada por el contexto, dilo explicitamente y sugiere revisar la seccion /soporte o consultar a un administrador.",
+    "Si la respuesta no esta sustentada por el contexto, dilo explicitamente y sugiere revisar la seccion /help o consultar a un administrador.",
     "No inventes modulos, permisos, botones ni comportamientos.",
     "Cuando sea util, incluye la ruta a la que debe ir el usuario.",
     "Prioriza pasos accionables y breves.",
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
           error:
             "Falta configurar OPENAI_API_KEY en el entorno del servidor para usar el asistente.",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -59,11 +60,13 @@ export async function POST(req: NextRequest) {
     if (!question) {
       return NextResponse.json(
         { error: "Debes enviar una pregunta para el asistente." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const guides = getVisibleHelpGuides(loggedInUser.permisos ?? []);
+    const path = body.currentPath ?? "";
+    const category: HelpCategory = path.startsWith("/citizen") ? "citizen" : path.startsWith("/teacher") ? "teacher" : path.startsWith("/access") ? "reception" : "administration";
+    const guides = getVisibleHelpGuides(loggedInUser.permisos ?? [], category);
     const context = formatGuidesForAssistant(guides);
 
     const response = await openai.responses.create({

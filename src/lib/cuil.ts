@@ -21,7 +21,7 @@ export function isValidCuil(raw: string): boolean {
   if (d.length !== 11) return false;
 
   const nums = d.split("").map(Number);
-  const weights = [5,4,3,2,7,6,5,4,3,2]; // para los primeros 10 dígitos
+  const weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]; // para los primeros 10 dígitos
   const sum = weights.reduce((acc, w, i) => acc + w * nums[i], 0);
   let dv = 11 - (sum % 11);
   if (dv === 11) dv = 0;
@@ -54,7 +54,9 @@ export function cuilDashed(input: string | number | null | undefined): string {
 export function assertCuil11Digits(input: string | number): string {
   const d = cuilDigits(input);
   if (d.length !== 11) {
-    throw new Error(`CUIL inválido: se esperaban 11 dígitos y llegó "${input}"`);
+    throw new Error(
+      `CUIL inválido: se esperaban 11 dígitos y llegó "${input}"`,
+    );
   }
   return d;
 }
@@ -73,7 +75,7 @@ export function isValidCuilDV(input: string | number): boolean {
   if (d.length !== 11) return false;
 
   // Algoritmo de verificación AFIP
-  const weights = [5,4,3,2,7,6,5,4,3,2];
+  const weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
   const nums = d.split("").map(Number);
   const sum = weights.reduce((acc, w, i) => acc + w * nums[i], 0);
   let dv = 11 - (sum % 11);

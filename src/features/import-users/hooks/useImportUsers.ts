@@ -23,7 +23,7 @@ export function useImportUsers() {
 
   const acceptBySource = useMemo(
     () => (source === "pdf" ? "application/pdf" : ".xlsx,.xls,.csv"),
-    [source]
+    [source],
   );
 
   function clearData() {
@@ -71,9 +71,13 @@ export function useImportUsers() {
     try {
       const parsedRows = await parseImportUsersExcel(file);
       setExcelRows(parsedRows);
-      toast.success(`Se analizaron ${parsedRows.length} filas del archivo ${file.name}.`);
+      toast.success(
+        `Se analizaron ${parsedRows.length} filas del archivo ${file.name}.`,
+      );
     } catch (error: unknown) {
-      toast.error(getImportErrorMessage(error, "Error al analizar la hoja de cálculo."));
+      toast.error(
+        getImportErrorMessage(error, "Error al analizar la hoja de cálculo."),
+      );
     } finally {
       setLoading(false);
     }
@@ -95,7 +99,7 @@ export function useImportUsers() {
 
       if (result.failCount > 0) {
         toast.warning(
-          `Importación completada con ${result.okCount} éxitos y ${result.failCount} errores`
+          `Importación completada con ${result.okCount} éxitos y ${result.failCount} errores`,
         );
         return;
       }
@@ -122,7 +126,7 @@ export function useImportUsers() {
 
       if (result.failCount > 0) {
         toast.warning(
-          `Importación completada con ${result.okCount} éxitos y ${result.failCount} errores`
+          `Importación completada con ${result.okCount} éxitos y ${result.failCount} errores`,
         );
         return;
       }

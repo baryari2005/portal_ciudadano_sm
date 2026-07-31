@@ -1,0 +1,9 @@
+import { axiosInstance } from "@/lib/axios"; import type { EnrollmentDocument } from "../types/enrollment-document.types";
+export async function listEnrollmentDocumentsClient(params?: Record<string, string>) { return (await axiosInstance.get<{ data: EnrollmentDocument[] }>("/enrollment-documents", { params })).data.data; }
+export async function getEnrollmentDocumentClient(id: string) { return (await axiosInstance.get<{ data: EnrollmentDocument }>(`/enrollment-documents/${id}`)).data.data; }
+export async function reviewEnrollmentDocumentClient(id: string, input: { status: "APROBADO" | "RECHAZADO"; rejectionReason?: string | null; reviewObservations?: string | null }) { return (await axiosInstance.post(`/enrollment-documents/${id}/review`, input)).data.data; }
+export async function downloadEnrollmentDocumentClient(id: string) { return (await axiosInstance.get<{ data: { url: string } }>(`/enrollment-documents/${id}/download`)).data.data.url; }
+export async function getCitizenEnrollmentDocumentsClient(id: string) { return (await axiosInstance.get(`/citizen/enrollments/${id}/documents`)).data.data; }
+export async function uploadCitizenEnrollmentDocumentClient(id: string, requirementId: string, file: File, observations?: string) { const form = new FormData(); form.set("requirementId", requirementId); form.set("file", file); if (observations) form.set("observations", observations); return (await axiosInstance.post(`/citizen/enrollments/${id}/documents`, form)).data.data; }
+export async function removeCitizenEnrollmentDocumentClient(enrollmentId: string, documentId: string) { await axiosInstance.delete(`/citizen/enrollments/${enrollmentId}/documents/${documentId}`); }
+export async function downloadCitizenEnrollmentDocumentClient(enrollmentId: string, documentId: string) { return (await axiosInstance.get<{ data: { url: string } }>(`/citizen/enrollments/${enrollmentId}/documents/${documentId}/download`)).data.data.url; }

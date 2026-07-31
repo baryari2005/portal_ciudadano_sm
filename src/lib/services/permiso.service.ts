@@ -4,10 +4,7 @@ import { Permiso } from "@prisma/client";
 export async function getAllPermisos(): Promise<Permiso[]> {
   return prisma.permiso.findMany({
     where: { activo: true },
-    orderBy: [
-      { modulo: "asc" },
-      { accion: "asc" },
-    ],
+    orderBy: [{ modulo: "asc" }, { accion: "asc" }],
   });
 }
 

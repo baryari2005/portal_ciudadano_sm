@@ -3,7 +3,7 @@ import type { LicensesStatParams } from "../../types/dashboardBuilders";
 
 export function buildLicensesStat({
   canApprove,
-  canLoad,  
+  canLoad,
   loadingOtherLeaves,
   pendingOtherLeaves,
   onGoLicenses,
@@ -14,10 +14,9 @@ export function buildLicensesStat({
     id: "licenses",
     labelTop: "Licencias",
     disabled: !canAccess,
-    disabledHint:
-      !canAccess
-        ? "No tenés permisos para ver esta sección.\n Si creés que esto es un error, pedile acceso a un administrador."
-        : "",
+    disabledHint: !canAccess
+      ? "No tenés permisos para ver esta sección.\n Si creés que esto es un error, pedile acceso a un administrador."
+      : "",
     labelBottom: loadingOtherLeaves
       ? "Cargando…"
       : pendingOtherLeaves > 0

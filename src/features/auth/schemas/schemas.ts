@@ -17,13 +17,16 @@ export const forgotPasswordSchema = z.object({
 
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 
-
 export const resetPasswordSchema = z
   .object({
-    password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
+    password: z
+      .string()
+      .min(8, "La contraseña debe tener al menos 8 caracteres")
+      .regex(/[A-Za-z]/, "La contraseña debe incluir al menos una letra")
+      .regex(/[0-9]/, "La contraseña debe incluir al menos un número"),
     confirm: z.string().min(8, "Confirmación requerida"),
   })
-  .refine((v) => v.password === v.confirm, {
+  .refine((value) => value.password === value.confirm, {
     message: "Las contraseñas no coinciden",
     path: ["confirm"],
   });

@@ -36,7 +36,7 @@ export function StatCard({ stat, density = "compact" }: Props) {
         <CardContent
           title={
             disabled
-              ? stat.disabledHint ?? "Funcionalidad no implementada"
+              ? (stat.disabledHint ?? "Funcionalidad no implementada")
               : undefined
           }
           className={`

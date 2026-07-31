@@ -423,11 +423,9 @@
 //   );
 // }
 
-
 "use client";
 
-import { Users } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UploadCloud } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import SourceSelector from "./SourceSelector";
 import UploadField from "./UploadField";
@@ -459,16 +457,20 @@ export default function ImportUsersView() {
   } = useImportUsers();
 
   return (
-    <div className="grid gap-6">
-      <Card>
-        <CardHeader className="flex items-center justify-between">
-          <CardTitle className="flex items-center text-2xl">
-            <Users className="mr-2" />
-            Import Users
-          </CardTitle>
-        </CardHeader>
+    <div className="grid h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_minmax(0,1fr)] gap-6 overflow-hidden bg-[#F7FBF5] p-8">
+      <header>
+        <h1 className="flex items-center gap-3 text-3xl font-extrabold leading-tight text-[#003A22]">
+          <UploadCloud className="h-7 w-7 text-[#1D4F36]" />
+          Importar usuarios
+        </h1>
+        <p className="mt-2 text-base font-medium text-[#5F6F68]">
+          Carga usuarios desde PDF, Excel o CSV y revisa el resultado antes de
+          guardar.
+        </p>
+      </header>
 
-        <CardContent className="space-y-4">
+      <section className="min-h-0 overflow-y-auto rounded-[24px] bg-[#EEF6E9] p-8 text-[#173C2A] shadow-sm">
+        <div className="space-y-5">
           <SourceSelector
             source={source}
             setSource={setSource}
@@ -502,8 +504,8 @@ export default function ImportUsersView() {
           <Separator />
 
           <CredentialsTable creds={creds} onDownload={downloadCSV} />
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       <ExcelHeadersDialog
         open={showHeadersModal}

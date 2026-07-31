@@ -1,0 +1,1 @@
+"use client";import AccessDenied403Page from"../403/page";import{AttendancePage}from"@/features/attendance/components/AttendancePage";import{useCan}from"@/hooks/useCan";export default function Page(){return useCan("attendance","ver")?<AttendancePage/>:<AccessDenied403Page/>}

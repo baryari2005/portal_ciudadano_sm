@@ -27,8 +27,8 @@ const fetcher = async (url: string): Promise<UsersApiResponse> => {
 
 export function useUsers() {
   const { data, isLoading } = useSWR<UsersApiResponse>(
-    "/api/admin/users", 
-    fetcher
+    "/api/admin/users",
+    fetcher,
   );
 
   return {

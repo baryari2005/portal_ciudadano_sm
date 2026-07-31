@@ -19,17 +19,21 @@ export function UserMenuHeader({ avatarUrl, fullName, email }: Props) {
       .toUpperCase() || "US";
 
   return (
-    <div className="p-4 text-center">
-      <div className="flex justify-center">
-        <Avatar className="h-14 w-14">
+    <div className="bg-[#F7FAF3] p-4">
+      <div className="flex items-center gap-3">
+        <Avatar className="h-12 w-12 border border-[#819B56]/30 bg-white shadow-sm">
           <AvatarImage src={avatarUrl} alt={fullName} />
-          <AvatarFallback className="font-medium">{initials}</AvatarFallback>
+          <AvatarFallback className="bg-[#E9F3D8] font-semibold text-[#1D4F36]">
+            {initials}
+          </AvatarFallback>
         </Avatar>
-      </div>
 
-      <div className="mt-2">
-        <div className="text-sm font-semibold leading-5">{fullName}</div>
-        <div className="text-xs text-muted-foreground">{email}</div>
+        <div className="min-w-0">
+          <div className="truncate text-sm font-semibold leading-5 text-[#1D4F36]">
+            {fullName}
+          </div>
+          <div className="truncate text-xs text-[#6B756D]">{email}</div>
+        </div>
       </div>
     </div>
   );

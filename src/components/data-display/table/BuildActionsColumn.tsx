@@ -57,7 +57,7 @@ export const buildActionsColumn = <T extends RowWithId>({
         onConfirm: async () => {
           await axiosInstance.delete(`/${component}/${id}`);
           toast.success(
-            formatApiMessage(`success.${component.slice(0, -1)}Deleted`)
+            formatApiMessage(`success.${component.slice(0, -1)}Deleted`),
           );
           onDeleted?.();
         },

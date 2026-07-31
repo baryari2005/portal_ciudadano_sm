@@ -1,0 +1,12 @@
+import { axiosInstance } from "@/lib/axios";
+import type { AttendanceRoster, MarkAttendanceBatchInput } from "@/features/attendance/types/attendance.types";
+export const getTeacherSummaryClient=async()=>(await axiosInstance.get("/teacher/summary")).data.data;
+export const getTeacherSchedulesClient=async()=>(await axiosInstance.get("/teacher/schedules")).data.data;
+export const getTeacherSessionsClient=async(params?:Record<string,string|number|undefined>)=>(await axiosInstance.get("/teacher/sessions",{params})).data;
+export const getTeacherSessionClient=async(id:string)=>(await axiosInstance.get<{data:AttendanceRoster}>(`/teacher/sessions/${id}`)).data.data;
+export const getTeacherAttendanceClient=async(id:string)=>(await axiosInstance.get<{data:AttendanceRoster}>(`/teacher/attendance/${id}`,{showTeacherAssignmentError:true})).data.data;
+export const updateTeacherAttendanceClient=async(id:string,data:{action:"batch";records:MarkAttendanceBatchInput["records"]}|{action:"close"}|{action:"reopen"})=>(await axiosInstance.post<{data:AttendanceRoster}>(`/teacher/attendance/${id}`,data)).data.data;
+export const registerTeacherQrClient=async(id:string,qrToken:string)=>(await axiosInstance.post(`/teacher/attendance/${id}/qr`,{qrToken})).data;
+export const getTeacherNotificationsClient=async()=>(await axiosInstance.get("/teacher/notifications")).data.data;
+export const getTeacherProfileClient=async()=>(await axiosInstance.get("/teacher/profile")).data.data;
+export const updateTeacherProfileClient=async(data:{description?:string|null;photoUrl?:string|null})=>(await axiosInstance.patch("/teacher/profile",data)).data.data;

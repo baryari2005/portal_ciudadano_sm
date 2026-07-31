@@ -1,0 +1,4 @@
+import { z } from "zod";
+export const teacherSessionFiltersSchema = z.object({ status: z.string().optional(), activityId: z.string().optional(), establishmentId: z.string().optional(), dateFrom: z.string().optional(), dateTo: z.string().optional(), page: z.coerce.number().int().positive().default(1), pageSize: z.coerce.number().int().min(1).max(50).default(8) });
+export const teacherProfileSchema = z.object({ description: z.string().trim().max(1000).nullable().optional(), photoUrl: z.string().trim().url().nullable().optional() });
+export const teacherAttendanceActionSchema = z.discriminatedUnion("action", [z.object({ action: z.literal("batch"), records: z.array(z.object({ enrollmentId: z.string(), status: z.enum(["PRESENTE", "AUSENTE", "JUSTIFICADA"]), justificationReason: z.string().nullable().optional(), observations: z.string().nullable().optional() })).min(1) }), z.object({ action: z.literal("close") }), z.object({ action: z.literal("reopen") })]);

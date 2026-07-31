@@ -14,19 +14,17 @@ import { resetPasswordSchema, ResetPasswordValues } from "../schemas/schemas";
 type Props = { token: string };
 
 function getErrorMessage(err: unknown): string {
-  if (
-    typeof err === "object" &&
-    err !== null &&
-    "response" in err
-  ) {
-    const response = (err as {
-      response?: {
-        data?: {
-          error?: string;
-          message?: string;
+  if (typeof err === "object" && err !== null && "response" in err) {
+    const response = (
+      err as {
+        response?: {
+          data?: {
+            error?: string;
+            message?: string;
+          };
         };
-      };
-    }).response;
+      }
+    ).response;
 
     return (
       response?.data?.error ||
@@ -98,7 +96,8 @@ export function ResetPasswordForm({ token }: Props) {
       </Button>
 
       <p className="text-xs text-muted-foreground">
-        El enlace de restablecimiento puede expirar. Si falla, solicitá uno nuevo desde “¿Olvidó su contraseña?”.
+        El enlace de restablecimiento puede expirar. Si falla, solicitá uno
+        nuevo desde “¿Olvidó su contraseña?”.
       </p>
     </form>
   );

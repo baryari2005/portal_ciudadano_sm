@@ -1,0 +1,2 @@
+import { NextRequest, NextResponse } from "next/server"; import { getTeacherSummary } from "@/features/teacher/services/teacher.server"; import { mapApiRouteError } from "@/lib/api/route-error"; import { requireAuth, requirePermission } from "@/lib/server-auth";
+export async function GET(req: NextRequest) { try { const user = await requireAuth(req); requirePermission(user, "activity_sessions", "ver"); return NextResponse.json({ data: await getTeacherSummary(user.id) }); } catch (error) { return mapApiRouteError(error, "No pudimos cargar el inicio del profesor."); } }

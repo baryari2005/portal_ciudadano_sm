@@ -1,0 +1,1 @@
+import{EnrollmentDocumentReviewPage}from"@/features/enrollment-documents/components/EnrollmentDocumentReviewPage";export default async function Page({params}:{params:Promise<{id:string}>}){return <EnrollmentDocumentReviewPage id={(await params).id}/>}

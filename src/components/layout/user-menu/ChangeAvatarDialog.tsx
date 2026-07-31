@@ -1,32 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AvatarUploader } from "@/features/settings/components/AvatarUploader";
 import { useAvatarStaging } from "@/features/users/hooks/useAvatarStaging";
 import { pathFromPublicUrl } from "@/features/users/lib/utils";
 import { useAuth } from "@/stores/auth"; // donde tengas user + logout
-import { Separator } from "@/components/ui/separator";
 import { FileImage, Loader2 } from "lucide-react";
 import { formatMessage } from "@/utils/formatters";
 import { changeMyAvatar } from "@/lib/api/account";
 import axios from "axios";
+import {
+  ProfileDialogBody,
+  ProfileDialogFooter,
+  ProfileDialogHeader,
+  profilePrimaryButtonClassName,
+  profileSecondaryButtonClassName,
+} from "./ProfileDialogParts";
 
 type Props = { open: boolean; onOpenChange: (v: boolean) => void };
 
 export function ChangeAvatarDialog({ open, onOpenChange }: Props) {
-  const { user, logout } = useAuth();                 // 👈 tu usuario logueado
+  const { user, logout } = useAuth(); // tu usuario logueado
   const { tmpPath, setTmpPath, commit } = useAvatarStaging();
-  const oldKey = pathFromPublicUrl(user?.avatarUrl);  // ej: users/<id>.jpg
+  const oldKey = pathFromPublicUrl(user?.avatarUrl); // ej: users/<id>.jpg
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { if (open) setTmpPath(null); }, [open, setTmpPath]);
+  useEffect(() => {
+    if (open) setTmpPath(null);
+  }, [open, setTmpPath]);
 
   const onSave = async () => {
     if (!tmpPath) {
-      toast.error("Seleccioná una imagen primero");
+      toast.error("Selecciona una imagen primero");
       return;
     }
     try {
@@ -38,9 +46,9 @@ export function ChangeAvatarDialog({ open, onOpenChange }: Props) {
       // guarda en tu usuario logueado
       //await axiosInstance.post("/auth/change-avatar", { avatarUrl: r.publicUrl });
 
-      toast.success("Avatar actualizado. Vuelve a iniciar sesión.");
+      toast.success("Avatar actualizado. Vuelve a iniciar sesion.");
       onOpenChange(false);
-      onOpenChange(false);                    // 👈 cierra el modal
+      onOpenChange(false); // cierra el modal
       setTimeout(() => logout(), 1500);
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -62,40 +70,44 @@ export function ChangeAvatarDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md rounded-sm p-0">
-        <DialogHeader className="px-5 pt-4 pb-2">
-          <DialogTitle className="text-sm-plus font-semibold flex">
-            <FileImage className="w-4 h-4 mr-2" />Cambiar avatar
-          </DialogTitle>
-          <Separator className="mt-4 mb-4" />
-          <DialogDescription className="text-sm-plus  justify-center">
-            Cambiar tu avatar de acceso
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="overflow-hidden rounded-2xl border-[#DDE5D8] bg-white p-0 shadow-[0_24px_70px_rgba(0,58,34,0.18)] sm:max-w-md">
+        <ProfileDialogHeader
+          icon={FileImage}
+          title="Cambiar avatar"
+          description="Actualiza la imagen visible en tu perfil del dashboard."
+        />
 
-        <div className="grid gap-3 px-5 pb-4">
+        <ProfileDialogBody>
           <AvatarUploader
             currentUrl={user?.avatarUrl}
-            onTempUploaded={({ tmpPath }) => setTmpPath(tmpPath)} // 👈 guardamos el tmp
+            onTempUploaded={({ tmpPath }) => setTmpPath(tmpPath)} // guardamos el tmp
           />
-        </div>
+        </ProfileDialogBody>
 
-
-        <DialogFooter className="px-5 py-3 bg-muted/40 border-t rounded-none">
+        <ProfileDialogFooter>
           <DialogClose asChild>
-            <Button className="h-11 rounded bg-[#008C93] hover:bg-[#007381] cursor-pointer" >Cancelar</Button>
+            <Button
+              variant="outline"
+              className={profileSecondaryButtonClassName}
+            >
+              Cancelar
+            </Button>
           </DialogClose>
-          <Button onClick={onSave}
+          <Button
+            onClick={onSave}
             disabled={saving || !tmpPath}
-            className="h-11 rounded  bg-[#008C93] hover:bg-[#007381] cursor-pointer">
+            className={profilePrimaryButtonClassName}
+          >
             {saving ? (
               <span className="inline-flex items-center gap-2">
                 <Loader2 className="animate-spin" size={18} />
                 {formatMessage("Guardando...")}
               </span>
-            ) : ("Guardar")}
+            ) : (
+              "Guardar"
+            )}
           </Button>
-        </DialogFooter>
+        </ProfileDialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -1,6 +1,12 @@
 import { randomBytes } from "crypto";
 import { hash } from "bcryptjs";
-import { EstadoLaboral, Legajo, Prisma, TipoContrato, Usuario } from "@prisma/client";
+import {
+  EstadoLaboral,
+  Legajo,
+  Prisma,
+  TipoContrato,
+  Usuario,
+} from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { ImportUpsertBodyDto } from "../schemas/import-upsert.schema";
 import {
@@ -52,7 +58,7 @@ export async function findTargetUser(input: {
 
 export async function createOrUpdateImportedUser(
   dto: ImportUpsertBodyDto,
-  opts: { setTemp: boolean }
+  opts: { setTemp: boolean },
 ): Promise<CreateOrUpdateImportedUserResult> {
   const { user: userDto, legajo: legajoDto } = dto;
 
@@ -76,22 +82,30 @@ export async function createOrUpdateImportedUser(
     };
 
     if (emailNorm) dataToUpdate.email = emailNorm;
-    if (userDto.nombre !== undefined) dataToUpdate.nombre = titleCase(userDto.nombre);
-    if (userDto.apellido !== undefined) dataToUpdate.apellido = titleCase(userDto.apellido);
+    if (userDto.nombre !== undefined)
+      dataToUpdate.nombre = titleCase(userDto.nombre);
+    if (userDto.apellido !== undefined)
+      dataToUpdate.apellido = titleCase(userDto.apellido);
 
     if ("fechaNacimiento" in userDto) {
       dataToUpdate.fechaNacimiento = fromYMDorISO(userDto.fechaNacimiento);
     }
     if ("genero" in userDto) dataToUpdate.genero = userDto.genero ?? null;
-    if ("estadoCivil" in userDto) dataToUpdate.estadoCivil = userDto.estadoCivil ?? null;
-    if ("nacionalidad" in userDto) dataToUpdate.nacionalidad = userDto.nacionalidad ?? null;
+    if ("estadoCivil" in userDto)
+      dataToUpdate.estadoCivil = userDto.estadoCivil ?? null;
+    if ("nacionalidad" in userDto)
+      dataToUpdate.nacionalidad = userDto.nacionalidad ?? null;
 
     if ("celular" in userDto) dataToUpdate.celular = userDto.celular ?? null;
-    if ("domicilio" in userDto) dataToUpdate.domicilio = userDto.domicilio ?? null;
-    if ("codigoPostal" in userDto) dataToUpdate.codigoPostal = userDto.codigoPostal ?? null;
+    if ("domicilio" in userDto)
+      dataToUpdate.domicilio = userDto.domicilio ?? null;
+    if ("codigoPostal" in userDto)
+      dataToUpdate.codigoPostal = userDto.codigoPostal ?? null;
 
-    if ("documentType" in userDto) dataToUpdate.tipoDocumento = userDto.documentType ?? null;
-    if ("documentNumber" in userDto) dataToUpdate.documento = userDto.documentNumber ?? null;
+    if ("documentType" in userDto)
+      dataToUpdate.tipoDocumento = userDto.documentType ?? null;
+    if ("documentNumber" in userDto)
+      dataToUpdate.documento = userDto.documentNumber ?? null;
     if ("cuil" in userDto) dataToUpdate.cuil = cuilFmt ?? cuilNum ?? null;
 
     if (opts.setTemp) {
@@ -169,8 +183,14 @@ export async function createOrUpdateImportedUser(
       departamento: legajoDto.department ?? null,
       categoria: legajoDto.category ?? null,
       observaciones: legajoDto.notes ?? null,
-      matriculaProvincial: ensureMatriculaPrefix(legajoDto.matriculaProvincial, "MP"),
-      matriculaNacional: ensureMatriculaPrefix(legajoDto.matriculaNacional, "MN"),
+      matriculaProvincial: ensureMatriculaPrefix(
+        legajoDto.matriculaProvincial,
+        "MP",
+      ),
+      matriculaNacional: ensureMatriculaPrefix(
+        legajoDto.matriculaNacional,
+        "MN",
+      ),
     };
 
     savedLegajo = await prisma.legajo.upsert({
@@ -192,7 +212,7 @@ export function mapImportUpsertError(error: unknown) {
     error instanceof Prisma.PrismaClientKnownRequestError &&
     error.code === "P2002"
   ) {
-     const target = Array.isArray(error.meta?.target)
+    const target = Array.isArray(error.meta?.target)
       ? error.meta?.target.join(", ")
       : String(error.meta?.target ?? "campo desconocido");
 

@@ -10,10 +10,10 @@ export function toPermissionKeys(permisos: PermissionDTO[]): PermissionKey[] {
     .filter(
       (permission): permission is { modulo: string; accion: string } =>
         typeof permission?.modulo === "string" &&
-        typeof permission?.accion === "string"
+        typeof permission?.accion === "string",
     )
     .map(
       (permission) =>
-        `${permission.modulo}:${permission.accion}` as PermissionKey
+        `${permission.modulo}:${permission.accion}` as PermissionKey,
     );
 }

@@ -6,7 +6,10 @@ export type LoginDraft = {
 };
 
 function canUseSessionStorage() {
-  return typeof window !== "undefined" && typeof window.sessionStorage !== "undefined";
+  return (
+    typeof window !== "undefined" &&
+    typeof window.sessionStorage !== "undefined"
+  );
 }
 
 export function readDraft(fallback: LoginDraft = {}): LoginDraft {
@@ -28,7 +31,8 @@ export function readDraft(fallback: LoginDraft = {}): LoginDraft {
     }
 
     return {
-      userId: typeof parsed.userId === "string" ? parsed.userId : fallback.userId,
+      userId:
+        typeof parsed.userId === "string" ? parsed.userId : fallback.userId,
     };
   } catch {
     return fallback;

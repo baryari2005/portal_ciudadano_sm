@@ -27,7 +27,8 @@ export default function ExcelHeadersDialog({
       <DialogContent className="sm:max-w-md rounded-sm p-0">
         <DialogHeader className="px-5 pt-4 pb-2">
           <DialogTitle className="text-sm-plus font-semibold flex">
-            <FileSpreadsheetIcon className="w-4 h-4 mr-2" />Encabezados esperados del Excel
+            <FileSpreadsheetIcon className="w-4 h-4 mr-2" />
+            Encabezados esperados del Excel
           </DialogTitle>
           <Separator className="mt-4 mb-4" />
           <DialogDescription className="text-sm-plus  justify-center">
@@ -67,7 +68,6 @@ export default function ExcelHeadersDialog({
             <Label className="text-sm">departamento</Label>
             <Label className="text-sm">categoria</Label>
             <Label className="text-sm">observaciones</Label>
-
           </div>
         </div>
 
@@ -77,7 +77,8 @@ export default function ExcelHeadersDialog({
             <Label className="text-xs text-muted-foreground border-l-2 pl-2">
               genero, matriculaProvincial, matriculaNacional, estadoLaboral,
               tipoContrato, puesto, area, departamento, categoria, observaciones
-            </Label>.
+            </Label>
+            .
           </Label>
         </div>
 

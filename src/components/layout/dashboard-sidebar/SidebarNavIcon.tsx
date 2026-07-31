@@ -32,27 +32,22 @@ export function SidebarNavIcon({
   highlight,
   onClick,
 }: Props) {
-  const iconSize = collapsed ? 22 : 18;
+  const iconSize = collapsed ? 23 : 21;
 
   const content = (
     <div
       className={`
         relative flex items-center w-full
-        ${collapsed ? "justify-center" : "gap-3"}
+        ${collapsed ? "justify-center" : "gap-4"}
       `}
     >
-      <Icon
-        style={{ width: iconSize, height: iconSize }}
-        strokeWidth={2}
-      />
+      <Icon style={{ width: iconSize, height: iconSize }} strokeWidth={2} />
 
       {!collapsed && (
-        <span className="text-sm font-medium whitespace-nowrap">
-          {title}
-        </span>
+        <span className="whitespace-nowrap text-sm font-semibold">{title}</span>
       )}
 
-      {badgeCount && badgeCount > 0 && (
+      {typeof badgeCount === "number" && badgeCount > 0 ? (
         <span
           className={`
             absolute
@@ -68,7 +63,7 @@ export function SidebarNavIcon({
         >
           {badgeCount}
         </span>
-      )}
+      ) : null}
     </div>
   );
 
@@ -78,15 +73,19 @@ export function SidebarNavIcon({
       onClick={onClick}
       asChild={!!href}
       className={`
-        relative w-full text-white
+        relative text-white
         transition-all duration-200
-        ${collapsed
-          ? "flex items-center justify-center h-12 px-0"
-          : "flex items-center justify-start px-3 h-11"}
-        ${active ? "bg-white/15" : ""}
-        ${highlight
-          ? "bg-red-500/20 hover:bg-red-500/30"
-          : "hover:bg-white/10"}
+        ${
+          collapsed
+            ? "mx-3 flex h-12 w-12 items-center justify-center rounded-lg px-0"
+            : "mx-5 flex h-14 w-[calc(100%-2.5rem)] items-center justify-start rounded-lg px-4"
+        }
+        ${active ? "bg-[#ddef8f] text-primary shadow-sm hover:bg-[#ddef8f] hover:text-primary" : ""}
+        ${
+          highlight
+            ? "bg-red-500/20 hover:bg-red-500/30"
+            : "hover:bg-[#ddef8f] hover:text-primary"
+        }
       `}
     >
       {href ? <Link href={href}>{content}</Link> : content}

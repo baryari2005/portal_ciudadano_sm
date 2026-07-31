@@ -43,14 +43,12 @@ const HEIGHTS: Record<HeightKey, string> = {
   tall: "min-h-[220px]",
 };
 
-const SIZES: Record<
-  SizeKey,
-  { pad: string; artImg: string; radius: string }
-> = {
-  sm: { pad: "pl-4 py-3", artImg: "h-28", radius: "rounded-xl" },
-  md: { pad: "pl-6 py-5", artImg: "h-24", radius: "rounded-2xl" },
-  lg: { pad: "pl-8 py-6", artImg: "h-32", radius: "rounded-3xl" },
-};
+const SIZES: Record<SizeKey, { pad: string; artImg: string; radius: string }> =
+  {
+    sm: { pad: "pl-4 py-3", artImg: "h-28", radius: "rounded-xl" },
+    md: { pad: "pl-6 py-5", artImg: "h-24", radius: "rounded-2xl" },
+    lg: { pad: "pl-8 py-6", artImg: "h-32", radius: "rounded-3xl" },
+  };
 
 const CLOCK_BY_HOUR: Record<number, LucideIcon> = {
   1: Clock1,
@@ -73,7 +71,7 @@ function getHour24(date: Date, timeZone?: string) {
       hour: "numeric",
       hour12: false,
       timeZone,
-    }).format(date)
+    }).format(date),
   );
 }
 
@@ -148,17 +146,16 @@ export function WelcomeBanner({
   return (
     <section className={className}>
       <div
-        className={`group relative ${h} ${s.radius} overflow-hidden border text-indigo-950 transition-colors duration-300
-        bg-[linear-gradient(135deg,_#F2F9F9_0%,_#99D1D3_45%,_#008C93_100%)]
-        hover:bg-[linear-gradient(135deg,_#EAF6F7_0%,_#8CC8CB_45%,_#00777C_100%)]`}
+        className={`brand-surface group relative ${h} ${s.radius} overflow-hidden border border-white/15 text-white shadow-sm transition-colors duration-300`}
       >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_15%,_rgba(255,255,255,0.18),_transparent_34%)]" />
         <div className="grid h-full grid-cols-[1fr_auto] items-center">
-          <div className={`${s.pad} pr-4`}>
-            <p className="text-xl text-indigo-900/70">
-              Hola <span className="font-semibold text-indigo-950">{name}</span>,
+          <div className={`${s.pad} relative z-10 pr-4`}>
+            <p className="text-xl text-white/82">
+              Hola <span className="font-semibold text-white">{name}</span>,
             </p>
 
-            <h2 className="mt-1 text-xl font-semibold text-indigo-900/70">
+            <h2 className="mt-1 text-xl font-semibold text-white/82">
               <span className="inline-flex items-center gap-2">
                 {gText}
                 {showClock && (
@@ -171,7 +168,7 @@ export function WelcomeBanner({
             </h2>
           </div>
 
-          <div className="flex h-full items-end justify-end pr-0">
+          <div className="relative z-10 flex h-full items-end justify-end pr-0">
             <div className={artWrapperClassName}>
               <Image
                 src="/welcome.png"
@@ -179,7 +176,7 @@ export function WelcomeBanner({
                 width={320}
                 height={320}
                 priority
-                className={`${s.artImg} w-auto pointer-events-none select-none ${artImgClassName ?? ""}`}
+                className={`${s.artImg} w-auto pointer-events-none select-none drop-shadow-sm ${artImgClassName ?? ""}`}
               />
             </div>
           </div>

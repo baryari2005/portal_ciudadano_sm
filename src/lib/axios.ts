@@ -3,10 +3,13 @@ import axios, {
   AxiosRequestConfig,
   InternalAxiosRequestConfig,
 } from "axios";
+import { toast } from "sonner";
+import { TEACHER_SESSION_ACCESS_DENIED_MESSAGE } from "@/features/teacher/constants/teacher-errors";
 
 declare module "axios" {
   export interface AxiosRequestConfig {
     skipAuthRedirect?: boolean;
+    showTeacherAssignmentError?: boolean;
   }
 }
 
@@ -45,6 +48,7 @@ if (typeof window !== "undefined") {
 
 type AxiosRequestConfigExt = AxiosRequestConfig & {
   skipAuthRedirect?: boolean;
+  showTeacherAssignmentError?: boolean;
 };
 
 function isLoginCall(url = "") {
@@ -66,7 +70,8 @@ axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
   if (token) {
     config.headers = config.headers ?? {};
-    (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+    (config.headers as Record<string, string>).Authorization =
+      `Bearer ${token}`;
   }
 
   return config;
@@ -97,8 +102,15 @@ axiosInstance.interceptors.response.use(
 
         return new Promise<never>(() => {});
       }
+
+      if (status === 403 && config.showTeacherAssignmentError) {
+        const data = error.response?.data as { message?: string } | undefined;
+        if (data?.message === TEACHER_SESSION_ACCESS_DENIED_MESSAGE) {
+          toast.error(data.message, { id: `teacher-assignment:${requestUrl}` });
+        }
+      }
     }
 
     return Promise.reject(error);
-  }
+  },
 );

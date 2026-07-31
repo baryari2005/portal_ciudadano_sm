@@ -39,7 +39,7 @@ async function upsertHandler(req: NextRequest, ctx: RouteContext) {
     if (!body) {
       return NextResponse.json(
         { error: "bad_request", message: "JSON body requerido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 

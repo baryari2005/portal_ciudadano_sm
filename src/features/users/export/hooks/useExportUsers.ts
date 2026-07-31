@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { exportUsersExcel } from "../services/export-users.client";
 import { ExportUsersStats } from "../types/export-users.types";
 
-
 export function useExportUsers() {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<ExportUsersStats | null>(null);
@@ -21,8 +20,7 @@ export function useExportUsers() {
         `Export ready (${result.users} users, ${result.legajos} employee records)`,
       );
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "Export failed";
+      const message = error instanceof Error ? error.message : "Export failed";
 
       toast.error(message);
     } finally {

@@ -1,33 +1,32 @@
-// src/app/layout.tsx
-import MobileUnsupported from "@/components/layout/MobileUnsupported";
-import "./globals.css";
+import { AppViewportGate } from "@/components/layout/AppViewportGate";
 import { Toaster } from "@/components/ui/sonner";
-import { Poppins } from "next/font/google";
+import { Roboto } from "next/font/google";
 
-const poppins = Poppins({
+import "./globals.css";
+
+const roboto = Roboto({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["300", "400", "500", "700"],
   variable: "--font-app-sans",
   display: "swap",
 });
 
-export const metadata = { title: "Sistema de Gestión de Documentos Laborales" };
+export const metadata = {
+  title: "Portal Ciudadano | Sistema de Ayuda y Actividades ",
+};
 
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="es" className={poppins.variable}>
+    <html lang="es" className={roboto.variable}>
       <body className="font-sans antialiased">
-        {/* App solo en pantallas grandes */}
-        <div className="hidden lg:block">
+        <AppViewportGate>
           {children}
           <Toaster />
-        </div>
-
-        {/* Cartel en móvil / ventana chica */}
-        <div className="lg:hidden">
-          <MobileUnsupported />
-        </div>
+        </AppViewportGate>
       </body>
     </html>
   );

@@ -16,7 +16,7 @@ export type User = {
 
 export type PersonnelFile = {
   employeeNumber?: number | null;
-  
+
   admissionDate?: string | null;
   terminationDate?: string | null;
   employmentStatus: string;
@@ -33,14 +33,15 @@ export type PersonnelFile = {
 
 // helpers actuales
 const s = (v?: string | null) => (v && v.trim() !== "" ? v.trim() : undefined);
-const n = (v?: number | null) => (typeof v === "number" && !Number.isNaN(v) ? v : undefined);
+const n = (v?: number | null) =>
+  typeof v === "number" && !Number.isNaN(v) ? v : undefined;
 
 // 👇 NUEVO helper que devuelve null (para que la clave SIEMPRE viaje)
 const sNull = (v?: string | null) => (v && v.trim() !== "" ? v.trim() : null);
 
 export function cleanPersonnelFile(p: PersonnelFile): Partial<PersonnelFile> {
   return {
-    employeeNumber: n(p.employeeNumber ?? null),    
+    employeeNumber: n(p.employeeNumber ?? null),
     admissionDate: s(p.admissionDate ?? undefined),
     terminationDate: s(p.terminationDate ?? undefined),
     employmentStatus: p.employmentStatus,
@@ -52,7 +53,7 @@ export function cleanPersonnelFile(p: PersonnelFile): Partial<PersonnelFile> {
 
     // 👇 INCLUIR SIEMPRE LAS MATRÍCULAS (null si están vacías)
     matriculaProvincial: sNull(p.matriculaProvincial ?? null),
-    matriculaNacional:  sNull(p.matriculaNacional ?? null),
+    matriculaNacional: sNull(p.matriculaNacional ?? null),
 
     notes: s(p.notes ?? undefined),
   };
@@ -68,7 +69,10 @@ export async function getUserPersonnelFile(id: string) {
   return data as PersonnelFile | null;
 }
 
-export async function upsertUserPersonnelFile(id: string, payload: PersonnelFile) {
+export async function upsertUserPersonnelFile(
+  id: string,
+  payload: PersonnelFile,
+) {
   const body = cleanPersonnelFile(payload);
   const { data } = await axiosInstance.put(`/users/${id}/legajo`, body);
   return data as PersonnelFile;
