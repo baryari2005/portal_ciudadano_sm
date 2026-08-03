@@ -37,7 +37,7 @@ export function SupportPageClient() {
   const pathname = usePathname();
   const permissions = useAuth((state) => state.user?.permisos ?? []);
   const [query, setQuery] = useState("");
-  const category: HelpCategory = pathname.startsWith("/citizen") ? "citizen" : pathname.startsWith("/teacher") ? "teacher" : pathname.startsWith("/access") ? "reception" : "administration";
+  const category: HelpCategory = pathname.startsWith("/citizen") ? "citizen" : pathname.startsWith("/teacher") ? "teacher" : pathname.startsWith("/reception") || pathname.startsWith("/access") ? "reception" : "administration";
   const visible = useMemo(() => getVisibleHelpGuides(permissions, category), [category, permissions]);
   const guides = useMemo(() => { const normalized = query.trim().toLocaleLowerCase("es"); return visible.filter((guide) => !normalized || [guide.title, guide.description, ...guide.keywords, ...guide.steps].join(" ").toLocaleLowerCase("es").includes(normalized)); }, [query, visible]);
   const categoryMeta = HELP_CATEGORY_META[category];

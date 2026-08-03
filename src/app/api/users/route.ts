@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
     requirePermission(loggedInUser, "usuarios", "ver");
 
     const params = parseUserListParams(req.url);
+    if (["reception", "recepcion"].includes(loggedInUser.rol.codigo?.trim().toLowerCase() ?? "")) params.scope = "citizen";
     const { items, meta } = await listUsers(params);
 
     return NextResponse.json({
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const dto = createUserSchema.parse(body);
+    if (dto.professorProfile) requirePermission(loggedInUser, "profesores", "crear");
 
     const result = await createOrReviveUser(dto);
     await createAuditLog({actorId:loggedInUser.id,action:result.revived?"REACTIVAR":"CREAR",entityType:"USUARIO",entityId:result.id,entityName:[dto.nombre,dto.apellido].filter(Boolean).join(" "),origin:"ADMINISTRACION",requestContext:getAuditRequestContext(req.headers)});

@@ -1,2 +1,2 @@
 import { redirect } from "next/navigation";
-export default function Page() { redirect("/access/manual"); }
+export default function Page() { redirect("/reception/manual"); }

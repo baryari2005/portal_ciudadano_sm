@@ -163,6 +163,39 @@ export async function listAccessRecords(filters: { search?: string; result?: Acc
 export async function getAccessRecord(id: string) { const record = await prisma.registroAcceso.findUnique({ where: { id }, include: accessInclude }); if (!record) throw new CatalogNotFoundError("Registro de acceso no encontrado."); return record; }
 export async function updateAccessRecord(id: string, observations: string, actorId: string, requestContext?: RequestContext) { return prisma.$transaction(async (tx) => { const before = await tx.registroAcceso.findUnique({ where: { id } }); if (!before) throw new CatalogNotFoundError("Registro de acceso no encontrado."); if (before.anuladoAt) throw new CatalogValidationError("No se puede corregir un registro anulado."); const record = await tx.registroAcceso.update({ where: { id }, data: { observaciones: observations } }); await createAuditLogTx(tx, { actorId, action: "EDITAR", entityType: "REGISTRO_ACCESO", entityId: id, changes: { observaciones: { before: before.observaciones, after: observations } }, origin: "ADMINISTRACION", requestContext }); return record; }); }
 export async function annulAccessRecord(id: string, reason: string, actorId: string, requestContext?: RequestContext) { return prisma.$transaction(async (tx) => { const before = await tx.registroAcceso.findUnique({ where: { id } }); if (!before) throw new CatalogNotFoundError("Registro de acceso no encontrado."); if (before.anuladoAt) throw new CatalogValidationError("El registro ya está anulado."); const record = await tx.registroAcceso.update({ where: { id }, data: { anuladoAt: new Date(), anuladoPorId: actorId, motivoAnulacion: reason } }); await createAuditLogTx(tx, { actorId, action: "ANULAR", entityType: "REGISTRO_ACCESO", entityId: id, changes: { anuladoAt: { before: null, after: record.anuladoAt }, motivoAnulacion: { before: null, after: reason } }, origin: "ADMINISTRACION", requestContext }); return record; }); }
-export async function getAccessHome(establishmentId: string) { await activeEstablishment(establishmentId); const start = localDateTime(localParts(new Date()), "00:00"); const [allowed, rejected, recent, upcoming] = await Promise.all([prisma.registroAcceso.count({ where: { establecimientoId: establishmentId, resultado: "PERMITIDO", fechaHora: { gte: start }, anuladoAt: null } }), prisma.registroAcceso.count({ where: { establecimientoId: establishmentId, resultado: "RECHAZADO", fechaHora: { gte: start }, anuladoAt: null } }), prisma.registroAcceso.findMany({ where: { establecimientoId: establishmentId }, include: accessInclude, orderBy: { fechaHora: "desc" }, take: 5 }), prisma.claseActividad.findMany({ where: { establecimientoId: establishmentId, fecha: { gte: start }, estado: { in: ["PROGRAMADA", "EN_CURSO"] } }, include: { horarioActividad: { include: { actividad: { select: { nombre: true } } } } }, orderBy: [{ fecha: "asc" }, { horaInicio: "asc" }], take: 5 })]); return { allowed, rejected, recent, upcoming }; }
+export async function getAccessHome(establishmentId: string) {
+  const establishment = await activeEstablishment(establishmentId);
+  const now = new Date();
+  const today = localParts(now);
+  const start = localDateTime(today, "00:00");
+  const end = localDateTime(today, "23:59");
+  const baseAccessWhere: Prisma.RegistroAccesoWhereInput = { establecimientoId: establishmentId, fechaHora: { gte: start, lte: end }, anuladoAt: null };
+  const [allowedEntries, rejectedEntries, attendedPeople, recent, upcoming] = await Promise.all([
+    prisma.registroAcceso.count({ where: { ...baseAccessWhere, resultado: "PERMITIDO" } }),
+    prisma.registroAcceso.count({ where: { ...baseAccessWhere, resultado: "RECHAZADO" } }),
+    prisma.registroAcceso.findMany({ where: { ...baseAccessWhere, usuarioId: { not: null } }, distinct: ["usuarioId"], select: { usuarioId: true } }),
+    prisma.registroAcceso.findMany({ where: { establecimientoId: establishmentId }, include: accessInclude, orderBy: { fechaHora: "desc" }, take: 5 }),
+    prisma.claseActividad.findMany({ where: { establecimientoId: establishmentId, fecha: { gte: start }, estado: { in: ["PROGRAMADA", "EN_CURSO"] } }, include: { horarioActividad: { include: { actividad: { select: { nombre: true } } } } }, orderBy: [{ fecha: "asc" }, { horaInicio: "asc" }], take: 6 }),
+  ]);
+  return {
+    allowed: allowedEntries,
+    rejected: rejectedEntries,
+    recent,
+    upcoming,
+    establishment: { id: establishment.id, name: establishment.nombre },
+    metrics: { totalEntries: allowedEntries + rejectedEntries, allowedEntries, rejectedEntries, attendedPeople: attendedPeople.length },
+    recentAccesses: recent.map((item) => ({
+      id: item.id,
+      occurredAt: item.fechaHora.toISOString(),
+      personName: item.nombreSnapshot,
+      documentNumber: item.documentoSnapshot,
+      result: item.resultado,
+      origin: item.origen,
+      operatorName: item.registradoPor ? [item.registradoPor.nombre, item.registradoPor.apellido].filter(Boolean).join(" ") : null,
+    })),
+    upcomingSessions: upcoming.map((item) => ({ id: item.id, date: localParts(item.fecha), startTime: item.horaInicio, activityName: item.horarioActividad.actividad.nombre })),
+    updatedAt: now.toISOString(),
+  };
+}
 export async function listActiveEstablishments() { return prisma.establecimiento.findMany({ where: { activo: true, estado: { not: "inactivo" } }, select: { id: true, nombre: true }, orderBy: { nombre: "asc" } }); }
 export async function findAccessUserByDni(dni: string) { const user = await prisma.usuario.findFirst({ where: { documento: dni.replace(/\D/g, ""), deletedAt: null }, select: { id: true, nombre: true, apellido: true, documento: true, avatarUrl: true, fotoPerfilUrl: true } }); return user ? person(user) : null; }

@@ -1,2 +1,2 @@
-import { AccessHomePage } from "@/features/access/components/AccessHomePage";
-export default function Page() { return <AccessHomePage />; }
+import { redirect } from "next/navigation";
+export default function Page() { redirect("/reception"); }

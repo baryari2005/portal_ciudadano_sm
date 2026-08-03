@@ -21,6 +21,7 @@ type RouteContext = {
 export async function GET(req: NextRequest, ctx: RouteContext) {
   const loggedInUser = await requireAuth(req);
   requirePermission(loggedInUser, "usuarios", "editar");
+  if (["reception", "recepcion"].includes(loggedInUser.rol.codigo?.trim().toLowerCase() ?? "")) return NextResponse.json({ message: "Usá el endpoint operativo de Recepción." }, { status: 403 });
 
   try {
     const { id } = await ctx.params;
@@ -36,11 +37,13 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
 export async function PATCH(req: NextRequest, ctx: RouteContext) {
   const loggedInUser = await requireAuth(req);
   requirePermission(loggedInUser, "usuarios", "editar");
+  if (["reception", "recepcion"].includes(loggedInUser.rol.codigo?.trim().toLowerCase() ?? "")) return NextResponse.json({ message: "Usá el endpoint operativo de Recepción." }, { status: 403 });
 
   try {
     const { id } = await ctx.params;
     const body = await req.json();
     const dto = patchUserSchema.parse(body);
+    if (dto.professorProfile) requirePermission(loggedInUser, "profesores", "editar");
 
     if (dto.estado === "ACTIVO" || dto.estado === "RECHAZADO") {
       return NextResponse.json(

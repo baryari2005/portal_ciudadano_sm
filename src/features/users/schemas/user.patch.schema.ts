@@ -50,6 +50,11 @@ export const patchUserSchema = z.object({
   genero: z.nativeEnum(Genero).nullable().optional(),
   estadoCivil: z.nativeEnum(EstadoCivil).nullable().optional(),
   nacionalidad: z.nativeEnum(Nacionalidad).nullable().optional(),
+  professorProfile: z.object({
+    especialidad: z.string().trim().max(160).optional().nullable(),
+    matricula: z.string().trim().max(120).optional().nullable(),
+    descripcion: z.string().trim().max(1200).optional().nullable(),
+  }).optional(),
 });
 
 export type PatchUserDto = z.infer<typeof patchUserSchema>;

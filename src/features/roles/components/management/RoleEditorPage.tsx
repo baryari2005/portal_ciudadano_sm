@@ -19,6 +19,7 @@ import { axiosInstance } from "@/lib/axios";
 import { PermissionIcon } from "../PermissionIcon";
 import { RoleFormActions } from "../RoleFormActions";
 import { resolveRoleCode } from "../../lib/role-code";
+import { CatalogLoadingState } from "@/features/activity-catalogs/components/CatalogPrimitives";
 
 type EditorMode = "create" | "edit";
 
@@ -77,6 +78,8 @@ export function RoleEditorPage({ mode }: { mode: EditorMode }) {
     ...groups.map((group) => ({ id: `permission:${group.modulo}`, ...modulePresentation(group.modulo) })),
   ], [groups]);
   const selectedGroup = active.startsWith("permission:") ? groups.find((group) => group.modulo === active.slice("permission:".length)) : null;
+
+  if (loading) return <CatalogLoadingState label="rol y permisos" fullPage />;
 
   function toggle(permissionId: number) {
     setSelectedIds((current) => current.includes(permissionId) ? current.filter((id) => id !== permissionId) : [...current, permissionId]);

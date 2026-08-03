@@ -1,2 +1,2 @@
-import { AccessHistoryPage } from "@/features/access/components/AccessHistoryPage";
-export default function Page() { return <AccessHistoryPage />; }
+import { redirect } from "next/navigation";
+export default function Page() { redirect("/reception/history"); }

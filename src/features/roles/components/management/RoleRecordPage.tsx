@@ -7,7 +7,7 @@ import { BellRing, ClipboardCheck, DoorOpen, Edit3, FileCheck2, FileText, Gradua
 import { AdminRecordLayout, AdminRecordSectionContent } from "@/components/shared/admin-record-layout";
 import { AdminDetailActions, AdminDetailHeader, AdminDetailPanel } from "@/components/shared/admin-patterns";
 import { Button } from "@/components/ui/button";
-import { CatalogDetailField } from "@/features/activity-catalogs/components/CatalogPrimitives";
+import { CatalogDetailField, CatalogLoadingState } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { useCan } from "@/hooks/useCan";
 import { axiosInstance } from "@/lib/axios";
 import { SIDEBAR_CONFIG } from "@/config/sidebar.config";
@@ -80,6 +80,8 @@ export function RoleRecordPage({ roleId, section }: { roleId: number; section: R
     if (section !== "permissions" || !permissionGroups.length || active.startsWith("permission:")) return;
     setActive(`permission:${permissionGroups[0][0]}`);
   }, [active, permissionGroups, section]);
+
+  if (loading) return <CatalogLoadingState label="información del rol" fullPage />;
 
   function select(next: string) {
     if (next === active) return;

@@ -118,6 +118,9 @@ const BaseFields = z.object({
   genero: z.enum(GENERO_OPCIONES).optional(),
   estadoCivil: z.enum(ESTADO_CIVIL_OPCIONES).optional(),
   nacionalidad: z.enum(NACIONALIDAD_VALUES).optional(),
+  profesorEspecialidad: z.string().max(160, "Máximo 160 caracteres").optional(),
+  profesorMatricula: z.string().max(120, "Máximo 120 caracteres").optional(),
+  profesorDescripcion: z.string().max(1200, "Máximo 1200 caracteres").optional(),
 });
 
 const createUserSchemaBase = BaseFields.extend({

@@ -1,7 +1,7 @@
 import { axiosInstance } from "@/lib/axios";
 import { Role, UserDTO, UserFormValues } from "../types/types";
 
-type UpsertUserDto = {
+export type UpsertUserDto = {
   userId: string;
   email: string;
   password?: string;
@@ -33,6 +33,7 @@ type UpsertUserDto = {
   genero?: UserFormValues["genero"] | null;
   estadoCivil?: UserFormValues["estadoCivil"] | null;
   nacionalidad?: UserFormValues["nacionalidad"] | null;
+  professorProfile?: { especialidad?: string | null; matricula?: string | null; descripcion?: string | null };
 };
 
 export async function listRoles(): Promise<Role[]> {
@@ -52,10 +53,25 @@ export async function createUser(dto: UpsertUserDto): Promise<UserDTO> {
   return data;
 }
 
+export async function createReceptionAccessRequest(dto: Omit<UpsertUserDto, "rolId">): Promise<{ id: string; requestId: string }> {
+  const { data } = await axiosInstance.post<{ data: { id: string; requestId: string } }>("/reception/request-access", dto);
+  return data.data;
+}
+
 export async function updateUser(
   id: string,
   dto: Partial<UpsertUserDto>,
 ): Promise<UserDTO> {
   const { data } = await axiosInstance.patch(`/users/${id}`, dto);
+  return data;
+}
+
+export async function getReceptionCitizen(id: string): Promise<UserDTO> {
+  const { data } = await axiosInstance.get(`/reception/citizens/${id}`);
+  return data;
+}
+
+export async function updateReceptionCitizen(id: string, dto: Partial<UpsertUserDto>): Promise<UserDTO> {
+  const { data } = await axiosInstance.patch(`/reception/citizens/${id}`, dto);
   return data;
 }

@@ -5,9 +5,10 @@ import { LoginImagePanel } from "./LoginImagePanel";
 
 type LoginPageLayoutProps = {
   children: ReactNode;
+  imageSources?: readonly string[];
 };
 
-export function LoginPageLayout({ children }: LoginPageLayoutProps) {
+export function LoginPageLayout({ children, imageSources }: LoginPageLayoutProps) {
   const authStyle = {
     "--auth-background": AUTH_COLORS.background,
     "--auth-primary": AUTH_COLORS.primary,
@@ -23,7 +24,7 @@ export function LoginPageLayout({ children }: LoginPageLayoutProps) {
       className="grid min-h-screen bg-[var(--auth-background)] lg:grid-cols-2"
       style={authStyle}
     >
-      <LoginImagePanel />
+      <LoginImagePanel imageSources={imageSources} />
       <main className="flex min-h-screen items-center justify-center px-6 py-10 sm:px-10 lg:px-16 xl:px-24">
         <div className="w-full max-w-[420px]">{children}</div>
       </main>

@@ -65,6 +65,20 @@ export function requirePermission(
   }
 }
 
+function normalizedRoleCode(user: Pick<ServerUser, "rol">) {
+  return (user.rol?.codigo || user.rol?.nombre || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+export function requireAccessRequestReviewPermission(user: Pick<ServerUser, "permisos" | "rol">) {
+  requirePermission(user, "usuarios", "editar");
+  if (["reception", "recepcion", "teacher", "profesor", "citizen", "ciudadano"].includes(normalizedRoleCode(user))) throw new Error("FORBIDDEN");
+}
+
+export function requireDocumentReviewPermission(user: Pick<ServerUser, "permisos" | "rol">) {
+  requirePermission(user, "enrollment_documents", "asignar");
+  if (["reception", "recepcion", "teacher", "profesor", "citizen", "ciudadano"].includes(normalizedRoleCode(user))) throw new Error("FORBIDDEN");
+}
+
 export async function getServerMe(
   req: NextRequest,
 ): Promise<{ user: ServerUser | null }> {

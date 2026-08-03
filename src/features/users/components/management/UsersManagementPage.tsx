@@ -9,8 +9,10 @@ import { UsersHeader } from "./UsersHeader";
 import { UsersList } from "./UsersList";
 import { UsersManagementLoadingState } from "./UsersManagementLoadingState";
 import { UsersSearchBar } from "./UsersSearchBar";
+import { useSearchParams } from "next/navigation";
 
-export function UsersManagementPage({ scope = "citizen" }: { scope?: "citizen" | "personnel" }) {
+export function UsersManagementPage({ scope = "citizen", context = "admin" }: { scope?: "citizen" | "personnel"; context?: "admin" | "reception" }) {
+  const searchParams = useSearchParams();
   const canCreate = useCan("usuarios", "crear");
   const {
     query,
@@ -31,7 +33,7 @@ export function UsersManagementPage({ scope = "citizen" }: { scope?: "citizen" |
     setPage,
     loading,
     error,
-  } = useUsersManagement(scope);
+  } = useUsersManagement(scope, context, searchParams.get("selected") ?? "");
   const showInitialLoading = (loading || rolesLoading) && !error;
 
   if (showInitialLoading) {
@@ -40,7 +42,7 @@ export function UsersManagementPage({ scope = "citizen" }: { scope?: "citizen" |
 
   return (
     <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_minmax(0,1fr)] gap-5 bg-[#F7FBF5] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
-      <UsersHeader total={meta.total} canCreate={canCreate} scope={scope} />
+      <UsersHeader total={meta.total} canCreate={canCreate} scope={scope} context={context} />
 
       <section className="grid min-h-0 gap-6 lg:grid-cols-[minmax(340px,0.95fr)_minmax(420px,1.05fr)]">
         <div
@@ -70,13 +72,19 @@ export function UsersManagementPage({ scope = "citizen" }: { scope?: "citizen" |
             filtered={Boolean(query.trim()) || selectedRoleId !== null || selectedStatus !== "all"}
           />
         </div>
-        <div className={cn(!selectedUserId && "hidden lg:block", "min-h-0")}>
+        <div
+          className={cn(
+            !selectedUserId && "hidden lg:block",
+            "min-h-0",
+          )}
+        >
           <UserDetailPanel
             user={selectedUser}
             loading={loading}
             onBack={() => selectUser("")}
             onUserChanged={refreshUsers}
             compact
+            context={context}
           />
         </div>
       </section>

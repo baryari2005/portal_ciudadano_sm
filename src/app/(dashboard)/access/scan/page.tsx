@@ -1,2 +1,2 @@
-import { AccessScanPage } from "@/features/access/components/AccessScanPage";
-export default function Page() { return <AccessScanPage />; }
+import { redirect } from "next/navigation";
+export default function Page() { redirect("/reception/scan"); }

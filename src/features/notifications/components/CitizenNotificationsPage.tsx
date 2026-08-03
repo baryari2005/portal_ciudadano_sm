@@ -11,8 +11,10 @@ import {
   ChevronRight,
   CircleDot,
   Flag,
+  Inbox,
   Loader2,
   MessageSquare,
+  Send,
   UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -29,6 +31,7 @@ import {
 } from "@/components/shared/admin-patterns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   CATALOG_PAGE_SIZE,
   CatalogDetailField,
@@ -54,6 +57,7 @@ import {
 import type { Notification, NotificationStatus } from "../types/notification.types";
 
 type Scope = "citizen" | "admin" | "teacher";
+type PersonalWorkspace = "citizen" | "reception";
 type StatusFilter = "all" | "unread" | "read" | "archived";
 type NotificationAction = "markAsRead" | "markAsUnread" | "archive";
 
@@ -83,12 +87,22 @@ function accessRequestStatus(item: Notification) {
   return null;
 }
 
-function notificationAction(item: Notification, scope: Scope) {
+function notificationAction(item: Notification, scope: Scope, workspace: PersonalWorkspace) {
   const requestStatus = accessRequestStatus(item);
   if (requestStatus === "APROBADA" || requestStatus === "PENDIENTE") return null;
   if (requestStatus === "RECHAZADA") {
     return { href: "/request-access", label: "Corregir y reenviar" };
   }
+  if (workspace === "reception" && item.actionUrl?.startsWith("/citizen")) {
+    const receptionRoutes: Record<string, string> = {
+      "/citizen/profile": "/reception/profile",
+      "/citizen/qr": "/reception/qr",
+      "/citizen/notifications": "/reception/notifications",
+    };
+    const href = receptionRoutes[item.actionUrl];
+    return href ? { href, label: item.actionLabel || "Ver detalle" } : null;
+  }
+  if (workspace === "reception" && item.actionUrl && !item.actionUrl.startsWith("/reception") && item.actionUrl !== "/request-access") return null;
   if (scope !== "citizen" && item.actionUrl?.startsWith("/citizen")) return null;
   return item.actionUrl
     ? { href: item.actionUrl, label: item.actionLabel || "Ver detalle" }
@@ -98,9 +112,11 @@ function notificationAction(item: Notification, scope: Scope) {
 export function CitizenNotificationsPage({
   title = "Mis notificaciones",
   scope = "citizen",
+  workspace = "citizen",
 }: {
   title?: string;
   scope?: Scope;
+  workspace?: PersonalWorkspace;
 } = {}) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Notification | null>(null);
@@ -227,10 +243,18 @@ export function CitizenNotificationsPage({
       <AdminSplitLayout
         list={
           <AdminListPane detailOpen={Boolean(selected)}>
-            <div className="grid grid-cols-2 gap-2 rounded-xl border border-[#C9D9C3] bg-white p-1">
-              <Button type="button" variant={mailbox === "received" ? "default" : "ghost"} className={mailbox === "received" ? "bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]" : ""} onClick={() => setMailbox("received")}>Recibidas</Button>
-              <Button type="button" variant={mailbox === "sent" ? "default" : "ghost"} className={mailbox === "sent" ? "bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]" : ""} onClick={() => setMailbox("sent")}>Enviadas</Button>
-            </div>
+            <Tabs value={mailbox} onValueChange={(value) => setMailbox(value as "received" | "sent")}>
+              <TabsList className="grid h-12 w-full grid-cols-2 rounded-xl border border-[var(--brand-border)] bg-white p-1 shadow-sm">
+                <TabsTrigger value="received" className={cn("h-10 gap-2 rounded-lg bg-transparent font-bold text-[var(--brand-muted)] shadow-none hover:bg-[var(--brand-panel)]", mailbox === "received" && "!bg-[var(--brand-primary)] !text-white shadow-sm hover:!bg-[var(--brand-primary-hover)]")}>
+                  <Inbox className="size-4" />
+                  Recibidas
+                </TabsTrigger>
+                <TabsTrigger value="sent" className={cn("h-10 gap-2 rounded-lg bg-transparent font-bold text-[var(--brand-muted)] shadow-none hover:bg-[var(--brand-panel)]", mailbox === "sent" && "!bg-[var(--brand-primary)] !text-white shadow-sm hover:!bg-[var(--brand-primary-hover)]")}>
+                  <Send className="size-4" />
+                  Enviadas
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
               <CatalogSearchInput
                 value={query}
@@ -291,6 +315,7 @@ export function CitizenNotificationsPage({
             <NotificationDetail
               item={selected}
               scope={scope}
+              workspace={workspace}
               loading={Boolean(actionLoading)}
               onBack={() => setSelected(null)}
               onUpdate={updateSelected}
@@ -345,6 +370,7 @@ function NotificationListItem({
 function NotificationDetail({
   item,
   scope,
+  workspace,
   loading,
   onBack,
   onUpdate,
@@ -352,6 +378,7 @@ function NotificationDetail({
 }: {
   item: Notification | null;
   scope: Scope;
+  workspace: PersonalWorkspace;
   loading: boolean;
   onBack: () => void;
   onUpdate: (action: NotificationAction) => Promise<void>;
@@ -361,7 +388,7 @@ function NotificationDetail({
     return <AdminDetailPanel empty="Seleccioná una notificación para consultar su detalle." />;
   }
   const requestStatus = accessRequestStatus(item);
-  const action = notificationAction(item, scope);
+  const action = notificationAction(item, scope, workspace);
   const recipient = item.user
     ? [item.user.firstName, item.user.lastName].filter(Boolean).join(" ")
     : null;

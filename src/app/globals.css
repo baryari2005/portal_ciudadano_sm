@@ -274,3 +274,27 @@ main > header > div.flex.items-start.gap-3 > div > p.mt-2:not(.flex)::before {
     animation: none;
   }
 }
+
+.brand-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-secondary) var(--brand-panel);
+}
+
+.brand-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.brand-scrollbar::-webkit-scrollbar-track {
+  background: var(--brand-panel);
+  border-radius: 999px;
+}
+
+.brand-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--brand-secondary);
+  border: 2px solid var(--brand-panel);
+  border-radius: 999px;
+}
+
+.brand-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-primary);
+}

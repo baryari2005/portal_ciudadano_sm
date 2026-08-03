@@ -7,7 +7,7 @@ import { HelpCircle } from "lucide-react";
 
 import { Separator } from "@/components/ui/separator";
 import { UserAvatar } from "@/components/layout/user-menu/UserAvatar";
-import { SIDEBAR_CONFIG } from "@/config/sidebar.config";
+import { RECEPTION_SIDEBAR_CONFIG, SIDEBAR_CONFIG } from "@/config/sidebar.config";
 import { hasPermission } from "@/features/auth/libs/permissions";
 import { useAuth } from "@/stores/auth";
 import { hasAdministrativeWorkspace } from "@/features/auth/libs/workspaces";
@@ -18,26 +18,30 @@ import { SidebarSection } from "./SidebarSection";
 
 type Props = {
   collapsed: boolean;
+  experience?: "administration" | "reception";
 };
 
 const SIDEBAR_SECTION_ORDER = [
   "Inicio",
+  "General",
   "Ciudadanos",
   "Participación",
   "Actividades",
   "Programación",
   "Personal",
+  "Operación",
   "Recepción",
   "Catálogos y Configuración",
   "Administración",
   "Comunicación",
+  "Mi cuenta",
 ];
 
-export function Sidebar({ collapsed }: Props) {
+export function Sidebar({ collapsed, experience = "administration" }: Props) {
   const pathname = usePathname();
   const user = useAuth((state) => state.user);
   const permissions = useAuth((state) => state.user?.permisos ?? []);
-  const { unreadNotificationCount } = usePendingUsersAlert();
+  const { unreadNotificationCount } = usePendingUsersAlert(experience === "administration");
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 
   const fullName =
@@ -53,7 +57,8 @@ export function Sidebar({ collapsed }: Props) {
   };
 
   const visibleItems = useMemo(() => {
-    return SIDEBAR_CONFIG.filter((item) => {
+    const items = experience === "reception" ? RECEPTION_SIDEBAR_CONFIG : SIDEBAR_CONFIG;
+    return items.filter((item) => {
       if (item.href === "/" && !hasAdministrativeWorkspace(user)) {
         return false;
       }
@@ -67,7 +72,7 @@ export function Sidebar({ collapsed }: Props) {
         item.permission.accion,
       );
     });
-  }, [permissions, user]);
+  }, [experience, permissions, user]);
 
   const grouped = useMemo(() => {
     return visibleItems.reduce<Record<string, typeof visibleItems>>(
@@ -86,8 +91,8 @@ export function Sidebar({ collapsed }: Props) {
   const activeSection = useMemo(
     () =>
       visibleItems.find((item) =>
-        item.href === "/"
-          ? pathname === "/"
+        item.href === "/" || item.href === "/reception"
+          ? pathname === item.href
           : pathname === item.href || pathname.startsWith(`${item.href}/`),
       )?.section,
     [pathname, visibleItems],
@@ -99,8 +104,8 @@ export function Sidebar({ collapsed }: Props) {
   }, [activeSection]);
 
   function isItemActive(href: string) {
-    return href === "/"
-      ? pathname === "/"
+    return href === "/" || href === "/reception"
+      ? pathname === href
       : pathname === href || pathname.startsWith(`${href}/`);
   }
 
@@ -189,8 +194,8 @@ export function Sidebar({ collapsed }: Props) {
         <SidebarNavIcon
           Icon={HelpCircle}
           title="Ayuda"
-          href="/help"
-          active={pathname === "/help"}
+          href={experience === "reception" ? "/reception/help" : "/help"}
+          active={pathname === (experience === "reception" ? "/reception/help" : "/help")}
           collapsed={collapsed}
         />
 

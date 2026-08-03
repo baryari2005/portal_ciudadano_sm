@@ -213,6 +213,35 @@ model RegistroAuditoria {
   @@index([entidadTipo, entidadId, createdAt])
 }
 
+model ParametrosGenerales {
+  id                    Int      @id @default(1)
+  registrosPorPagina    Int      @default(6)
+  imagenLoginCollage1   String?
+  imagenLoginCollage2   String?
+  imagenLoginCollage3   String?
+  imagenLoginCollage4   String?
+  updatedById           String?  @db.Uuid
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model UsuarioBorrador {
+  id              String   @id @default(cuid())
+  ownerId         String   @db.Uuid
+  subjectUserId   String?  @db.Uuid
+  scope           String
+  mode            String
+  payload         Json
+  currentStep     Int      @default(1)
+  stepStatuses    Json
+  viewMode        String   @default("workflow")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([ownerId, scope, mode, updatedAt])
+  @@index([subjectUserId])
+}
+
 model Profesor {
   id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   usuarioId    String         @unique @db.Uuid
@@ -1251,6 +1280,7 @@ enum AuditoriaEntidad {
   CREDENCIAL_QR
   NOTIFICACION
   REGISTRO_ACCESO
+  PARAMETROS_GENERALES
 }
 
 enum AccesoResultado {

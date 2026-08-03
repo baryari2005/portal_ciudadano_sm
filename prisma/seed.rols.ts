@@ -270,12 +270,18 @@ const SYSTEM_RESET_DATABASE_PERMISSION = {
   icono: "database-zap",
 };
 
+const GENERAL_SETTINGS_PERMISSIONS = [
+  { modulo: "general_settings", accion: "ver", descripcion: "Permite visualizar los parámetros generales.", icono: "eye" },
+  { modulo: "general_settings", accion: "editar", descripcion: "Permite modificar los parámetros generales.", icono: "pencil" },
+];
+
 const PERMISOS = [
   ...BASE_PERMISOS,
   ...CATALOG_PERMISOS,
   ...PROFESORES_PERMISOS,
   USUARIOS_ASIGNAR_PERMISO,
   SYSTEM_RESET_DATABASE_PERMISSION,
+  ...GENERAL_SETTINGS_PERMISSIONS,
   ...OPERATIONAL_PERMISOS,
 ];
 

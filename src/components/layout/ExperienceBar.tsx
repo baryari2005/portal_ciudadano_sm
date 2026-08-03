@@ -7,9 +7,9 @@ export type ExperienceKind = "administration" | "reception" | "teacher" | "citiz
 
 const meta = {
   administration: { label: "Portal Ciudadano - Más San Miguel - Experiencia Administrativa", icon: BriefcaseBusiness },
-  reception: { label: "Experiencia de recepción", icon: ScanLine },
-  teacher: { label: "Experiencia docente", icon: GraduationCap },
-  citizen: { label: "Experiencia ciudadana", icon: UserRound },
+  reception: { label: "Portal de Recepción - Más San Miguel - Experiencia Operativa", icon: ScanLine },
+  teacher: { label: "Portal Ciudadano - Más San Miguel - Experiencia docente", icon: GraduationCap },
+  citizen: { label: "Portal Ciudadano - Más San Miguel - Experiencia ciudadana", icon: UserRound },
 } as const;
 
 export function ExperienceBar({ experience, className }: { experience: ExperienceKind; className?: string }) {

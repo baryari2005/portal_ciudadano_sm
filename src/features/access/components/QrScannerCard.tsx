@@ -207,7 +207,7 @@ export function QrScannerCard({
               variant="outline"
               className="h-12 rounded-xl border-[#C9D9C3] bg-white font-bold text-[#173C2A] hover:bg-[#DDEF8F]"
             >
-              <Link href="/access/manual">
+              <Link href="/reception/manual">
                 <Search className="h-5 w-5" />
                 Busqueda manual
               </Link>

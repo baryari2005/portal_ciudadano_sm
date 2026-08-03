@@ -269,11 +269,11 @@ export function RolesManagementPage() {
           <CatalogPagination page={page} total={meta.total} onPageChange={setPage} />
         </div>
 
-        <div className={selectedRoleId ? "block" : "hidden xl:block"}>
+        <div className={`min-h-0 ${selectedRoleId ? "block" : "hidden xl:block"}`}>
           {detailLoading && selectedRoleId ? (
-            <AdminDetailPanel loading loadingLabel="el detalle del rol" />
+            <AdminDetailPanel className="xl:h-full" loading loadingLabel="el detalle del rol" />
           ) : selectedRole ? (
-            <AdminDetailPanel onBack={() => { setSelectedRoleId(null); setSelectedRole(null); }}>
+            <AdminDetailPanel className="xl:flex xl:h-full xl:min-h-0 xl:flex-col xl:overflow-hidden" onBack={() => { setSelectedRoleId(null); setSelectedRole(null); }}>
               <AdminDetailHeader
                 title={selectedRole.nombre}
                 leading={<span className="grid size-16 place-items-center rounded-2xl bg-[var(--brand-primary)] text-xl font-extrabold text-white shadow-sm">
@@ -283,6 +283,7 @@ export function RolesManagementPage() {
                 action={<Button asChild variant="outline" className="w-full border-[var(--brand-secondary)] bg-white font-bold text-[var(--brand-primary)]"><Link href={`/roles/${selectedRole.id}/record/overview`}><Eye />Ver ficha completa</Link></Button>}
               />
 
+              <div className="brand-scrollbar xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-2">
               <dl className="mt-6 grid gap-3 sm:grid-cols-3">
                 <CatalogDetailField icon={KeyRound} label="Código interno">
                   {resolveRoleCode(selectedRole)}
@@ -297,9 +298,10 @@ export function RolesManagementPage() {
                   {selectedRole._count.usuarios}
                 </CatalogDetailField>
               </dl>
+              </div>
 
               {canEdit ? (
-                <AdminDetailActions>
+                <AdminDetailActions className="xl:shrink-0">
                   <Button
                     asChild
                     className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]"

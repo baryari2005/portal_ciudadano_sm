@@ -27,7 +27,7 @@ export function SupportAssistant() {
   const pathname = usePathname();
   const token = useAuth((state) => state.token);
   const permissions = useAuth((state) => state.user?.permisos ?? []);
-  const category: HelpCategory = pathname.startsWith("/citizen") ? "citizen" : pathname.startsWith("/teacher") ? "teacher" : pathname.startsWith("/access") ? "reception" : "administration";
+  const category: HelpCategory = pathname.startsWith("/citizen") ? "citizen" : pathname.startsWith("/teacher") ? "teacher" : pathname.startsWith("/reception") || pathname.startsWith("/access") ? "reception" : "administration";
   const starterQuestions = useMemo(() => {
     const categories = new Set(
       getVisibleHelpGuides(permissions, category).map((guide) => guide.category),

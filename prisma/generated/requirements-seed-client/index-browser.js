@@ -239,6 +239,32 @@ exports.Prisma.RegistroAuditoriaScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ParametrosGeneralesScalarFieldEnum = {
+  id: 'id',
+  registrosPorPagina: 'registrosPorPagina',
+  imagenLoginCollage1: 'imagenLoginCollage1',
+  imagenLoginCollage2: 'imagenLoginCollage2',
+  imagenLoginCollage3: 'imagenLoginCollage3',
+  imagenLoginCollage4: 'imagenLoginCollage4',
+  updatedById: 'updatedById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.UsuarioBorradorScalarFieldEnum = {
+  id: 'id',
+  ownerId: 'ownerId',
+  subjectUserId: 'subjectUserId',
+  scope: 'scope',
+  mode: 'mode',
+  payload: 'payload',
+  currentStep: 'currentStep',
+  stepStatuses: 'stepStatuses',
+  viewMode: 'viewMode',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.ProfesorScalarFieldEnum = {
   id: 'id',
   usuarioId: 'usuarioId',
@@ -957,7 +983,8 @@ exports.AuditoriaEntidad = exports.$Enums.AuditoriaEntidad = {
   DOCUMENTO_INSCRIPCION: 'DOCUMENTO_INSCRIPCION',
   CREDENCIAL_QR: 'CREDENCIAL_QR',
   NOTIFICACION: 'NOTIFICACION',
-  REGISTRO_ACCESO: 'REGISTRO_ACCESO'
+  REGISTRO_ACCESO: 'REGISTRO_ACCESO',
+  PARAMETROS_GENERALES: 'PARAMETROS_GENERALES'
 };
 
 exports.AuditoriaOrigen = exports.$Enums.AuditoriaOrigen = {
@@ -1204,6 +1231,8 @@ exports.Prisma.ModelName = {
   Notificacion: 'Notificacion',
   EntregaNotificacion: 'EntregaNotificacion',
   RegistroAuditoria: 'RegistroAuditoria',
+  ParametrosGenerales: 'ParametrosGenerales',
+  UsuarioBorrador: 'UsuarioBorrador',
   Profesor: 'Profesor',
   Establecimiento: 'Establecimiento',
   HorarioEstablecimiento: 'HorarioEstablecimiento',

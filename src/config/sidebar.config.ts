@@ -23,6 +23,10 @@ import {
   Boxes,
   DatabaseZap,
   BriefcaseBusiness,
+  Settings2,
+  QrCode,
+  UserPlus,
+  UserRound,
 } from "lucide-react";
 import { ComponentType, SVGProps } from "react";
 
@@ -38,6 +42,13 @@ export type SidebarItemConfig = {
 };
 
 export const SIDEBAR_CONFIG: SidebarItemConfig[] = [
+  {
+    section: "Administración",
+    title: "Parámetros generales",
+    href: "/general-settings",
+    icon: Settings2,
+    permission: { modulo: "general_settings", accion: "ver" },
+  },
   {
     section: "Inicio",
     title: "Dashboard",
@@ -231,4 +242,17 @@ export const SIDEBAR_CONFIG: SidebarItemConfig[] = [
       badgeKey: "notifications",
     },
   ];
+
+export const RECEPTION_SIDEBAR_CONFIG: SidebarItemConfig[] = [
+  { section: "General", title: "Inicio", href: "/reception", icon: Home, permission: { modulo: "access", accion: "ver" } },
+  { section: "Participación", title: "Inscripciones", href: "/reception/enrollments", icon: ClipboardCheck, permission: { modulo: "enrollments", accion: "ver" } },
+  { section: "Recepción", title: "Escanear QR", href: "/reception/scan", icon: DoorOpen, permission: { modulo: "access", accion: "crear" } },
+  { section: "Recepción", title: "Búsqueda manual", href: "/reception/manual", icon: Users, permission: { modulo: "access", accion: "crear" } },
+  { section: "Recepción", title: "Adjuntar documentos", href: "/reception/documents/new", icon: Files, permission: { modulo: "enrollment_documents", accion: "editar" } },
+  { section: "Recepción", title: "Solicitar acceso", href: "/reception/citizens", icon: UserPlus, permission: { modulo: "usuarios", accion: "ver" } },
+  { section: "Recepción", title: "Historial", href: "/reception/history", icon: History, permission: { modulo: "access", accion: "ver" } },
+  { section: "Mi cuenta", title: "Mi perfil", href: "/reception/profile", icon: UserRound },
+  { section: "Mi cuenta", title: "Mi QR", href: "/reception/qr", icon: QrCode },
+  { section: "Comunicación", title: "Notificaciones", href: "/reception/notifications", icon: BellRing, badgeKey: "notifications" },
+];
   

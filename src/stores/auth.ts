@@ -13,6 +13,7 @@ import type {
   LoginResult,
   UserDTO,
 } from "@/features/auth/types/auth.types";
+import { RECEPTION_ESTABLISHMENT_STORAGE_KEY } from "@/features/auth/libs/workspaces";
 
 type State = {
   user: UserDTO | null;
@@ -204,6 +205,7 @@ export const useAuth = create<State & Actions>()(
         });
 
         if (typeof window !== "undefined") {
+          sessionStorage.removeItem(RECEPTION_ESTABLISHMENT_STORAGE_KEY);
           window.location.replace(redirectTo);
         }
       },

@@ -3,7 +3,7 @@ import { UsersRound } from "lucide-react";
 
 import { CatalogPageHeader } from "@/features/activity-catalogs/components/CatalogPrimitives";
 
-export function UsersHeader({ total, canCreate, scope = "citizen" }: { total: number; canCreate: boolean; scope?: "citizen" | "personnel" }) {
+export function UsersHeader({ total, canCreate, scope = "citizen", context = "admin" }: { total: number; canCreate: boolean; scope?: "citizen" | "personnel"; context?: "admin" | "reception" }) {
   const router = useRouter();
 
   return (
@@ -14,7 +14,7 @@ export function UsersHeader({ total, canCreate, scope = "citizen" }: { total: nu
       total={total}
       createLabel={scope === "personnel" ? "Nuevo integrante" : "Nuevo ciudadano"}
       canCreate={canCreate}
-      onCreate={() => router.push(scope === "personnel" ? "/personnel/new" : "/users/new")}
+      onCreate={() => router.push(context === "reception" ? "/reception/request-access" : scope === "personnel" ? "/personnel/new" : "/users/new")}
     />
   );
 }

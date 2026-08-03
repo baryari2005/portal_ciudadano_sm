@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     }
 
     const path = body.currentPath ?? "";
-    const category: HelpCategory = path.startsWith("/citizen") ? "citizen" : path.startsWith("/teacher") ? "teacher" : path.startsWith("/access") ? "reception" : "administration";
+    const category: HelpCategory = path.startsWith("/citizen") ? "citizen" : path.startsWith("/teacher") ? "teacher" : path.startsWith("/reception") || path.startsWith("/access") ? "reception" : "administration";
     const guides = getVisibleHelpGuides(loggedInUser.permisos ?? [], category);
     const context = formatGuidesForAssistant(guides);
 

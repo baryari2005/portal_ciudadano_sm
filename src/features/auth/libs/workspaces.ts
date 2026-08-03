@@ -1,17 +1,22 @@
 import type { UserDTO } from "../types/auth.types";
-export type WorkspaceKey = "administration" | "access" | "teacher" | "citizen";
+
+export type WorkspaceKey = "administration" | "reception" | "teacher" | "citizen";
 export const WORKSPACE_STORAGE_KEY = "massm:last-workspace";
-const ADMIN_MODULES = new Set(["usuarios", "roles", "actividades", "establecimientos", "profesores", "activity_schedules", "activity_sessions", "enrollments", "attendance", "requirements", "enrollment_documents", "audit_log", "reports", "notifications", "categorias_actividades", "publicos_objetivo"]);
+export const RECEPTION_ESTABLISHMENT_STORAGE_KEY = "massm:reception:establishment";
+
+const ADMIN_MODULES = new Set(["usuarios", "roles", "actividades", "establecimientos", "profesores", "activity_schedules", "activity_sessions", "enrollments", "attendance", "requirements", "enrollment_documents", "audit_log", "reports", "notifications", "categorias_actividades", "publicos_objetivo", "general_settings"]);
 const TEACHER_MINIMUM = ["activity_schedules:ver", "activity_sessions:ver", "enrollments:ver", "attendance:ver"];
 const has = (user: UserDTO | null | undefined, key: string) => user?.permisos?.some((permission) => `${permission.modulo}:${permission.accion}` === key) ?? false;
-const isAdministratorRole = (user: UserDTO | null | undefined) => {
-  const role = (user?.rol?.codigo || user?.rol?.nombre || "").trim().toLowerCase();
-  return role === "admin" || role === "administrador";
-};
-export const hasAdministrativeWorkspace = (user: UserDTO | null | undefined) => isAdministratorRole(user) || (user?.permisos?.some((permission) => ADMIN_MODULES.has(permission.modulo)) ?? false);
-export const hasAccessWorkspace = (user: UserDTO | null | undefined) => has(user, "access:ver");
+const roleCode = (user: UserDTO | null | undefined) => (user?.rol?.codigo || user?.rol?.nombre || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const isAdministratorRole = (user: UserDTO | null | undefined) => ["admin", "administrador"].includes(roleCode(user));
+const hasDedicatedPortalRole = (user: UserDTO | null | undefined) => ["reception", "recepcion", "teacher", "profesor", "citizen", "ciudadano", "user"].includes(roleCode(user));
+
+export const hasAdministrativeWorkspace = (user: UserDTO | null | undefined) => isAdministratorRole(user) || (!hasDedicatedPortalRole(user) && (user?.permisos?.some((permission) => ADMIN_MODULES.has(permission.modulo)) ?? false));
+export const hasReceptionWorkspace = (user: UserDTO | null | undefined) => has(user, "access:ver");
+/** @deprecated El módulo de permiso continúa llamándose `access`; el workspace es `reception`. */
+export const hasAccessWorkspace = hasReceptionWorkspace;
 export const hasTeacherPermissions = (user: UserDTO | null | undefined) => TEACHER_MINIMUM.every((key) => has(user, key));
-export function availableWorkspaces(user: UserDTO, teacherProfileEnabled: boolean): WorkspaceKey[] { return [...(hasAdministrativeWorkspace(user) ? ["administration" as const] : []), ...(hasAccessWorkspace(user) ? ["access" as const] : []), ...(teacherProfileEnabled && hasTeacherPermissions(user) ? ["teacher" as const] : []), "citizen"]; }
-export const workspaceRoute = (workspace: WorkspaceKey) => workspace === "administration" ? "/" : workspace === "access" ? "/access" : workspace === "teacher" ? "/teacher" : "/citizen";
-export const workspaceForPath = (path: string): WorkspaceKey => path.startsWith("/access") || path === "/validar-qr" || path === "/busqueda-manual" ? "access" : path.startsWith("/teacher") ? "teacher" : path.startsWith("/citizen") ? "citizen" : "administration";
-export function getDefaultWorkspace(user: UserDTO, teacherProfileEnabled: boolean, preferred?: string | null) { const available = availableWorkspaces(user, teacherProfileEnabled); if (isAdministratorRole(user)) return workspaceRoute("administration"); return workspaceRoute(available.find((workspace) => workspace === preferred) ?? available[0] ?? "citizen"); }
+export function availableWorkspaces(user: UserDTO, teacherProfileEnabled: boolean): WorkspaceKey[] { return [...(hasAdministrativeWorkspace(user) ? ["administration" as const] : []), ...(hasReceptionWorkspace(user) ? ["reception" as const] : []), ...(teacherProfileEnabled && hasTeacherPermissions(user) ? ["teacher" as const] : []), "citizen"]; }
+export const workspaceRoute = (workspace: WorkspaceKey) => workspace === "administration" ? "/" : workspace === "reception" ? "/reception" : workspace === "teacher" ? "/teacher" : "/citizen";
+export const workspaceForPath = (path: string): WorkspaceKey => path.startsWith("/reception") || path.startsWith("/access") || path === "/validar-qr" || path === "/busqueda-manual" ? "reception" : path.startsWith("/teacher") ? "teacher" : path.startsWith("/citizen") ? "citizen" : "administration";
+export function getDefaultWorkspace(user: UserDTO, teacherProfileEnabled: boolean, preferred?: string | null) { const available = availableWorkspaces(user, teacherProfileEnabled); const normalizedPreferred = preferred === "access" ? "reception" : preferred; return workspaceRoute(available.find((workspace) => workspace === normalizedPreferred) ?? (isAdministratorRole(user) ? "administration" : available[0]) ?? "citizen"); }

@@ -73,6 +73,9 @@ function EditUserContent({ id }: { id: string }) {
         genero: data.genero ?? undefined,
         estadoCivil: data.estadoCivil ?? undefined,
         nacionalidad: data.nacionalidad ?? undefined,
+        profesorEspecialidad: data.profesor?.especialidad ?? "",
+        profesorMatricula: data.profesor?.matricula ?? "",
+        profesorDescripcion: data.profesor?.descripcion ?? "",
       });
 
       setLoading(false);

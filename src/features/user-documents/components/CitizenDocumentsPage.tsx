@@ -10,7 +10,6 @@ import {
   FileClock,
   FileUp,
   Loader2,
-  Search,
   UploadCloud,
   XCircle,
 } from "lucide-react";
@@ -18,10 +17,11 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CatalogEmptyState, CatalogFilterPopover } from "@/features/activity-catalogs/components/CatalogPrimitives";
+import { CatalogEmptyState, CatalogFilterPopover, CatalogLoadingState, CatalogSearchInput } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { CitizenHeader } from "@/features/citizen/components/CitizenPrimitives";
 import { axiosInstance } from "@/lib/axios";
 import { cn } from "@/lib/utils";
+import { AdminDetailHeader, AdminDetailPanel } from "@/components/shared/admin-patterns";
 
 type Doc = {
   id: string;
@@ -57,8 +57,10 @@ export function CitizenDocumentsPage() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [uploading, setUploading] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   async function load() {
+    setLoading(true);
     const response = await axiosInstance.get("/citizen/documents");
     const requirements = response.data.data.requirements as Requirement[];
     setItems(requirements);
@@ -67,6 +69,7 @@ export function CitizenDocumentsPage() {
         ? current
         : requirements[0]?.id ?? "",
     );
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -109,6 +112,8 @@ export function CitizenDocumentsPage() {
     window.open(response.data.data.url, "_blank", "noopener,noreferrer");
   }
 
+  if (loading) return <CatalogLoadingState label="documentos" fullPage />;
+
   return (
     <main className="min-h-full bg-[#F7FBF5] p-4 sm:p-6 lg:p-8">
       <CitizenHeader
@@ -119,15 +124,7 @@ export function CitizenDocumentsPage() {
       <section className="mt-6 grid min-h-0 gap-6 lg:grid-cols-[minmax(340px,0.95fr)_minmax(420px,1.05fr)]">
         <div className={cn("min-h-0 flex-col gap-4", selectedId ? "hidden lg:flex" : "flex")}>
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-            <div className="relative w-full">
-              <Search className="pointer-events-none absolute left-5 top-1/2 size-5 -translate-y-1/2 text-[#1D4F36]" />
-              <Input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Buscar documento requerido..."
-                className="h-11 rounded-xl border-0 bg-[#F1F5EC] pl-14 text-base text-[#173C2A] shadow-sm placeholder:text-[#6D8D75] focus-visible:ring-2 focus-visible:ring-[#819B56]/25"
-              />
-            </div>
+            <CatalogSearchInput value={query} onChange={setQuery} placeholder="Buscar documento requerido..." />
             <CatalogFilterPopover
               sections={[{
                 id: "document-status",
@@ -215,17 +212,8 @@ function DocumentDetail({
   const canUpload = !item.current || item.current.status === "RECHAZADO";
 
   return (
-    <aside className="h-fit rounded-3xl border border-[#DDE8D7] bg-[#EEF6E9] p-5 text-[#173C2A] shadow-sm sm:p-7 lg:sticky lg:top-0">
-      <Button variant="ghost" onClick={onBack} className="mb-4 -ml-2 text-[#1D4F36] lg:hidden">
-        <ArrowLeft /> Volver al listado
-      </Button>
-      <div className="flex items-start gap-4">
-        <DocumentIcon status={currentStatus} large />
-        <div className="min-w-0 flex-1">
-          <h2 className="break-words text-2xl font-extrabold text-[#1D4F36]">{item.name}</h2>
-          <div className="mt-2"><StatusPill status={currentStatus} /></div>
-        </div>
-      </div>
+    <AdminDetailPanel onBack={onBack} empty="Seleccioná un documento.">
+      <AdminDetailHeader title={item.name} leading={<DocumentIcon status={currentStatus} large />} badge={<StatusPill status={currentStatus} />} />
 
       <div className="mt-6 rounded-2xl border border-[#C9D9C3] bg-white p-4">
         <p className="text-xs font-extrabold uppercase text-[#819B56]">Indicaciones</p>
@@ -271,7 +259,7 @@ function DocumentDetail({
             : "El documento fue aprobado y no requiere otra carga."}
         </p>
       )}
-    </aside>
+    </AdminDetailPanel>
   );
 }
 

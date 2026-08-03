@@ -6,6 +6,9 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   CalendarIcon,
+  AlignLeft,
+  BadgeCheck,
+  BookOpen,
   CakeSlice,
   Contact,
   ClipboardCheck,
@@ -29,6 +32,7 @@ import { IconInput } from "@/components/forms/IconInput";
 import { PhoneInput } from "@/components/forms/PhoneInput";
 import { GoogleAddressInput } from "@/components/forms/GoogleAddressInput";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Popover,
@@ -100,10 +104,11 @@ export function UserFormFields({
   hasPortalAvatar,
   hasIdentityPhoto,
   onMediaUploadingChange,
+  showReview = true,
 }: {
   mode: Mode;
   form: UseFormReturn<UserFormValues>;
-  roles: Array<{ id: number; nombre: string }>;
+  roles: Array<{ id: number; nombre: string; codigo?: string }>;
   loadingRoles: boolean;
   currentAvatarUrl?: string | null;
   onTempAvatarUploaded?: (tmpPath: string | null) => void;
@@ -115,6 +120,7 @@ export function UserFormFields({
   hasPortalAvatar?: boolean;
   hasIdentityPhoto?: boolean;
   onMediaUploadingChange?: (uploading: boolean) => void;
+  showReview?: boolean;
 }) {
   const {
     register,
@@ -126,6 +132,10 @@ export function UserFormFields({
 
   const [showPassword, setShowPassword] = useState(false);
   const rolValue = watch("rolId");
+  const selectedRole = roles.find((role) => role.id === Number(rolValue));
+  const selectedRoleCode = selectedRole?.codigo?.trim().toLowerCase();
+  const selectedRoleName = selectedRole?.nombre.trim().toLowerCase();
+  const isProfessorRole = ["teacher", "profesor"].includes(selectedRoleCode ?? "") || selectedRoleName === "profesor";
   const isEdit = mode === "edit";
   const show = (section: number) => step == null || step === section;
   const birthDate = watch("fechaNacimiento");
@@ -360,7 +370,7 @@ export function UserFormFields({
         />
         </> : null}
 
-        {show(7) ? <div className="space-y-5">
+        {showReview && show(7) ? <div className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-2">
             <ReviewItem label="Nombre completo" value={`${watch("nombre") || ""} ${watch("apellido") || ""}`.trim()} />
             <ReviewItem label="DNI" value={watch("documento")} />
@@ -370,6 +380,11 @@ export function UserFormFields({
             <ReviewItem label="Contacto de emergencia" value={watch("contactoEmergenciaNombre")} />
             <ReviewItem label="Usuario" value={watch("userId")} />
             <ReviewItem label="Rol" value={fixedRoleLabel || roles.find((role) => role.id === rolValue)?.nombre} />
+            {isProfessorRole ? <>
+              <ReviewItem label="Especialidad" value={watch("profesorEspecialidad")} />
+              <ReviewItem label="Matrícula" value={watch("profesorMatricula")} />
+              <ReviewItem label="Descripción profesional" value={watch("profesorDescripcion")} />
+            </> : null}
             <ReviewItem label="Cobertura médica" value={watch("coberturaMedicaId") ? "Cobertura seleccionada" : "Sin cobertura"} />
             <ReviewItem label="Imágenes" value={`${hasPortalAvatar ? "Avatar cargado" : "Sin avatar"} · ${hasIdentityPhoto ? "Foto de identidad cargada" : "Sin foto de identidad"}`} />
           </div>
@@ -465,6 +480,14 @@ export function UserFormFields({
               <FormErrorMessage message={errors.password?.message} />
             </div>
           </div>
+          {isProfessorRole ? <section className="space-y-4 border-t border-[#C9D9C3] pt-5">
+            <div><h3 className="font-extrabold text-[#173C2A]">Datos del perfil profesional</h3><p className="mt-1 text-sm font-medium text-[#5F6F68]">Esta información se utilizará también en el módulo Profesores.</p></div>
+            <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+              <div className="space-y-1"><Label className="font-extrabold text-[#173C2A]">Especialidad</Label><IconInput id="profesorEspecialidad" leftIcon={<BookOpen className="size-4 text-[#1D4F36]" />} input={<Input {...register("profesorEspecialidad")} maxLength={160} className="h-11 w-full rounded-xl border-[#C9D9C3] bg-[#F7FBF5] pl-9 font-medium text-[#173C2A]" placeholder="Ej: Educación física" />} /></div>
+              <div className="space-y-1"><Label className="font-extrabold text-[#173C2A]">Matrícula</Label><IconInput id="profesorMatricula" leftIcon={<BadgeCheck className="size-4 text-[#1D4F36]" />} input={<Input {...register("profesorMatricula")} maxLength={120} className="h-11 w-full rounded-xl border-[#C9D9C3] bg-[#F7FBF5] pl-9 font-medium text-[#173C2A]" placeholder="Número de matrícula" />} /></div>
+              <div className="space-y-1 sm:col-span-2"><Label className="font-extrabold text-[#173C2A]">Descripción</Label><div className="relative"><AlignLeft className="pointer-events-none absolute left-3 top-3 size-4 text-[#1D4F36]" /><Textarea {...register("profesorDescripcion")} maxLength={1200} rows={4} className="min-h-28 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] pl-9 font-medium text-[#173C2A]" placeholder="Formación, experiencia u observaciones profesionales" /></div></div>
+            </div>
+          </section> : null}
         </div> : null}
       </div>
       {footer}

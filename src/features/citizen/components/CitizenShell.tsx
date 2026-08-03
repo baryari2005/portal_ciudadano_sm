@@ -200,6 +200,10 @@ export function CitizenShell({ children }: { children: ReactNode }) {
                 </Button>
               </div>
 
+              <Separator
+                className={collapsed ? "mx-4 w-auto shrink-0 bg-white/15" : "mx-7 w-auto shrink-0 bg-white/15"}
+              />
+
               <div className="min-h-0 flex-1 overflow-y-auto pb-5">
                 {Object.entries(groupedNavigation).map(([section, links]) => {
                   const sectionOpen = collapsed || (openSections[section] ?? section === activeSection);

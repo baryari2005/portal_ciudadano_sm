@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { CreateUserDto } from "../schemas/user.schema";
 import { buildUserWhere } from "../lib/user.filters";
 import { UserWithRole } from "../lib/user.mapper";
+import { syncProfessorProfile } from "./professor-profile-sync.server";
 
 class HttpError extends Error {
   constructor(
@@ -54,7 +55,8 @@ export async function createOrReviveUser(dto: CreateUserDto) {
   const userId = dto.userId.trim();
   const passwordHash = await bcrypt.hash(dto.password, 12);
 
-  const activeDup = await prisma.usuario.findFirst({
+  return prisma.$transaction(async (tx) => {
+  const activeDup = await tx.usuario.findFirst({
     where: {
       deletedAt: null,
       OR: [{ email }, { userId }],
@@ -73,7 +75,7 @@ export async function createOrReviveUser(dto: CreateUserDto) {
     throw new HttpError(`Ya existe un ${field} activo con ese valor.`, 409);
   }
 
-  const soft = await prisma.usuario.findFirst({
+  const soft = await tx.usuario.findFirst({
     where: {
       deletedAt: { not: null },
       OR: [{ email }, { userId }],
@@ -118,21 +120,24 @@ export async function createOrReviveUser(dto: CreateUserDto) {
   };
 
   if (soft) {
-    const revived = await prisma.usuario.update({
+    const revived = await tx.usuario.update({
       where: { id: soft.id },
       data: { ...baseData, deletedAt: null },
       select: { id: true },
     });
 
+    await syncProfessorProfile(tx, revived.id, dto.rolId, dto.professorProfile);
     return { id: revived.id, revived: true };
   }
 
-  const created = await prisma.usuario.create({
+  const created = await tx.usuario.create({
     data: baseData,
     select: { id: true },
   });
 
+  await syncProfessorProfile(tx, created.id, dto.rolId, dto.professorProfile);
   return { id: created.id, revived: false };
+  });
 }
 
 export function handleUserError(err: unknown) {
@@ -154,6 +159,13 @@ export function handleUserError(err: unknown) {
   }
 
   if (err instanceof HttpError) {
+    return {
+      message: err.message || "Error de validación",
+      status: err.status,
+    };
+  }
+
+  if (err instanceof Error && "status" in err && typeof err.status === "number") {
     return {
       message: err.message || "Error de validación",
       status: err.status,

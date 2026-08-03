@@ -153,7 +153,7 @@ export const HELP_GUIDES: HelpGuide[] = [
       "Revisá si el ingreso fue permitido o rechazado y el motivo informado.",
     ],
     warnings: ["Este circuito registra acceso al establecimiento; no crea una asistencia de clase."],
-    links: [{ label: "Escanear QR", href: "/access/scan", permission: permission("access", "ver") }, { label: "Ver historial", href: "/access/history", permission: permission("access", "ver") }],
+    links: [{ label: "Escanear QR", href: "/reception/scan", permission: permission("access", "ver") }, { label: "Ver historial", href: "/reception/history", permission: permission("access", "ver") }],
   },
   {
     id: "reception-manual-access", category: "reception", order: 20,
@@ -167,7 +167,7 @@ export const HELP_GUIDES: HelpGuide[] = [
       "Autorizá o rechazá manualmente e ingresá la observación obligatoria.",
     ],
     warnings: ["La autorización manual puede permitir el ingreso aunque la evaluación automática sea negativa; debe quedar justificada."],
-    links: [{ label: "Búsqueda manual", href: "/access/manual", permission: permission("access", "ver") }],
+    links: [{ label: "Búsqueda manual", href: "/reception/manual", permission: permission("access", "ver") }],
   },
   {
     id: "admin-create-activity", category: "administration", order: 10,
@@ -296,6 +296,25 @@ export const HELP_GUIDES: HelpGuide[] = [
     keywords: ["auditoría", "reportes", "registro", "indicadores", "control"],
     steps: ["Usá Auditoría para buscar operaciones por usuario, módulo, acción o período y abrir el detalle del registro.", "Usá Reportes para consultar los indicadores disponibles y aplicar sus filtros.", "Contrastá el registro de auditoría antes de corregir manualmente un estado o dato sensible."],
     links: [{ label: "Auditoría", href: "/audit-log", permission: permission("audit_log", "ver") }, { label: "Reportes", href: "/reports", permission: permission("reports", "ver") }],
+  },
+  {
+    id: "admin-general-settings", category: "administration", order: 95,
+    title: "Configurar parámetros generales", description: "Administración del paginado compartido y las imágenes institucionales del inicio de sesión.",
+    requiredPermissions: [permission("general_settings", "ver")],
+    keywords: ["parámetros", "configuración", "general", "paginado", "registros", "login", "collage", "imágenes"],
+    steps: [
+      "Abrí Parámetros generales desde la sección Administración.",
+      "Definí la cantidad de registros por página. El valor se aplica a los listados administrativos que utilizan el paginado compartido; los límites técnicos de búsquedas y selectores no se modifican.",
+      "Para actualizar el collage del inicio de sesión, cargá una imagen en cada una de las cuatro posiciones mediante Subir foto o arrastrando el archivo sobre el control.",
+      "Revisá las vistas previas y presioná Guardar cambios. La carga del archivo por sí sola no publica la nueva configuración.",
+      "Cerrá sesión o abrí la pantalla de acceso para comprobar el collage actualizado. Si una imagen no puede cargarse, el sistema conserva las imágenes institucionales predeterminadas como respaldo.",
+      "Los cambios guardados quedan registrados en Auditoría para mantener la trazabilidad administrativa.",
+    ],
+    warnings: [
+      "Usá imágenes institucionales JPG o PNG y evitá contenido con texto pequeño, porque el collage adapta el recorte según el tamaño de pantalla.",
+      "El acceso a esta pantalla y su edición dependen de los permisos general_settings:ver y general_settings:editar.",
+    ],
+    links: [{ label: "Parámetros generales", href: "/general-settings", permission: permission("general_settings", "ver") }],
   },
   {
     id: "admin-test-data", category: "administration", order: 100,

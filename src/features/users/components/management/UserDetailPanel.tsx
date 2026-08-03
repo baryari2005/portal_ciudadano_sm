@@ -50,6 +50,7 @@ type UserDetailPanelProps = {
   onUserChanged?: () => void;
   compact?: boolean;
   showFullRecordAction?: boolean;
+  context?: "admin" | "reception";
 };
 
 async function updateUserStatus(
@@ -74,6 +75,7 @@ export function UserDetailPanel({
   onUserChanged,
   compact = false,
   showFullRecordAction = compact,
+  context = "admin",
 }: UserDetailPanelProps) {
   const [actionLoading, setActionLoading] = useState<ManagedUserStatus | null>(
     null,
@@ -138,7 +140,7 @@ export function UserDetailPanel({
       value: user.registeredAt,
     },
     { icon: Clock, label: "Ultimo acceso", value: user.lastAccess },
-    { icon: ShieldCheck, label: "Rol asignado", value: user.role },
+    ...(context === "admin" ? [{ icon: ShieldCheck, label: "Rol asignado", value: user.role }] : []),
   ];
 
   async function handleStatusChange(nextStatus: ManagedUserStatus) {
@@ -178,9 +180,13 @@ export function UserDetailPanel({
 
   return (
     <>
-      <AdminDetailPanel onBack={onBack}>
-        <AdminDetailHeader title={user.fullName} leading={<UserAvatarMark user={user} size="lg" />} badge={<div className="flex flex-wrap gap-2"><StatusPill status={user.status} /><RolePill role={user.role} /></div>} action={showFullRecordAction ? <Button asChild variant="outline" className="w-full border-[#819B56] bg-white font-bold text-[#1D4F36]"><Link href={`/users/${user.id}/record/overview`}><Eye />Ver ficha completa</Link></Button> : null} />
+      <AdminDetailPanel
+        onBack={onBack}
+        className={compact ? "lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-hidden" : undefined}
+      >
+        <AdminDetailHeader title={user.fullName} leading={<UserAvatarMark user={user} size="lg" />} badge={<div className="flex flex-wrap gap-2"><StatusPill status={user.status} />{context === "admin" ? <RolePill role={user.role} /> : null}</div>} action={showFullRecordAction && context === "admin" ? <Button asChild variant="outline" className="w-full border-[#819B56] bg-white font-bold text-[#1D4F36]"><Link href={`/users/${user.id}/record/overview`}><Eye />Ver ficha completa</Link></Button> : null} />
 
+        <div className={compact ? "brand-scrollbar lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-2" : undefined}>
         <div className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
           <dl className="grid gap-3">
             {detailRows.map((row) => {
@@ -229,14 +235,15 @@ export function UserDetailPanel({
           <Button disabled={savingParticipation} className="mt-4 bg-[#1D4F36] hover:bg-[#143A27]" onClick={() => void saveParticipationPolicy()}>{savingParticipation ? <Clock className="animate-spin" /> : <Save />}Guardar política</Button>
         </section>
         </> : null}
+        </div>
 
-        <AdminDetailActions>
+        <AdminDetailActions className={compact ? "lg:shrink-0" : undefined}>
           <Button asChild className="bg-[#1D4F36] hover:bg-[#143A27]">
-            <Link href={`/users/${user.id}`}>
-              <Edit3 /> Editar
+            <Link href={context === "reception" ? `/reception/citizens/${user.id}` : `/users/${user.id}`}>
+              <Edit3 /> {context === "reception" ? "Editar perfil" : "Editar"}
             </Link>
           </Button>
-          {canReviewRequest ? (
+          {context === "admin" && canReviewRequest ? (
             <Button
               variant="outline"
               className="text-[#1D4F36]"
@@ -246,7 +253,7 @@ export function UserDetailPanel({
               <CheckCircle2 /> Aprobar
             </Button>
           ) : null}
-          {canReviewRequest ? (
+          {context === "admin" && canReviewRequest ? (
             <Button
               variant="outline"
               className="text-red-700 hover:bg-red-50"
@@ -256,7 +263,7 @@ export function UserDetailPanel({
               <X /> Rechazar
             </Button>
           ) : null}
-          {user.status !== "BLOQUEADO" ? (
+          {context === "admin" && user.status !== "BLOQUEADO" ? (
             <Button
               variant="outline"
               className="text-red-700 hover:bg-red-50"

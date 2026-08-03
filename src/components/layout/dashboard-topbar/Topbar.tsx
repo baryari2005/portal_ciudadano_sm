@@ -2,7 +2,6 @@
 
 import type { Dispatch, SetStateAction } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Bell, CalendarClock, Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -21,17 +20,17 @@ import { useServerClock } from "./useServerClock";
 type TopbarProps = {
   collapsed: boolean;
   setCollapsed: Dispatch<SetStateAction<boolean>>;
+  experience?: "administration" | "reception";
 };
 
-export function Topbar({ collapsed, setCollapsed }: TopbarProps) {
-  const pathname = usePathname();
+export function Topbar({ collapsed, setCollapsed, experience = "administration" }: TopbarProps) {
   const serverClock = useServerClock();
-  const { notificationItems, totalActions } = usePendingUsersAlert();
+  const { notificationItems, totalActions } = usePendingUsersAlert(experience === "administration");
   const user = useAuth((state) => state.user);
   const displayName =
     [user?.nombre, user?.apellido].filter(Boolean).join(" ") ||
     user?.userId ||
-    "Administrador";
+    (experience === "reception" ? "Recepción" : "Administrador");
 
   return (
     <header className="flex h-[var(--topbar-h)] w-full flex-col border-l border-white/15 bg-primary text-white">
@@ -53,7 +52,7 @@ export function Topbar({ collapsed, setCollapsed }: TopbarProps) {
 
         <div className="min-w-0 py-1">
           <h1 className="truncate text-xl font-bold leading-6 text-white">
-            Portal ciudadano
+            {experience === "reception" ? "Portal de Recepción" : "Portal ciudadano"}
           </h1>
           <div className="text-base  leading-5 text-[#ddef8f]">
             <p className="truncate">Sistema de Ayuda</p>
@@ -83,7 +82,7 @@ export function Topbar({ collapsed, setCollapsed }: TopbarProps) {
                 className="relative h-11 w-11 rounded-lg bg-[#e9f3d8] text-primary hover:bg-[#ddef8f] hover:text-primary"
               >
                 <Link
-                  href="/notifications"
+                  href={experience === "reception" ? "/reception/notifications" : "/notifications"}
                   aria-label={
                     totalActions > 0
                       ? `${totalActions} notificaciones o acciones pendientes`
@@ -124,7 +123,7 @@ export function Topbar({ collapsed, setCollapsed }: TopbarProps) {
         <UserMenu />
       </div>
       </div>
-      <ExperienceBar experience={pathname.startsWith("/access") ? "reception" : "administration"} />
+      <ExperienceBar experience={experience} />
     </header>
   );
 }

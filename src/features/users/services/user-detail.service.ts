@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { PatchUserDto } from "../schemas/user.patch.schema";
 import { ymdToUTCDate } from "../lib/user.date";
+import { syncProfessorProfile } from "./professor-profile-sync.server";
 
 function toNull(v: unknown) {
   return v === "" || v === undefined ? null : v;
@@ -16,7 +17,7 @@ function normalizeTrimmedNullable(v: unknown) {
 export async function getUserByIdOrThrow(id: string) {
   const user = await prisma.usuario.findUnique({
     where: { id },
-    include: { rol: true, coberturaMedica: true },
+    include: { rol: true, coberturaMedica: true, profesor: true },
   });
 
   if (!user || user.deletedAt) {
@@ -79,13 +80,15 @@ export async function updateUserById(id: string, dto: PatchUserDto) {
   if ("estadoCivil" in dto) data.estadoCivil = dto.estadoCivil ?? null;
   if ("nacionalidad" in dto) data.nacionalidad = dto.nacionalidad ?? null;
 
-  const updated = await prisma.usuario.update({
-    where: { id },
-    data,
-    include: { rol: true, coberturaMedica: true },
+  return prisma.$transaction(async (tx) => {
+    const updated = await tx.usuario.update({
+      where: { id },
+      data,
+      include: { rol: true, coberturaMedica: true, profesor: true },
+    });
+    await syncProfessorProfile(tx, id, dto.rolId ?? exists.rolId, dto.professorProfile);
+    return tx.usuario.findUniqueOrThrow({ where: { id }, include: { rol: true, coberturaMedica: true, profesor: true } });
   });
-
-  return updated;
 }
 
 export async function softDeleteUserById(id: string) {

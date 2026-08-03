@@ -44,6 +44,16 @@ export type EntregaNotificacion = $Result.DefaultSelection<Prisma.$EntregaNotifi
  */
 export type RegistroAuditoria = $Result.DefaultSelection<Prisma.$RegistroAuditoriaPayload>
 /**
+ * Model ParametrosGenerales
+ * 
+ */
+export type ParametrosGenerales = $Result.DefaultSelection<Prisma.$ParametrosGeneralesPayload>
+/**
+ * Model UsuarioBorrador
+ * 
+ */
+export type UsuarioBorrador = $Result.DefaultSelection<Prisma.$UsuarioBorradorPayload>
+/**
  * Model Profesor
  * 
  */
@@ -536,7 +546,8 @@ export const AuditoriaEntidad: {
   DOCUMENTO_INSCRIPCION: 'DOCUMENTO_INSCRIPCION',
   CREDENCIAL_QR: 'CREDENCIAL_QR',
   NOTIFICACION: 'NOTIFICACION',
-  REGISTRO_ACCESO: 'REGISTRO_ACCESO'
+  REGISTRO_ACCESO: 'REGISTRO_ACCESO',
+  PARAMETROS_GENERALES: 'PARAMETROS_GENERALES'
 };
 
 export type AuditoriaEntidad = (typeof AuditoriaEntidad)[keyof typeof AuditoriaEntidad]
@@ -1172,6 +1183,26 @@ export class PrismaClient<
     * ```
     */
   get registroAuditoria(): Prisma.RegistroAuditoriaDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.parametrosGenerales`: Exposes CRUD operations for the **ParametrosGenerales** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ParametrosGenerales
+    * const parametrosGenerales = await prisma.parametrosGenerales.findMany()
+    * ```
+    */
+  get parametrosGenerales(): Prisma.ParametrosGeneralesDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.usuarioBorrador`: Exposes CRUD operations for the **UsuarioBorrador** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more UsuarioBorradors
+    * const usuarioBorradors = await prisma.usuarioBorrador.findMany()
+    * ```
+    */
+  get usuarioBorrador(): Prisma.UsuarioBorradorDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.profesor`: Exposes CRUD operations for the **Profesor** model.
@@ -1959,6 +1990,8 @@ export namespace Prisma {
     Notificacion: 'Notificacion',
     EntregaNotificacion: 'EntregaNotificacion',
     RegistroAuditoria: 'RegistroAuditoria',
+    ParametrosGenerales: 'ParametrosGenerales',
+    UsuarioBorrador: 'UsuarioBorrador',
     Profesor: 'Profesor',
     Establecimiento: 'Establecimiento',
     HorarioEstablecimiento: 'HorarioEstablecimiento',
@@ -2011,7 +2044,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "usuario" | "coberturaMedica" | "solicitudAcceso" | "notificacion" | "entregaNotificacion" | "registroAuditoria" | "profesor" | "establecimiento" | "horarioEstablecimiento" | "actividad" | "actividadBorrador" | "requisito" | "documentoUsuario" | "actividadRequisito" | "horarioActividad" | "horarioActividadProfesor" | "claseActividad" | "claseActividadProfesor" | "inscripcion" | "inscripcionHorario" | "reservaClase" | "recurso" | "actividadRecurso" | "horarioActividadRecurso" | "reservaRecurso" | "bloqueoRecurso" | "documentoInscripcion" | "asistencia" | "usuarioQrCredencial" | "accesoQrDigital" | "registroAcceso" | "actividadUsuario" | "actividadPublicoObjetivo" | "categoriaActividad" | "publicoObjetivo" | "legajo" | "rol" | "passwordResetToken" | "permiso" | "rolPermiso"
+      modelProps: "usuario" | "coberturaMedica" | "solicitudAcceso" | "notificacion" | "entregaNotificacion" | "registroAuditoria" | "parametrosGenerales" | "usuarioBorrador" | "profesor" | "establecimiento" | "horarioEstablecimiento" | "actividad" | "actividadBorrador" | "requisito" | "documentoUsuario" | "actividadRequisito" | "horarioActividad" | "horarioActividadProfesor" | "claseActividad" | "claseActividadProfesor" | "inscripcion" | "inscripcionHorario" | "reservaClase" | "recurso" | "actividadRecurso" | "horarioActividadRecurso" | "reservaRecurso" | "bloqueoRecurso" | "documentoInscripcion" | "asistencia" | "usuarioQrCredencial" | "accesoQrDigital" | "registroAcceso" | "actividadUsuario" | "actividadPublicoObjetivo" | "categoriaActividad" | "publicoObjetivo" | "legajo" | "rol" | "passwordResetToken" | "permiso" | "rolPermiso"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2456,6 +2489,154 @@ export namespace Prisma {
           count: {
             args: Prisma.RegistroAuditoriaCountArgs<ExtArgs>
             result: $Utils.Optional<RegistroAuditoriaCountAggregateOutputType> | number
+          }
+        }
+      }
+      ParametrosGenerales: {
+        payload: Prisma.$ParametrosGeneralesPayload<ExtArgs>
+        fields: Prisma.ParametrosGeneralesFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ParametrosGeneralesFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ParametrosGeneralesPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ParametrosGeneralesFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ParametrosGeneralesPayload>
+          }
+          findFirst: {
+            args: Prisma.ParametrosGeneralesFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ParametrosGeneralesPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ParametrosGeneralesFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ParametrosGeneralesPayload>
+          }
+          findMany: {
+            args: Prisma.ParametrosGeneralesFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ParametrosGeneralesPayload>[]
+          }
+          create: {
+            args: Prisma.ParametrosGeneralesCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ParametrosGeneralesPayload>
+          }
+          createMany: {
+            args: Prisma.ParametrosGeneralesCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ParametrosGeneralesCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ParametrosGeneralesPayload>[]
+          }
+          delete: {
+            args: Prisma.ParametrosGeneralesDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ParametrosGeneralesPayload>
+          }
+          update: {
+            args: Prisma.ParametrosGeneralesUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ParametrosGeneralesPayload>
+          }
+          deleteMany: {
+            args: Prisma.ParametrosGeneralesDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ParametrosGeneralesUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ParametrosGeneralesUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ParametrosGeneralesPayload>[]
+          }
+          upsert: {
+            args: Prisma.ParametrosGeneralesUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ParametrosGeneralesPayload>
+          }
+          aggregate: {
+            args: Prisma.ParametrosGeneralesAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateParametrosGenerales>
+          }
+          groupBy: {
+            args: Prisma.ParametrosGeneralesGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ParametrosGeneralesGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ParametrosGeneralesCountArgs<ExtArgs>
+            result: $Utils.Optional<ParametrosGeneralesCountAggregateOutputType> | number
+          }
+        }
+      }
+      UsuarioBorrador: {
+        payload: Prisma.$UsuarioBorradorPayload<ExtArgs>
+        fields: Prisma.UsuarioBorradorFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.UsuarioBorradorFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UsuarioBorradorPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.UsuarioBorradorFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UsuarioBorradorPayload>
+          }
+          findFirst: {
+            args: Prisma.UsuarioBorradorFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UsuarioBorradorPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.UsuarioBorradorFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UsuarioBorradorPayload>
+          }
+          findMany: {
+            args: Prisma.UsuarioBorradorFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UsuarioBorradorPayload>[]
+          }
+          create: {
+            args: Prisma.UsuarioBorradorCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UsuarioBorradorPayload>
+          }
+          createMany: {
+            args: Prisma.UsuarioBorradorCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.UsuarioBorradorCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UsuarioBorradorPayload>[]
+          }
+          delete: {
+            args: Prisma.UsuarioBorradorDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UsuarioBorradorPayload>
+          }
+          update: {
+            args: Prisma.UsuarioBorradorUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UsuarioBorradorPayload>
+          }
+          deleteMany: {
+            args: Prisma.UsuarioBorradorDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.UsuarioBorradorUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.UsuarioBorradorUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UsuarioBorradorPayload>[]
+          }
+          upsert: {
+            args: Prisma.UsuarioBorradorUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UsuarioBorradorPayload>
+          }
+          aggregate: {
+            args: Prisma.UsuarioBorradorAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUsuarioBorrador>
+          }
+          groupBy: {
+            args: Prisma.UsuarioBorradorGroupByArgs<ExtArgs>
+            result: $Utils.Optional<UsuarioBorradorGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.UsuarioBorradorCountArgs<ExtArgs>
+            result: $Utils.Optional<UsuarioBorradorCountAggregateOutputType> | number
           }
         }
       }
@@ -5077,6 +5258,8 @@ export namespace Prisma {
     notificacion?: NotificacionOmit
     entregaNotificacion?: EntregaNotificacionOmit
     registroAuditoria?: RegistroAuditoriaOmit
+    parametrosGenerales?: ParametrosGeneralesOmit
+    usuarioBorrador?: UsuarioBorradorOmit
     profesor?: ProfesorOmit
     establecimiento?: EstablecimientoOmit
     horarioEstablecimiento?: HorarioEstablecimientoOmit
@@ -14397,6 +14580,2190 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: RegistroAuditoriaInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ParametrosGenerales
+   */
+
+  export type AggregateParametrosGenerales = {
+    _count: ParametrosGeneralesCountAggregateOutputType | null
+    _avg: ParametrosGeneralesAvgAggregateOutputType | null
+    _sum: ParametrosGeneralesSumAggregateOutputType | null
+    _min: ParametrosGeneralesMinAggregateOutputType | null
+    _max: ParametrosGeneralesMaxAggregateOutputType | null
+  }
+
+  export type ParametrosGeneralesAvgAggregateOutputType = {
+    id: number | null
+    registrosPorPagina: number | null
+  }
+
+  export type ParametrosGeneralesSumAggregateOutputType = {
+    id: number | null
+    registrosPorPagina: number | null
+  }
+
+  export type ParametrosGeneralesMinAggregateOutputType = {
+    id: number | null
+    registrosPorPagina: number | null
+    imagenLoginCollage1: string | null
+    imagenLoginCollage2: string | null
+    imagenLoginCollage3: string | null
+    imagenLoginCollage4: string | null
+    updatedById: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ParametrosGeneralesMaxAggregateOutputType = {
+    id: number | null
+    registrosPorPagina: number | null
+    imagenLoginCollage1: string | null
+    imagenLoginCollage2: string | null
+    imagenLoginCollage3: string | null
+    imagenLoginCollage4: string | null
+    updatedById: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ParametrosGeneralesCountAggregateOutputType = {
+    id: number
+    registrosPorPagina: number
+    imagenLoginCollage1: number
+    imagenLoginCollage2: number
+    imagenLoginCollage3: number
+    imagenLoginCollage4: number
+    updatedById: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ParametrosGeneralesAvgAggregateInputType = {
+    id?: true
+    registrosPorPagina?: true
+  }
+
+  export type ParametrosGeneralesSumAggregateInputType = {
+    id?: true
+    registrosPorPagina?: true
+  }
+
+  export type ParametrosGeneralesMinAggregateInputType = {
+    id?: true
+    registrosPorPagina?: true
+    imagenLoginCollage1?: true
+    imagenLoginCollage2?: true
+    imagenLoginCollage3?: true
+    imagenLoginCollage4?: true
+    updatedById?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ParametrosGeneralesMaxAggregateInputType = {
+    id?: true
+    registrosPorPagina?: true
+    imagenLoginCollage1?: true
+    imagenLoginCollage2?: true
+    imagenLoginCollage3?: true
+    imagenLoginCollage4?: true
+    updatedById?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ParametrosGeneralesCountAggregateInputType = {
+    id?: true
+    registrosPorPagina?: true
+    imagenLoginCollage1?: true
+    imagenLoginCollage2?: true
+    imagenLoginCollage3?: true
+    imagenLoginCollage4?: true
+    updatedById?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ParametrosGeneralesAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ParametrosGenerales to aggregate.
+     */
+    where?: ParametrosGeneralesWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ParametrosGenerales to fetch.
+     */
+    orderBy?: ParametrosGeneralesOrderByWithRelationInput | ParametrosGeneralesOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ParametrosGeneralesWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ParametrosGenerales from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ParametrosGenerales.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ParametrosGenerales
+    **/
+    _count?: true | ParametrosGeneralesCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ParametrosGeneralesAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ParametrosGeneralesSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ParametrosGeneralesMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ParametrosGeneralesMaxAggregateInputType
+  }
+
+  export type GetParametrosGeneralesAggregateType<T extends ParametrosGeneralesAggregateArgs> = {
+        [P in keyof T & keyof AggregateParametrosGenerales]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateParametrosGenerales[P]>
+      : GetScalarType<T[P], AggregateParametrosGenerales[P]>
+  }
+
+
+
+
+  export type ParametrosGeneralesGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ParametrosGeneralesWhereInput
+    orderBy?: ParametrosGeneralesOrderByWithAggregationInput | ParametrosGeneralesOrderByWithAggregationInput[]
+    by: ParametrosGeneralesScalarFieldEnum[] | ParametrosGeneralesScalarFieldEnum
+    having?: ParametrosGeneralesScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ParametrosGeneralesCountAggregateInputType | true
+    _avg?: ParametrosGeneralesAvgAggregateInputType
+    _sum?: ParametrosGeneralesSumAggregateInputType
+    _min?: ParametrosGeneralesMinAggregateInputType
+    _max?: ParametrosGeneralesMaxAggregateInputType
+  }
+
+  export type ParametrosGeneralesGroupByOutputType = {
+    id: number
+    registrosPorPagina: number
+    imagenLoginCollage1: string | null
+    imagenLoginCollage2: string | null
+    imagenLoginCollage3: string | null
+    imagenLoginCollage4: string | null
+    updatedById: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: ParametrosGeneralesCountAggregateOutputType | null
+    _avg: ParametrosGeneralesAvgAggregateOutputType | null
+    _sum: ParametrosGeneralesSumAggregateOutputType | null
+    _min: ParametrosGeneralesMinAggregateOutputType | null
+    _max: ParametrosGeneralesMaxAggregateOutputType | null
+  }
+
+  type GetParametrosGeneralesGroupByPayload<T extends ParametrosGeneralesGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ParametrosGeneralesGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ParametrosGeneralesGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ParametrosGeneralesGroupByOutputType[P]>
+            : GetScalarType<T[P], ParametrosGeneralesGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ParametrosGeneralesSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    registrosPorPagina?: boolean
+    imagenLoginCollage1?: boolean
+    imagenLoginCollage2?: boolean
+    imagenLoginCollage3?: boolean
+    imagenLoginCollage4?: boolean
+    updatedById?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["parametrosGenerales"]>
+
+  export type ParametrosGeneralesSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    registrosPorPagina?: boolean
+    imagenLoginCollage1?: boolean
+    imagenLoginCollage2?: boolean
+    imagenLoginCollage3?: boolean
+    imagenLoginCollage4?: boolean
+    updatedById?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["parametrosGenerales"]>
+
+  export type ParametrosGeneralesSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    registrosPorPagina?: boolean
+    imagenLoginCollage1?: boolean
+    imagenLoginCollage2?: boolean
+    imagenLoginCollage3?: boolean
+    imagenLoginCollage4?: boolean
+    updatedById?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["parametrosGenerales"]>
+
+  export type ParametrosGeneralesSelectScalar = {
+    id?: boolean
+    registrosPorPagina?: boolean
+    imagenLoginCollage1?: boolean
+    imagenLoginCollage2?: boolean
+    imagenLoginCollage3?: boolean
+    imagenLoginCollage4?: boolean
+    updatedById?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ParametrosGeneralesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "registrosPorPagina" | "imagenLoginCollage1" | "imagenLoginCollage2" | "imagenLoginCollage3" | "imagenLoginCollage4" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["parametrosGenerales"]>
+
+  export type $ParametrosGeneralesPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ParametrosGenerales"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      registrosPorPagina: number
+      imagenLoginCollage1: string | null
+      imagenLoginCollage2: string | null
+      imagenLoginCollage3: string | null
+      imagenLoginCollage4: string | null
+      updatedById: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["parametrosGenerales"]>
+    composites: {}
+  }
+
+  type ParametrosGeneralesGetPayload<S extends boolean | null | undefined | ParametrosGeneralesDefaultArgs> = $Result.GetResult<Prisma.$ParametrosGeneralesPayload, S>
+
+  type ParametrosGeneralesCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ParametrosGeneralesFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ParametrosGeneralesCountAggregateInputType | true
+    }
+
+  export interface ParametrosGeneralesDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ParametrosGenerales'], meta: { name: 'ParametrosGenerales' } }
+    /**
+     * Find zero or one ParametrosGenerales that matches the filter.
+     * @param {ParametrosGeneralesFindUniqueArgs} args - Arguments to find a ParametrosGenerales
+     * @example
+     * // Get one ParametrosGenerales
+     * const parametrosGenerales = await prisma.parametrosGenerales.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ParametrosGeneralesFindUniqueArgs>(args: SelectSubset<T, ParametrosGeneralesFindUniqueArgs<ExtArgs>>): Prisma__ParametrosGeneralesClient<$Result.GetResult<Prisma.$ParametrosGeneralesPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ParametrosGenerales that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ParametrosGeneralesFindUniqueOrThrowArgs} args - Arguments to find a ParametrosGenerales
+     * @example
+     * // Get one ParametrosGenerales
+     * const parametrosGenerales = await prisma.parametrosGenerales.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ParametrosGeneralesFindUniqueOrThrowArgs>(args: SelectSubset<T, ParametrosGeneralesFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ParametrosGeneralesClient<$Result.GetResult<Prisma.$ParametrosGeneralesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ParametrosGenerales that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ParametrosGeneralesFindFirstArgs} args - Arguments to find a ParametrosGenerales
+     * @example
+     * // Get one ParametrosGenerales
+     * const parametrosGenerales = await prisma.parametrosGenerales.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ParametrosGeneralesFindFirstArgs>(args?: SelectSubset<T, ParametrosGeneralesFindFirstArgs<ExtArgs>>): Prisma__ParametrosGeneralesClient<$Result.GetResult<Prisma.$ParametrosGeneralesPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ParametrosGenerales that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ParametrosGeneralesFindFirstOrThrowArgs} args - Arguments to find a ParametrosGenerales
+     * @example
+     * // Get one ParametrosGenerales
+     * const parametrosGenerales = await prisma.parametrosGenerales.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ParametrosGeneralesFindFirstOrThrowArgs>(args?: SelectSubset<T, ParametrosGeneralesFindFirstOrThrowArgs<ExtArgs>>): Prisma__ParametrosGeneralesClient<$Result.GetResult<Prisma.$ParametrosGeneralesPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ParametrosGenerales that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ParametrosGeneralesFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ParametrosGenerales
+     * const parametrosGenerales = await prisma.parametrosGenerales.findMany()
+     * 
+     * // Get first 10 ParametrosGenerales
+     * const parametrosGenerales = await prisma.parametrosGenerales.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const parametrosGeneralesWithIdOnly = await prisma.parametrosGenerales.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ParametrosGeneralesFindManyArgs>(args?: SelectSubset<T, ParametrosGeneralesFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ParametrosGeneralesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ParametrosGenerales.
+     * @param {ParametrosGeneralesCreateArgs} args - Arguments to create a ParametrosGenerales.
+     * @example
+     * // Create one ParametrosGenerales
+     * const ParametrosGenerales = await prisma.parametrosGenerales.create({
+     *   data: {
+     *     // ... data to create a ParametrosGenerales
+     *   }
+     * })
+     * 
+     */
+    create<T extends ParametrosGeneralesCreateArgs>(args: SelectSubset<T, ParametrosGeneralesCreateArgs<ExtArgs>>): Prisma__ParametrosGeneralesClient<$Result.GetResult<Prisma.$ParametrosGeneralesPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ParametrosGenerales.
+     * @param {ParametrosGeneralesCreateManyArgs} args - Arguments to create many ParametrosGenerales.
+     * @example
+     * // Create many ParametrosGenerales
+     * const parametrosGenerales = await prisma.parametrosGenerales.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ParametrosGeneralesCreateManyArgs>(args?: SelectSubset<T, ParametrosGeneralesCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ParametrosGenerales and returns the data saved in the database.
+     * @param {ParametrosGeneralesCreateManyAndReturnArgs} args - Arguments to create many ParametrosGenerales.
+     * @example
+     * // Create many ParametrosGenerales
+     * const parametrosGenerales = await prisma.parametrosGenerales.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ParametrosGenerales and only return the `id`
+     * const parametrosGeneralesWithIdOnly = await prisma.parametrosGenerales.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ParametrosGeneralesCreateManyAndReturnArgs>(args?: SelectSubset<T, ParametrosGeneralesCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ParametrosGeneralesPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ParametrosGenerales.
+     * @param {ParametrosGeneralesDeleteArgs} args - Arguments to delete one ParametrosGenerales.
+     * @example
+     * // Delete one ParametrosGenerales
+     * const ParametrosGenerales = await prisma.parametrosGenerales.delete({
+     *   where: {
+     *     // ... filter to delete one ParametrosGenerales
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ParametrosGeneralesDeleteArgs>(args: SelectSubset<T, ParametrosGeneralesDeleteArgs<ExtArgs>>): Prisma__ParametrosGeneralesClient<$Result.GetResult<Prisma.$ParametrosGeneralesPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ParametrosGenerales.
+     * @param {ParametrosGeneralesUpdateArgs} args - Arguments to update one ParametrosGenerales.
+     * @example
+     * // Update one ParametrosGenerales
+     * const parametrosGenerales = await prisma.parametrosGenerales.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ParametrosGeneralesUpdateArgs>(args: SelectSubset<T, ParametrosGeneralesUpdateArgs<ExtArgs>>): Prisma__ParametrosGeneralesClient<$Result.GetResult<Prisma.$ParametrosGeneralesPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ParametrosGenerales.
+     * @param {ParametrosGeneralesDeleteManyArgs} args - Arguments to filter ParametrosGenerales to delete.
+     * @example
+     * // Delete a few ParametrosGenerales
+     * const { count } = await prisma.parametrosGenerales.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ParametrosGeneralesDeleteManyArgs>(args?: SelectSubset<T, ParametrosGeneralesDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ParametrosGenerales.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ParametrosGeneralesUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ParametrosGenerales
+     * const parametrosGenerales = await prisma.parametrosGenerales.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ParametrosGeneralesUpdateManyArgs>(args: SelectSubset<T, ParametrosGeneralesUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ParametrosGenerales and returns the data updated in the database.
+     * @param {ParametrosGeneralesUpdateManyAndReturnArgs} args - Arguments to update many ParametrosGenerales.
+     * @example
+     * // Update many ParametrosGenerales
+     * const parametrosGenerales = await prisma.parametrosGenerales.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ParametrosGenerales and only return the `id`
+     * const parametrosGeneralesWithIdOnly = await prisma.parametrosGenerales.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ParametrosGeneralesUpdateManyAndReturnArgs>(args: SelectSubset<T, ParametrosGeneralesUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ParametrosGeneralesPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ParametrosGenerales.
+     * @param {ParametrosGeneralesUpsertArgs} args - Arguments to update or create a ParametrosGenerales.
+     * @example
+     * // Update or create a ParametrosGenerales
+     * const parametrosGenerales = await prisma.parametrosGenerales.upsert({
+     *   create: {
+     *     // ... data to create a ParametrosGenerales
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ParametrosGenerales we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ParametrosGeneralesUpsertArgs>(args: SelectSubset<T, ParametrosGeneralesUpsertArgs<ExtArgs>>): Prisma__ParametrosGeneralesClient<$Result.GetResult<Prisma.$ParametrosGeneralesPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ParametrosGenerales.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ParametrosGeneralesCountArgs} args - Arguments to filter ParametrosGenerales to count.
+     * @example
+     * // Count the number of ParametrosGenerales
+     * const count = await prisma.parametrosGenerales.count({
+     *   where: {
+     *     // ... the filter for the ParametrosGenerales we want to count
+     *   }
+     * })
+    **/
+    count<T extends ParametrosGeneralesCountArgs>(
+      args?: Subset<T, ParametrosGeneralesCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ParametrosGeneralesCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ParametrosGenerales.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ParametrosGeneralesAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ParametrosGeneralesAggregateArgs>(args: Subset<T, ParametrosGeneralesAggregateArgs>): Prisma.PrismaPromise<GetParametrosGeneralesAggregateType<T>>
+
+    /**
+     * Group by ParametrosGenerales.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ParametrosGeneralesGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ParametrosGeneralesGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ParametrosGeneralesGroupByArgs['orderBy'] }
+        : { orderBy?: ParametrosGeneralesGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ParametrosGeneralesGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetParametrosGeneralesGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ParametrosGenerales model
+   */
+  readonly fields: ParametrosGeneralesFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ParametrosGenerales.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ParametrosGeneralesClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ParametrosGenerales model
+   */
+  interface ParametrosGeneralesFieldRefs {
+    readonly id: FieldRef<"ParametrosGenerales", 'Int'>
+    readonly registrosPorPagina: FieldRef<"ParametrosGenerales", 'Int'>
+    readonly imagenLoginCollage1: FieldRef<"ParametrosGenerales", 'String'>
+    readonly imagenLoginCollage2: FieldRef<"ParametrosGenerales", 'String'>
+    readonly imagenLoginCollage3: FieldRef<"ParametrosGenerales", 'String'>
+    readonly imagenLoginCollage4: FieldRef<"ParametrosGenerales", 'String'>
+    readonly updatedById: FieldRef<"ParametrosGenerales", 'String'>
+    readonly createdAt: FieldRef<"ParametrosGenerales", 'DateTime'>
+    readonly updatedAt: FieldRef<"ParametrosGenerales", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ParametrosGenerales findUnique
+   */
+  export type ParametrosGeneralesFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ParametrosGenerales
+     */
+    select?: ParametrosGeneralesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ParametrosGenerales
+     */
+    omit?: ParametrosGeneralesOmit<ExtArgs> | null
+    /**
+     * Filter, which ParametrosGenerales to fetch.
+     */
+    where: ParametrosGeneralesWhereUniqueInput
+  }
+
+  /**
+   * ParametrosGenerales findUniqueOrThrow
+   */
+  export type ParametrosGeneralesFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ParametrosGenerales
+     */
+    select?: ParametrosGeneralesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ParametrosGenerales
+     */
+    omit?: ParametrosGeneralesOmit<ExtArgs> | null
+    /**
+     * Filter, which ParametrosGenerales to fetch.
+     */
+    where: ParametrosGeneralesWhereUniqueInput
+  }
+
+  /**
+   * ParametrosGenerales findFirst
+   */
+  export type ParametrosGeneralesFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ParametrosGenerales
+     */
+    select?: ParametrosGeneralesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ParametrosGenerales
+     */
+    omit?: ParametrosGeneralesOmit<ExtArgs> | null
+    /**
+     * Filter, which ParametrosGenerales to fetch.
+     */
+    where?: ParametrosGeneralesWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ParametrosGenerales to fetch.
+     */
+    orderBy?: ParametrosGeneralesOrderByWithRelationInput | ParametrosGeneralesOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ParametrosGenerales.
+     */
+    cursor?: ParametrosGeneralesWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ParametrosGenerales from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ParametrosGenerales.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ParametrosGenerales.
+     */
+    distinct?: ParametrosGeneralesScalarFieldEnum | ParametrosGeneralesScalarFieldEnum[]
+  }
+
+  /**
+   * ParametrosGenerales findFirstOrThrow
+   */
+  export type ParametrosGeneralesFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ParametrosGenerales
+     */
+    select?: ParametrosGeneralesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ParametrosGenerales
+     */
+    omit?: ParametrosGeneralesOmit<ExtArgs> | null
+    /**
+     * Filter, which ParametrosGenerales to fetch.
+     */
+    where?: ParametrosGeneralesWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ParametrosGenerales to fetch.
+     */
+    orderBy?: ParametrosGeneralesOrderByWithRelationInput | ParametrosGeneralesOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ParametrosGenerales.
+     */
+    cursor?: ParametrosGeneralesWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ParametrosGenerales from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ParametrosGenerales.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ParametrosGenerales.
+     */
+    distinct?: ParametrosGeneralesScalarFieldEnum | ParametrosGeneralesScalarFieldEnum[]
+  }
+
+  /**
+   * ParametrosGenerales findMany
+   */
+  export type ParametrosGeneralesFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ParametrosGenerales
+     */
+    select?: ParametrosGeneralesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ParametrosGenerales
+     */
+    omit?: ParametrosGeneralesOmit<ExtArgs> | null
+    /**
+     * Filter, which ParametrosGenerales to fetch.
+     */
+    where?: ParametrosGeneralesWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ParametrosGenerales to fetch.
+     */
+    orderBy?: ParametrosGeneralesOrderByWithRelationInput | ParametrosGeneralesOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ParametrosGenerales.
+     */
+    cursor?: ParametrosGeneralesWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ParametrosGenerales from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ParametrosGenerales.
+     */
+    skip?: number
+    distinct?: ParametrosGeneralesScalarFieldEnum | ParametrosGeneralesScalarFieldEnum[]
+  }
+
+  /**
+   * ParametrosGenerales create
+   */
+  export type ParametrosGeneralesCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ParametrosGenerales
+     */
+    select?: ParametrosGeneralesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ParametrosGenerales
+     */
+    omit?: ParametrosGeneralesOmit<ExtArgs> | null
+    /**
+     * The data needed to create a ParametrosGenerales.
+     */
+    data: XOR<ParametrosGeneralesCreateInput, ParametrosGeneralesUncheckedCreateInput>
+  }
+
+  /**
+   * ParametrosGenerales createMany
+   */
+  export type ParametrosGeneralesCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ParametrosGenerales.
+     */
+    data: ParametrosGeneralesCreateManyInput | ParametrosGeneralesCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ParametrosGenerales createManyAndReturn
+   */
+  export type ParametrosGeneralesCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ParametrosGenerales
+     */
+    select?: ParametrosGeneralesSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ParametrosGenerales
+     */
+    omit?: ParametrosGeneralesOmit<ExtArgs> | null
+    /**
+     * The data used to create many ParametrosGenerales.
+     */
+    data: ParametrosGeneralesCreateManyInput | ParametrosGeneralesCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ParametrosGenerales update
+   */
+  export type ParametrosGeneralesUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ParametrosGenerales
+     */
+    select?: ParametrosGeneralesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ParametrosGenerales
+     */
+    omit?: ParametrosGeneralesOmit<ExtArgs> | null
+    /**
+     * The data needed to update a ParametrosGenerales.
+     */
+    data: XOR<ParametrosGeneralesUpdateInput, ParametrosGeneralesUncheckedUpdateInput>
+    /**
+     * Choose, which ParametrosGenerales to update.
+     */
+    where: ParametrosGeneralesWhereUniqueInput
+  }
+
+  /**
+   * ParametrosGenerales updateMany
+   */
+  export type ParametrosGeneralesUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ParametrosGenerales.
+     */
+    data: XOR<ParametrosGeneralesUpdateManyMutationInput, ParametrosGeneralesUncheckedUpdateManyInput>
+    /**
+     * Filter which ParametrosGenerales to update
+     */
+    where?: ParametrosGeneralesWhereInput
+    /**
+     * Limit how many ParametrosGenerales to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ParametrosGenerales updateManyAndReturn
+   */
+  export type ParametrosGeneralesUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ParametrosGenerales
+     */
+    select?: ParametrosGeneralesSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ParametrosGenerales
+     */
+    omit?: ParametrosGeneralesOmit<ExtArgs> | null
+    /**
+     * The data used to update ParametrosGenerales.
+     */
+    data: XOR<ParametrosGeneralesUpdateManyMutationInput, ParametrosGeneralesUncheckedUpdateManyInput>
+    /**
+     * Filter which ParametrosGenerales to update
+     */
+    where?: ParametrosGeneralesWhereInput
+    /**
+     * Limit how many ParametrosGenerales to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ParametrosGenerales upsert
+   */
+  export type ParametrosGeneralesUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ParametrosGenerales
+     */
+    select?: ParametrosGeneralesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ParametrosGenerales
+     */
+    omit?: ParametrosGeneralesOmit<ExtArgs> | null
+    /**
+     * The filter to search for the ParametrosGenerales to update in case it exists.
+     */
+    where: ParametrosGeneralesWhereUniqueInput
+    /**
+     * In case the ParametrosGenerales found by the `where` argument doesn't exist, create a new ParametrosGenerales with this data.
+     */
+    create: XOR<ParametrosGeneralesCreateInput, ParametrosGeneralesUncheckedCreateInput>
+    /**
+     * In case the ParametrosGenerales was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ParametrosGeneralesUpdateInput, ParametrosGeneralesUncheckedUpdateInput>
+  }
+
+  /**
+   * ParametrosGenerales delete
+   */
+  export type ParametrosGeneralesDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ParametrosGenerales
+     */
+    select?: ParametrosGeneralesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ParametrosGenerales
+     */
+    omit?: ParametrosGeneralesOmit<ExtArgs> | null
+    /**
+     * Filter which ParametrosGenerales to delete.
+     */
+    where: ParametrosGeneralesWhereUniqueInput
+  }
+
+  /**
+   * ParametrosGenerales deleteMany
+   */
+  export type ParametrosGeneralesDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ParametrosGenerales to delete
+     */
+    where?: ParametrosGeneralesWhereInput
+    /**
+     * Limit how many ParametrosGenerales to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ParametrosGenerales without action
+   */
+  export type ParametrosGeneralesDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ParametrosGenerales
+     */
+    select?: ParametrosGeneralesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ParametrosGenerales
+     */
+    omit?: ParametrosGeneralesOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model UsuarioBorrador
+   */
+
+  export type AggregateUsuarioBorrador = {
+    _count: UsuarioBorradorCountAggregateOutputType | null
+    _avg: UsuarioBorradorAvgAggregateOutputType | null
+    _sum: UsuarioBorradorSumAggregateOutputType | null
+    _min: UsuarioBorradorMinAggregateOutputType | null
+    _max: UsuarioBorradorMaxAggregateOutputType | null
+  }
+
+  export type UsuarioBorradorAvgAggregateOutputType = {
+    currentStep: number | null
+  }
+
+  export type UsuarioBorradorSumAggregateOutputType = {
+    currentStep: number | null
+  }
+
+  export type UsuarioBorradorMinAggregateOutputType = {
+    id: string | null
+    ownerId: string | null
+    subjectUserId: string | null
+    scope: string | null
+    mode: string | null
+    currentStep: number | null
+    viewMode: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type UsuarioBorradorMaxAggregateOutputType = {
+    id: string | null
+    ownerId: string | null
+    subjectUserId: string | null
+    scope: string | null
+    mode: string | null
+    currentStep: number | null
+    viewMode: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type UsuarioBorradorCountAggregateOutputType = {
+    id: number
+    ownerId: number
+    subjectUserId: number
+    scope: number
+    mode: number
+    payload: number
+    currentStep: number
+    stepStatuses: number
+    viewMode: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type UsuarioBorradorAvgAggregateInputType = {
+    currentStep?: true
+  }
+
+  export type UsuarioBorradorSumAggregateInputType = {
+    currentStep?: true
+  }
+
+  export type UsuarioBorradorMinAggregateInputType = {
+    id?: true
+    ownerId?: true
+    subjectUserId?: true
+    scope?: true
+    mode?: true
+    currentStep?: true
+    viewMode?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type UsuarioBorradorMaxAggregateInputType = {
+    id?: true
+    ownerId?: true
+    subjectUserId?: true
+    scope?: true
+    mode?: true
+    currentStep?: true
+    viewMode?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type UsuarioBorradorCountAggregateInputType = {
+    id?: true
+    ownerId?: true
+    subjectUserId?: true
+    scope?: true
+    mode?: true
+    payload?: true
+    currentStep?: true
+    stepStatuses?: true
+    viewMode?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type UsuarioBorradorAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UsuarioBorrador to aggregate.
+     */
+    where?: UsuarioBorradorWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UsuarioBorradors to fetch.
+     */
+    orderBy?: UsuarioBorradorOrderByWithRelationInput | UsuarioBorradorOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: UsuarioBorradorWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UsuarioBorradors from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UsuarioBorradors.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned UsuarioBorradors
+    **/
+    _count?: true | UsuarioBorradorCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: UsuarioBorradorAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UsuarioBorradorSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: UsuarioBorradorMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: UsuarioBorradorMaxAggregateInputType
+  }
+
+  export type GetUsuarioBorradorAggregateType<T extends UsuarioBorradorAggregateArgs> = {
+        [P in keyof T & keyof AggregateUsuarioBorrador]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUsuarioBorrador[P]>
+      : GetScalarType<T[P], AggregateUsuarioBorrador[P]>
+  }
+
+
+
+
+  export type UsuarioBorradorGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UsuarioBorradorWhereInput
+    orderBy?: UsuarioBorradorOrderByWithAggregationInput | UsuarioBorradorOrderByWithAggregationInput[]
+    by: UsuarioBorradorScalarFieldEnum[] | UsuarioBorradorScalarFieldEnum
+    having?: UsuarioBorradorScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: UsuarioBorradorCountAggregateInputType | true
+    _avg?: UsuarioBorradorAvgAggregateInputType
+    _sum?: UsuarioBorradorSumAggregateInputType
+    _min?: UsuarioBorradorMinAggregateInputType
+    _max?: UsuarioBorradorMaxAggregateInputType
+  }
+
+  export type UsuarioBorradorGroupByOutputType = {
+    id: string
+    ownerId: string
+    subjectUserId: string | null
+    scope: string
+    mode: string
+    payload: JsonValue
+    currentStep: number
+    stepStatuses: JsonValue
+    viewMode: string
+    createdAt: Date
+    updatedAt: Date
+    _count: UsuarioBorradorCountAggregateOutputType | null
+    _avg: UsuarioBorradorAvgAggregateOutputType | null
+    _sum: UsuarioBorradorSumAggregateOutputType | null
+    _min: UsuarioBorradorMinAggregateOutputType | null
+    _max: UsuarioBorradorMaxAggregateOutputType | null
+  }
+
+  type GetUsuarioBorradorGroupByPayload<T extends UsuarioBorradorGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<UsuarioBorradorGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof UsuarioBorradorGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], UsuarioBorradorGroupByOutputType[P]>
+            : GetScalarType<T[P], UsuarioBorradorGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type UsuarioBorradorSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ownerId?: boolean
+    subjectUserId?: boolean
+    scope?: boolean
+    mode?: boolean
+    payload?: boolean
+    currentStep?: boolean
+    stepStatuses?: boolean
+    viewMode?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["usuarioBorrador"]>
+
+  export type UsuarioBorradorSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ownerId?: boolean
+    subjectUserId?: boolean
+    scope?: boolean
+    mode?: boolean
+    payload?: boolean
+    currentStep?: boolean
+    stepStatuses?: boolean
+    viewMode?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["usuarioBorrador"]>
+
+  export type UsuarioBorradorSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ownerId?: boolean
+    subjectUserId?: boolean
+    scope?: boolean
+    mode?: boolean
+    payload?: boolean
+    currentStep?: boolean
+    stepStatuses?: boolean
+    viewMode?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["usuarioBorrador"]>
+
+  export type UsuarioBorradorSelectScalar = {
+    id?: boolean
+    ownerId?: boolean
+    subjectUserId?: boolean
+    scope?: boolean
+    mode?: boolean
+    payload?: boolean
+    currentStep?: boolean
+    stepStatuses?: boolean
+    viewMode?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type UsuarioBorradorOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ownerId" | "subjectUserId" | "scope" | "mode" | "payload" | "currentStep" | "stepStatuses" | "viewMode" | "createdAt" | "updatedAt", ExtArgs["result"]["usuarioBorrador"]>
+
+  export type $UsuarioBorradorPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "UsuarioBorrador"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      ownerId: string
+      subjectUserId: string | null
+      scope: string
+      mode: string
+      payload: Prisma.JsonValue
+      currentStep: number
+      stepStatuses: Prisma.JsonValue
+      viewMode: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["usuarioBorrador"]>
+    composites: {}
+  }
+
+  type UsuarioBorradorGetPayload<S extends boolean | null | undefined | UsuarioBorradorDefaultArgs> = $Result.GetResult<Prisma.$UsuarioBorradorPayload, S>
+
+  type UsuarioBorradorCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<UsuarioBorradorFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: UsuarioBorradorCountAggregateInputType | true
+    }
+
+  export interface UsuarioBorradorDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['UsuarioBorrador'], meta: { name: 'UsuarioBorrador' } }
+    /**
+     * Find zero or one UsuarioBorrador that matches the filter.
+     * @param {UsuarioBorradorFindUniqueArgs} args - Arguments to find a UsuarioBorrador
+     * @example
+     * // Get one UsuarioBorrador
+     * const usuarioBorrador = await prisma.usuarioBorrador.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends UsuarioBorradorFindUniqueArgs>(args: SelectSubset<T, UsuarioBorradorFindUniqueArgs<ExtArgs>>): Prisma__UsuarioBorradorClient<$Result.GetResult<Prisma.$UsuarioBorradorPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one UsuarioBorrador that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {UsuarioBorradorFindUniqueOrThrowArgs} args - Arguments to find a UsuarioBorrador
+     * @example
+     * // Get one UsuarioBorrador
+     * const usuarioBorrador = await prisma.usuarioBorrador.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends UsuarioBorradorFindUniqueOrThrowArgs>(args: SelectSubset<T, UsuarioBorradorFindUniqueOrThrowArgs<ExtArgs>>): Prisma__UsuarioBorradorClient<$Result.GetResult<Prisma.$UsuarioBorradorPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UsuarioBorrador that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UsuarioBorradorFindFirstArgs} args - Arguments to find a UsuarioBorrador
+     * @example
+     * // Get one UsuarioBorrador
+     * const usuarioBorrador = await prisma.usuarioBorrador.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends UsuarioBorradorFindFirstArgs>(args?: SelectSubset<T, UsuarioBorradorFindFirstArgs<ExtArgs>>): Prisma__UsuarioBorradorClient<$Result.GetResult<Prisma.$UsuarioBorradorPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UsuarioBorrador that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UsuarioBorradorFindFirstOrThrowArgs} args - Arguments to find a UsuarioBorrador
+     * @example
+     * // Get one UsuarioBorrador
+     * const usuarioBorrador = await prisma.usuarioBorrador.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends UsuarioBorradorFindFirstOrThrowArgs>(args?: SelectSubset<T, UsuarioBorradorFindFirstOrThrowArgs<ExtArgs>>): Prisma__UsuarioBorradorClient<$Result.GetResult<Prisma.$UsuarioBorradorPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more UsuarioBorradors that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UsuarioBorradorFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all UsuarioBorradors
+     * const usuarioBorradors = await prisma.usuarioBorrador.findMany()
+     * 
+     * // Get first 10 UsuarioBorradors
+     * const usuarioBorradors = await prisma.usuarioBorrador.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const usuarioBorradorWithIdOnly = await prisma.usuarioBorrador.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends UsuarioBorradorFindManyArgs>(args?: SelectSubset<T, UsuarioBorradorFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UsuarioBorradorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a UsuarioBorrador.
+     * @param {UsuarioBorradorCreateArgs} args - Arguments to create a UsuarioBorrador.
+     * @example
+     * // Create one UsuarioBorrador
+     * const UsuarioBorrador = await prisma.usuarioBorrador.create({
+     *   data: {
+     *     // ... data to create a UsuarioBorrador
+     *   }
+     * })
+     * 
+     */
+    create<T extends UsuarioBorradorCreateArgs>(args: SelectSubset<T, UsuarioBorradorCreateArgs<ExtArgs>>): Prisma__UsuarioBorradorClient<$Result.GetResult<Prisma.$UsuarioBorradorPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many UsuarioBorradors.
+     * @param {UsuarioBorradorCreateManyArgs} args - Arguments to create many UsuarioBorradors.
+     * @example
+     * // Create many UsuarioBorradors
+     * const usuarioBorrador = await prisma.usuarioBorrador.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends UsuarioBorradorCreateManyArgs>(args?: SelectSubset<T, UsuarioBorradorCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many UsuarioBorradors and returns the data saved in the database.
+     * @param {UsuarioBorradorCreateManyAndReturnArgs} args - Arguments to create many UsuarioBorradors.
+     * @example
+     * // Create many UsuarioBorradors
+     * const usuarioBorrador = await prisma.usuarioBorrador.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many UsuarioBorradors and only return the `id`
+     * const usuarioBorradorWithIdOnly = await prisma.usuarioBorrador.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends UsuarioBorradorCreateManyAndReturnArgs>(args?: SelectSubset<T, UsuarioBorradorCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UsuarioBorradorPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a UsuarioBorrador.
+     * @param {UsuarioBorradorDeleteArgs} args - Arguments to delete one UsuarioBorrador.
+     * @example
+     * // Delete one UsuarioBorrador
+     * const UsuarioBorrador = await prisma.usuarioBorrador.delete({
+     *   where: {
+     *     // ... filter to delete one UsuarioBorrador
+     *   }
+     * })
+     * 
+     */
+    delete<T extends UsuarioBorradorDeleteArgs>(args: SelectSubset<T, UsuarioBorradorDeleteArgs<ExtArgs>>): Prisma__UsuarioBorradorClient<$Result.GetResult<Prisma.$UsuarioBorradorPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one UsuarioBorrador.
+     * @param {UsuarioBorradorUpdateArgs} args - Arguments to update one UsuarioBorrador.
+     * @example
+     * // Update one UsuarioBorrador
+     * const usuarioBorrador = await prisma.usuarioBorrador.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends UsuarioBorradorUpdateArgs>(args: SelectSubset<T, UsuarioBorradorUpdateArgs<ExtArgs>>): Prisma__UsuarioBorradorClient<$Result.GetResult<Prisma.$UsuarioBorradorPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more UsuarioBorradors.
+     * @param {UsuarioBorradorDeleteManyArgs} args - Arguments to filter UsuarioBorradors to delete.
+     * @example
+     * // Delete a few UsuarioBorradors
+     * const { count } = await prisma.usuarioBorrador.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends UsuarioBorradorDeleteManyArgs>(args?: SelectSubset<T, UsuarioBorradorDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UsuarioBorradors.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UsuarioBorradorUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many UsuarioBorradors
+     * const usuarioBorrador = await prisma.usuarioBorrador.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends UsuarioBorradorUpdateManyArgs>(args: SelectSubset<T, UsuarioBorradorUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UsuarioBorradors and returns the data updated in the database.
+     * @param {UsuarioBorradorUpdateManyAndReturnArgs} args - Arguments to update many UsuarioBorradors.
+     * @example
+     * // Update many UsuarioBorradors
+     * const usuarioBorrador = await prisma.usuarioBorrador.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more UsuarioBorradors and only return the `id`
+     * const usuarioBorradorWithIdOnly = await prisma.usuarioBorrador.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends UsuarioBorradorUpdateManyAndReturnArgs>(args: SelectSubset<T, UsuarioBorradorUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UsuarioBorradorPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one UsuarioBorrador.
+     * @param {UsuarioBorradorUpsertArgs} args - Arguments to update or create a UsuarioBorrador.
+     * @example
+     * // Update or create a UsuarioBorrador
+     * const usuarioBorrador = await prisma.usuarioBorrador.upsert({
+     *   create: {
+     *     // ... data to create a UsuarioBorrador
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the UsuarioBorrador we want to update
+     *   }
+     * })
+     */
+    upsert<T extends UsuarioBorradorUpsertArgs>(args: SelectSubset<T, UsuarioBorradorUpsertArgs<ExtArgs>>): Prisma__UsuarioBorradorClient<$Result.GetResult<Prisma.$UsuarioBorradorPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of UsuarioBorradors.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UsuarioBorradorCountArgs} args - Arguments to filter UsuarioBorradors to count.
+     * @example
+     * // Count the number of UsuarioBorradors
+     * const count = await prisma.usuarioBorrador.count({
+     *   where: {
+     *     // ... the filter for the UsuarioBorradors we want to count
+     *   }
+     * })
+    **/
+    count<T extends UsuarioBorradorCountArgs>(
+      args?: Subset<T, UsuarioBorradorCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], UsuarioBorradorCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a UsuarioBorrador.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UsuarioBorradorAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends UsuarioBorradorAggregateArgs>(args: Subset<T, UsuarioBorradorAggregateArgs>): Prisma.PrismaPromise<GetUsuarioBorradorAggregateType<T>>
+
+    /**
+     * Group by UsuarioBorrador.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UsuarioBorradorGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends UsuarioBorradorGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: UsuarioBorradorGroupByArgs['orderBy'] }
+        : { orderBy?: UsuarioBorradorGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, UsuarioBorradorGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUsuarioBorradorGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the UsuarioBorrador model
+   */
+  readonly fields: UsuarioBorradorFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for UsuarioBorrador.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__UsuarioBorradorClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the UsuarioBorrador model
+   */
+  interface UsuarioBorradorFieldRefs {
+    readonly id: FieldRef<"UsuarioBorrador", 'String'>
+    readonly ownerId: FieldRef<"UsuarioBorrador", 'String'>
+    readonly subjectUserId: FieldRef<"UsuarioBorrador", 'String'>
+    readonly scope: FieldRef<"UsuarioBorrador", 'String'>
+    readonly mode: FieldRef<"UsuarioBorrador", 'String'>
+    readonly payload: FieldRef<"UsuarioBorrador", 'Json'>
+    readonly currentStep: FieldRef<"UsuarioBorrador", 'Int'>
+    readonly stepStatuses: FieldRef<"UsuarioBorrador", 'Json'>
+    readonly viewMode: FieldRef<"UsuarioBorrador", 'String'>
+    readonly createdAt: FieldRef<"UsuarioBorrador", 'DateTime'>
+    readonly updatedAt: FieldRef<"UsuarioBorrador", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * UsuarioBorrador findUnique
+   */
+  export type UsuarioBorradorFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UsuarioBorrador
+     */
+    select?: UsuarioBorradorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UsuarioBorrador
+     */
+    omit?: UsuarioBorradorOmit<ExtArgs> | null
+    /**
+     * Filter, which UsuarioBorrador to fetch.
+     */
+    where: UsuarioBorradorWhereUniqueInput
+  }
+
+  /**
+   * UsuarioBorrador findUniqueOrThrow
+   */
+  export type UsuarioBorradorFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UsuarioBorrador
+     */
+    select?: UsuarioBorradorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UsuarioBorrador
+     */
+    omit?: UsuarioBorradorOmit<ExtArgs> | null
+    /**
+     * Filter, which UsuarioBorrador to fetch.
+     */
+    where: UsuarioBorradorWhereUniqueInput
+  }
+
+  /**
+   * UsuarioBorrador findFirst
+   */
+  export type UsuarioBorradorFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UsuarioBorrador
+     */
+    select?: UsuarioBorradorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UsuarioBorrador
+     */
+    omit?: UsuarioBorradorOmit<ExtArgs> | null
+    /**
+     * Filter, which UsuarioBorrador to fetch.
+     */
+    where?: UsuarioBorradorWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UsuarioBorradors to fetch.
+     */
+    orderBy?: UsuarioBorradorOrderByWithRelationInput | UsuarioBorradorOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UsuarioBorradors.
+     */
+    cursor?: UsuarioBorradorWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UsuarioBorradors from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UsuarioBorradors.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UsuarioBorradors.
+     */
+    distinct?: UsuarioBorradorScalarFieldEnum | UsuarioBorradorScalarFieldEnum[]
+  }
+
+  /**
+   * UsuarioBorrador findFirstOrThrow
+   */
+  export type UsuarioBorradorFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UsuarioBorrador
+     */
+    select?: UsuarioBorradorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UsuarioBorrador
+     */
+    omit?: UsuarioBorradorOmit<ExtArgs> | null
+    /**
+     * Filter, which UsuarioBorrador to fetch.
+     */
+    where?: UsuarioBorradorWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UsuarioBorradors to fetch.
+     */
+    orderBy?: UsuarioBorradorOrderByWithRelationInput | UsuarioBorradorOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UsuarioBorradors.
+     */
+    cursor?: UsuarioBorradorWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UsuarioBorradors from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UsuarioBorradors.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UsuarioBorradors.
+     */
+    distinct?: UsuarioBorradorScalarFieldEnum | UsuarioBorradorScalarFieldEnum[]
+  }
+
+  /**
+   * UsuarioBorrador findMany
+   */
+  export type UsuarioBorradorFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UsuarioBorrador
+     */
+    select?: UsuarioBorradorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UsuarioBorrador
+     */
+    omit?: UsuarioBorradorOmit<ExtArgs> | null
+    /**
+     * Filter, which UsuarioBorradors to fetch.
+     */
+    where?: UsuarioBorradorWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UsuarioBorradors to fetch.
+     */
+    orderBy?: UsuarioBorradorOrderByWithRelationInput | UsuarioBorradorOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing UsuarioBorradors.
+     */
+    cursor?: UsuarioBorradorWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UsuarioBorradors from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UsuarioBorradors.
+     */
+    skip?: number
+    distinct?: UsuarioBorradorScalarFieldEnum | UsuarioBorradorScalarFieldEnum[]
+  }
+
+  /**
+   * UsuarioBorrador create
+   */
+  export type UsuarioBorradorCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UsuarioBorrador
+     */
+    select?: UsuarioBorradorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UsuarioBorrador
+     */
+    omit?: UsuarioBorradorOmit<ExtArgs> | null
+    /**
+     * The data needed to create a UsuarioBorrador.
+     */
+    data: XOR<UsuarioBorradorCreateInput, UsuarioBorradorUncheckedCreateInput>
+  }
+
+  /**
+   * UsuarioBorrador createMany
+   */
+  export type UsuarioBorradorCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many UsuarioBorradors.
+     */
+    data: UsuarioBorradorCreateManyInput | UsuarioBorradorCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * UsuarioBorrador createManyAndReturn
+   */
+  export type UsuarioBorradorCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UsuarioBorrador
+     */
+    select?: UsuarioBorradorSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UsuarioBorrador
+     */
+    omit?: UsuarioBorradorOmit<ExtArgs> | null
+    /**
+     * The data used to create many UsuarioBorradors.
+     */
+    data: UsuarioBorradorCreateManyInput | UsuarioBorradorCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * UsuarioBorrador update
+   */
+  export type UsuarioBorradorUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UsuarioBorrador
+     */
+    select?: UsuarioBorradorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UsuarioBorrador
+     */
+    omit?: UsuarioBorradorOmit<ExtArgs> | null
+    /**
+     * The data needed to update a UsuarioBorrador.
+     */
+    data: XOR<UsuarioBorradorUpdateInput, UsuarioBorradorUncheckedUpdateInput>
+    /**
+     * Choose, which UsuarioBorrador to update.
+     */
+    where: UsuarioBorradorWhereUniqueInput
+  }
+
+  /**
+   * UsuarioBorrador updateMany
+   */
+  export type UsuarioBorradorUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update UsuarioBorradors.
+     */
+    data: XOR<UsuarioBorradorUpdateManyMutationInput, UsuarioBorradorUncheckedUpdateManyInput>
+    /**
+     * Filter which UsuarioBorradors to update
+     */
+    where?: UsuarioBorradorWhereInput
+    /**
+     * Limit how many UsuarioBorradors to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * UsuarioBorrador updateManyAndReturn
+   */
+  export type UsuarioBorradorUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UsuarioBorrador
+     */
+    select?: UsuarioBorradorSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UsuarioBorrador
+     */
+    omit?: UsuarioBorradorOmit<ExtArgs> | null
+    /**
+     * The data used to update UsuarioBorradors.
+     */
+    data: XOR<UsuarioBorradorUpdateManyMutationInput, UsuarioBorradorUncheckedUpdateManyInput>
+    /**
+     * Filter which UsuarioBorradors to update
+     */
+    where?: UsuarioBorradorWhereInput
+    /**
+     * Limit how many UsuarioBorradors to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * UsuarioBorrador upsert
+   */
+  export type UsuarioBorradorUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UsuarioBorrador
+     */
+    select?: UsuarioBorradorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UsuarioBorrador
+     */
+    omit?: UsuarioBorradorOmit<ExtArgs> | null
+    /**
+     * The filter to search for the UsuarioBorrador to update in case it exists.
+     */
+    where: UsuarioBorradorWhereUniqueInput
+    /**
+     * In case the UsuarioBorrador found by the `where` argument doesn't exist, create a new UsuarioBorrador with this data.
+     */
+    create: XOR<UsuarioBorradorCreateInput, UsuarioBorradorUncheckedCreateInput>
+    /**
+     * In case the UsuarioBorrador was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<UsuarioBorradorUpdateInput, UsuarioBorradorUncheckedUpdateInput>
+  }
+
+  /**
+   * UsuarioBorrador delete
+   */
+  export type UsuarioBorradorDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UsuarioBorrador
+     */
+    select?: UsuarioBorradorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UsuarioBorrador
+     */
+    omit?: UsuarioBorradorOmit<ExtArgs> | null
+    /**
+     * Filter which UsuarioBorrador to delete.
+     */
+    where: UsuarioBorradorWhereUniqueInput
+  }
+
+  /**
+   * UsuarioBorrador deleteMany
+   */
+  export type UsuarioBorradorDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UsuarioBorradors to delete
+     */
+    where?: UsuarioBorradorWhereInput
+    /**
+     * Limit how many UsuarioBorradors to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * UsuarioBorrador without action
+   */
+  export type UsuarioBorradorDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UsuarioBorrador
+     */
+    select?: UsuarioBorradorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UsuarioBorrador
+     */
+    omit?: UsuarioBorradorOmit<ExtArgs> | null
   }
 
 
@@ -55943,6 +58310,38 @@ export namespace Prisma {
   export type RegistroAuditoriaScalarFieldEnum = (typeof RegistroAuditoriaScalarFieldEnum)[keyof typeof RegistroAuditoriaScalarFieldEnum]
 
 
+  export const ParametrosGeneralesScalarFieldEnum: {
+    id: 'id',
+    registrosPorPagina: 'registrosPorPagina',
+    imagenLoginCollage1: 'imagenLoginCollage1',
+    imagenLoginCollage2: 'imagenLoginCollage2',
+    imagenLoginCollage3: 'imagenLoginCollage3',
+    imagenLoginCollage4: 'imagenLoginCollage4',
+    updatedById: 'updatedById',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ParametrosGeneralesScalarFieldEnum = (typeof ParametrosGeneralesScalarFieldEnum)[keyof typeof ParametrosGeneralesScalarFieldEnum]
+
+
+  export const UsuarioBorradorScalarFieldEnum: {
+    id: 'id',
+    ownerId: 'ownerId',
+    subjectUserId: 'subjectUserId',
+    scope: 'scope',
+    mode: 'mode',
+    payload: 'payload',
+    currentStep: 'currentStep',
+    stepStatuses: 'stepStatuses',
+    viewMode: 'viewMode',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type UsuarioBorradorScalarFieldEnum = (typeof UsuarioBorradorScalarFieldEnum)[keyof typeof UsuarioBorradorScalarFieldEnum]
+
+
   export const ProfesorScalarFieldEnum: {
     id: 'id',
     usuarioId: 'usuarioId',
@@ -58146,6 +60545,164 @@ export namespace Prisma {
     ipHash?: StringNullableWithAggregatesFilter<"RegistroAuditoria"> | string | null
     userAgent?: StringNullableWithAggregatesFilter<"RegistroAuditoria"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"RegistroAuditoria"> | Date | string
+  }
+
+  export type ParametrosGeneralesWhereInput = {
+    AND?: ParametrosGeneralesWhereInput | ParametrosGeneralesWhereInput[]
+    OR?: ParametrosGeneralesWhereInput[]
+    NOT?: ParametrosGeneralesWhereInput | ParametrosGeneralesWhereInput[]
+    id?: IntFilter<"ParametrosGenerales"> | number
+    registrosPorPagina?: IntFilter<"ParametrosGenerales"> | number
+    imagenLoginCollage1?: StringNullableFilter<"ParametrosGenerales"> | string | null
+    imagenLoginCollage2?: StringNullableFilter<"ParametrosGenerales"> | string | null
+    imagenLoginCollage3?: StringNullableFilter<"ParametrosGenerales"> | string | null
+    imagenLoginCollage4?: StringNullableFilter<"ParametrosGenerales"> | string | null
+    updatedById?: UuidNullableFilter<"ParametrosGenerales"> | string | null
+    createdAt?: DateTimeFilter<"ParametrosGenerales"> | Date | string
+    updatedAt?: DateTimeFilter<"ParametrosGenerales"> | Date | string
+  }
+
+  export type ParametrosGeneralesOrderByWithRelationInput = {
+    id?: SortOrder
+    registrosPorPagina?: SortOrder
+    imagenLoginCollage1?: SortOrderInput | SortOrder
+    imagenLoginCollage2?: SortOrderInput | SortOrder
+    imagenLoginCollage3?: SortOrderInput | SortOrder
+    imagenLoginCollage4?: SortOrderInput | SortOrder
+    updatedById?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ParametrosGeneralesWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: ParametrosGeneralesWhereInput | ParametrosGeneralesWhereInput[]
+    OR?: ParametrosGeneralesWhereInput[]
+    NOT?: ParametrosGeneralesWhereInput | ParametrosGeneralesWhereInput[]
+    registrosPorPagina?: IntFilter<"ParametrosGenerales"> | number
+    imagenLoginCollage1?: StringNullableFilter<"ParametrosGenerales"> | string | null
+    imagenLoginCollage2?: StringNullableFilter<"ParametrosGenerales"> | string | null
+    imagenLoginCollage3?: StringNullableFilter<"ParametrosGenerales"> | string | null
+    imagenLoginCollage4?: StringNullableFilter<"ParametrosGenerales"> | string | null
+    updatedById?: UuidNullableFilter<"ParametrosGenerales"> | string | null
+    createdAt?: DateTimeFilter<"ParametrosGenerales"> | Date | string
+    updatedAt?: DateTimeFilter<"ParametrosGenerales"> | Date | string
+  }, "id">
+
+  export type ParametrosGeneralesOrderByWithAggregationInput = {
+    id?: SortOrder
+    registrosPorPagina?: SortOrder
+    imagenLoginCollage1?: SortOrderInput | SortOrder
+    imagenLoginCollage2?: SortOrderInput | SortOrder
+    imagenLoginCollage3?: SortOrderInput | SortOrder
+    imagenLoginCollage4?: SortOrderInput | SortOrder
+    updatedById?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ParametrosGeneralesCountOrderByAggregateInput
+    _avg?: ParametrosGeneralesAvgOrderByAggregateInput
+    _max?: ParametrosGeneralesMaxOrderByAggregateInput
+    _min?: ParametrosGeneralesMinOrderByAggregateInput
+    _sum?: ParametrosGeneralesSumOrderByAggregateInput
+  }
+
+  export type ParametrosGeneralesScalarWhereWithAggregatesInput = {
+    AND?: ParametrosGeneralesScalarWhereWithAggregatesInput | ParametrosGeneralesScalarWhereWithAggregatesInput[]
+    OR?: ParametrosGeneralesScalarWhereWithAggregatesInput[]
+    NOT?: ParametrosGeneralesScalarWhereWithAggregatesInput | ParametrosGeneralesScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"ParametrosGenerales"> | number
+    registrosPorPagina?: IntWithAggregatesFilter<"ParametrosGenerales"> | number
+    imagenLoginCollage1?: StringNullableWithAggregatesFilter<"ParametrosGenerales"> | string | null
+    imagenLoginCollage2?: StringNullableWithAggregatesFilter<"ParametrosGenerales"> | string | null
+    imagenLoginCollage3?: StringNullableWithAggregatesFilter<"ParametrosGenerales"> | string | null
+    imagenLoginCollage4?: StringNullableWithAggregatesFilter<"ParametrosGenerales"> | string | null
+    updatedById?: UuidNullableWithAggregatesFilter<"ParametrosGenerales"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ParametrosGenerales"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ParametrosGenerales"> | Date | string
+  }
+
+  export type UsuarioBorradorWhereInput = {
+    AND?: UsuarioBorradorWhereInput | UsuarioBorradorWhereInput[]
+    OR?: UsuarioBorradorWhereInput[]
+    NOT?: UsuarioBorradorWhereInput | UsuarioBorradorWhereInput[]
+    id?: StringFilter<"UsuarioBorrador"> | string
+    ownerId?: UuidFilter<"UsuarioBorrador"> | string
+    subjectUserId?: UuidNullableFilter<"UsuarioBorrador"> | string | null
+    scope?: StringFilter<"UsuarioBorrador"> | string
+    mode?: StringFilter<"UsuarioBorrador"> | string
+    payload?: JsonFilter<"UsuarioBorrador">
+    currentStep?: IntFilter<"UsuarioBorrador"> | number
+    stepStatuses?: JsonFilter<"UsuarioBorrador">
+    viewMode?: StringFilter<"UsuarioBorrador"> | string
+    createdAt?: DateTimeFilter<"UsuarioBorrador"> | Date | string
+    updatedAt?: DateTimeFilter<"UsuarioBorrador"> | Date | string
+  }
+
+  export type UsuarioBorradorOrderByWithRelationInput = {
+    id?: SortOrder
+    ownerId?: SortOrder
+    subjectUserId?: SortOrderInput | SortOrder
+    scope?: SortOrder
+    mode?: SortOrder
+    payload?: SortOrder
+    currentStep?: SortOrder
+    stepStatuses?: SortOrder
+    viewMode?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type UsuarioBorradorWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: UsuarioBorradorWhereInput | UsuarioBorradorWhereInput[]
+    OR?: UsuarioBorradorWhereInput[]
+    NOT?: UsuarioBorradorWhereInput | UsuarioBorradorWhereInput[]
+    ownerId?: UuidFilter<"UsuarioBorrador"> | string
+    subjectUserId?: UuidNullableFilter<"UsuarioBorrador"> | string | null
+    scope?: StringFilter<"UsuarioBorrador"> | string
+    mode?: StringFilter<"UsuarioBorrador"> | string
+    payload?: JsonFilter<"UsuarioBorrador">
+    currentStep?: IntFilter<"UsuarioBorrador"> | number
+    stepStatuses?: JsonFilter<"UsuarioBorrador">
+    viewMode?: StringFilter<"UsuarioBorrador"> | string
+    createdAt?: DateTimeFilter<"UsuarioBorrador"> | Date | string
+    updatedAt?: DateTimeFilter<"UsuarioBorrador"> | Date | string
+  }, "id">
+
+  export type UsuarioBorradorOrderByWithAggregationInput = {
+    id?: SortOrder
+    ownerId?: SortOrder
+    subjectUserId?: SortOrderInput | SortOrder
+    scope?: SortOrder
+    mode?: SortOrder
+    payload?: SortOrder
+    currentStep?: SortOrder
+    stepStatuses?: SortOrder
+    viewMode?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: UsuarioBorradorCountOrderByAggregateInput
+    _avg?: UsuarioBorradorAvgOrderByAggregateInput
+    _max?: UsuarioBorradorMaxOrderByAggregateInput
+    _min?: UsuarioBorradorMinOrderByAggregateInput
+    _sum?: UsuarioBorradorSumOrderByAggregateInput
+  }
+
+  export type UsuarioBorradorScalarWhereWithAggregatesInput = {
+    AND?: UsuarioBorradorScalarWhereWithAggregatesInput | UsuarioBorradorScalarWhereWithAggregatesInput[]
+    OR?: UsuarioBorradorScalarWhereWithAggregatesInput[]
+    NOT?: UsuarioBorradorScalarWhereWithAggregatesInput | UsuarioBorradorScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"UsuarioBorrador"> | string
+    ownerId?: UuidWithAggregatesFilter<"UsuarioBorrador"> | string
+    subjectUserId?: UuidNullableWithAggregatesFilter<"UsuarioBorrador"> | string | null
+    scope?: StringWithAggregatesFilter<"UsuarioBorrador"> | string
+    mode?: StringWithAggregatesFilter<"UsuarioBorrador"> | string
+    payload?: JsonWithAggregatesFilter<"UsuarioBorrador">
+    currentStep?: IntWithAggregatesFilter<"UsuarioBorrador"> | number
+    stepStatuses?: JsonWithAggregatesFilter<"UsuarioBorrador">
+    viewMode?: StringWithAggregatesFilter<"UsuarioBorrador"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"UsuarioBorrador"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"UsuarioBorrador"> | Date | string
   }
 
   export type ProfesorWhereInput = {
@@ -62366,6 +64923,188 @@ export namespace Prisma {
     ipHash?: NullableStringFieldUpdateOperationsInput | string | null
     userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ParametrosGeneralesCreateInput = {
+    id?: number
+    registrosPorPagina?: number
+    imagenLoginCollage1?: string | null
+    imagenLoginCollage2?: string | null
+    imagenLoginCollage3?: string | null
+    imagenLoginCollage4?: string | null
+    updatedById?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ParametrosGeneralesUncheckedCreateInput = {
+    id?: number
+    registrosPorPagina?: number
+    imagenLoginCollage1?: string | null
+    imagenLoginCollage2?: string | null
+    imagenLoginCollage3?: string | null
+    imagenLoginCollage4?: string | null
+    updatedById?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ParametrosGeneralesUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    registrosPorPagina?: IntFieldUpdateOperationsInput | number
+    imagenLoginCollage1?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenLoginCollage2?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenLoginCollage3?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenLoginCollage4?: NullableStringFieldUpdateOperationsInput | string | null
+    updatedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ParametrosGeneralesUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    registrosPorPagina?: IntFieldUpdateOperationsInput | number
+    imagenLoginCollage1?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenLoginCollage2?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenLoginCollage3?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenLoginCollage4?: NullableStringFieldUpdateOperationsInput | string | null
+    updatedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ParametrosGeneralesCreateManyInput = {
+    id?: number
+    registrosPorPagina?: number
+    imagenLoginCollage1?: string | null
+    imagenLoginCollage2?: string | null
+    imagenLoginCollage3?: string | null
+    imagenLoginCollage4?: string | null
+    updatedById?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ParametrosGeneralesUpdateManyMutationInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    registrosPorPagina?: IntFieldUpdateOperationsInput | number
+    imagenLoginCollage1?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenLoginCollage2?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenLoginCollage3?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenLoginCollage4?: NullableStringFieldUpdateOperationsInput | string | null
+    updatedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ParametrosGeneralesUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    registrosPorPagina?: IntFieldUpdateOperationsInput | number
+    imagenLoginCollage1?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenLoginCollage2?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenLoginCollage3?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenLoginCollage4?: NullableStringFieldUpdateOperationsInput | string | null
+    updatedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UsuarioBorradorCreateInput = {
+    id?: string
+    ownerId: string
+    subjectUserId?: string | null
+    scope: string
+    mode: string
+    payload: JsonNullValueInput | InputJsonValue
+    currentStep?: number
+    stepStatuses: JsonNullValueInput | InputJsonValue
+    viewMode?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UsuarioBorradorUncheckedCreateInput = {
+    id?: string
+    ownerId: string
+    subjectUserId?: string | null
+    scope: string
+    mode: string
+    payload: JsonNullValueInput | InputJsonValue
+    currentStep?: number
+    stepStatuses: JsonNullValueInput | InputJsonValue
+    viewMode?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UsuarioBorradorUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    subjectUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    scope?: StringFieldUpdateOperationsInput | string
+    mode?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    currentStep?: IntFieldUpdateOperationsInput | number
+    stepStatuses?: JsonNullValueInput | InputJsonValue
+    viewMode?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UsuarioBorradorUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    subjectUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    scope?: StringFieldUpdateOperationsInput | string
+    mode?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    currentStep?: IntFieldUpdateOperationsInput | number
+    stepStatuses?: JsonNullValueInput | InputJsonValue
+    viewMode?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UsuarioBorradorCreateManyInput = {
+    id?: string
+    ownerId: string
+    subjectUserId?: string | null
+    scope: string
+    mode: string
+    payload: JsonNullValueInput | InputJsonValue
+    currentStep?: number
+    stepStatuses: JsonNullValueInput | InputJsonValue
+    viewMode?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UsuarioBorradorUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    subjectUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    scope?: StringFieldUpdateOperationsInput | string
+    mode?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    currentStep?: IntFieldUpdateOperationsInput | number
+    stepStatuses?: JsonNullValueInput | InputJsonValue
+    viewMode?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UsuarioBorradorUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    subjectUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    scope?: StringFieldUpdateOperationsInput | string
+    mode?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    currentStep?: IntFieldUpdateOperationsInput | number
+    stepStatuses?: JsonNullValueInput | InputJsonValue
+    viewMode?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ProfesorCreateInput = {
@@ -67198,6 +69937,147 @@ export namespace Prisma {
     _max?: NestedEnumAuditoriaOrigenFilter<$PrismaModel>
   }
 
+  export type ParametrosGeneralesCountOrderByAggregateInput = {
+    id?: SortOrder
+    registrosPorPagina?: SortOrder
+    imagenLoginCollage1?: SortOrder
+    imagenLoginCollage2?: SortOrder
+    imagenLoginCollage3?: SortOrder
+    imagenLoginCollage4?: SortOrder
+    updatedById?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ParametrosGeneralesAvgOrderByAggregateInput = {
+    id?: SortOrder
+    registrosPorPagina?: SortOrder
+  }
+
+  export type ParametrosGeneralesMaxOrderByAggregateInput = {
+    id?: SortOrder
+    registrosPorPagina?: SortOrder
+    imagenLoginCollage1?: SortOrder
+    imagenLoginCollage2?: SortOrder
+    imagenLoginCollage3?: SortOrder
+    imagenLoginCollage4?: SortOrder
+    updatedById?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ParametrosGeneralesMinOrderByAggregateInput = {
+    id?: SortOrder
+    registrosPorPagina?: SortOrder
+    imagenLoginCollage1?: SortOrder
+    imagenLoginCollage2?: SortOrder
+    imagenLoginCollage3?: SortOrder
+    imagenLoginCollage4?: SortOrder
+    updatedById?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ParametrosGeneralesSumOrderByAggregateInput = {
+    id?: SortOrder
+    registrosPorPagina?: SortOrder
+  }
+  export type JsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type UsuarioBorradorCountOrderByAggregateInput = {
+    id?: SortOrder
+    ownerId?: SortOrder
+    subjectUserId?: SortOrder
+    scope?: SortOrder
+    mode?: SortOrder
+    payload?: SortOrder
+    currentStep?: SortOrder
+    stepStatuses?: SortOrder
+    viewMode?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type UsuarioBorradorAvgOrderByAggregateInput = {
+    currentStep?: SortOrder
+  }
+
+  export type UsuarioBorradorMaxOrderByAggregateInput = {
+    id?: SortOrder
+    ownerId?: SortOrder
+    subjectUserId?: SortOrder
+    scope?: SortOrder
+    mode?: SortOrder
+    currentStep?: SortOrder
+    viewMode?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type UsuarioBorradorMinOrderByAggregateInput = {
+    id?: SortOrder
+    ownerId?: SortOrder
+    subjectUserId?: SortOrder
+    scope?: SortOrder
+    mode?: SortOrder
+    currentStep?: SortOrder
+    viewMode?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type UsuarioBorradorSumOrderByAggregateInput = {
+    currentStep?: SortOrder
+  }
+  export type JsonWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedJsonFilter<$PrismaModel>
+    _max?: NestedJsonFilter<$PrismaModel>
+  }
+
   export type EnumProfesorEstadoFilter<$PrismaModel = never> = {
     equals?: $Enums.ProfesorEstado | EnumProfesorEstadoFieldRefInput<$PrismaModel>
     in?: $Enums.ProfesorEstado[] | ListEnumProfesorEstadoFieldRefInput<$PrismaModel>
@@ -67737,29 +70617,6 @@ export namespace Prisma {
     notIn?: $Enums.ActividadModalidad[] | ListEnumActividadModalidadFieldRefInput<$PrismaModel> | null
     not?: NestedEnumActividadModalidadNullableFilter<$PrismaModel> | $Enums.ActividadModalidad | null
   }
-  export type JsonFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
 
   export type ActividadNullableScalarRelationFilter = {
     is?: ActividadWhereInput | null
@@ -67822,32 +70679,6 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedEnumActividadModalidadNullableFilter<$PrismaModel>
     _max?: NestedEnumActividadModalidadNullableFilter<$PrismaModel>
-  }
-  export type JsonWithAggregatesFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedJsonFilter<$PrismaModel>
-    _max?: NestedJsonFilter<$PrismaModel>
   }
 
   export type EnumRequisitoTipoFilter<$PrismaModel = never> = {
@@ -74670,6 +77501,29 @@ export namespace Prisma {
     _min?: NestedEnumAuditoriaOrigenFilter<$PrismaModel>
     _max?: NestedEnumAuditoriaOrigenFilter<$PrismaModel>
   }
+  export type NestedJsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type NestedEnumProfesorEstadoFilter<$PrismaModel = never> = {
     equals?: $Enums.ProfesorEstado | EnumProfesorEstadoFieldRefInput<$PrismaModel>
@@ -74849,29 +77703,6 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedEnumActividadModalidadNullableFilter<$PrismaModel>
     _max?: NestedEnumActividadModalidadNullableFilter<$PrismaModel>
-  }
-  export type NestedJsonFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
-        Required<NestedJsonFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
-
-  export type NestedJsonFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
   export type NestedEnumRequisitoTipoFilter<$PrismaModel = never> = {

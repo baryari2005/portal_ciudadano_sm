@@ -20,12 +20,12 @@ const emptyMeta: UserManagementMeta = {
   pageCount: 1,
 };
 
-export function useUsersManagement(scope: "citizen" | "personnel" = "citizen") {
+export function useUsersManagement(scope: "citizen" | "personnel" = "citizen", context: "admin" | "reception" = "admin", initialSelectedUserId = "") {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [meta, setMeta] = useState<UserManagementMeta>(emptyMeta);
-  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState(initialSelectedUserId);
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<
     "all" | "active" | "inactive"
@@ -44,6 +44,7 @@ export function useUsersManagement(scope: "citizen" | "personnel" = "citizen") {
     let active = true;
 
     async function fetchRoles() {
+      if (context === "reception") { setRoles([]); setRolesLoading(false); return; }
       setRolesLoading(true);
 
       try {
@@ -74,7 +75,7 @@ export function useUsersManagement(scope: "citizen" | "personnel" = "citizen") {
     return () => {
       active = false;
     };
-  }, [scope]);
+  }, [scope, context]);
 
   useEffect(() => {
     let active = true;

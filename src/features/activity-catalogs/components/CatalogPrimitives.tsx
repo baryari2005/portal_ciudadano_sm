@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -37,7 +38,10 @@ export type CatalogFilterSection = {
   active?: boolean;
   onClear?: () => void;
 };
-export const CATALOG_PAGE_SIZE = 6;
+export let CATALOG_PAGE_SIZE = 6;
+export function setCatalogPageSize(value: number) {
+  CATALOG_PAGE_SIZE = Math.min(100, Math.max(3, Math.trunc(value)));
+}
 
 export function formatCatalogDate(value: string) {
   return new Intl.DateTimeFormat("es-AR", {
@@ -228,9 +232,11 @@ export function CatalogStatusBadge({
 export function CatalogLoadingState({
   label,
   fullPage = false,
+  viewport = false,
 }: {
   label: string;
   fullPage?: boolean;
+  viewport?: boolean;
 }) {
   return (
     <section
@@ -238,26 +244,44 @@ export function CatalogLoadingState({
       aria-live="polite"
       className={cn(
         "grid w-full place-items-center bg-[#F7FBF5]",
-        fullPage
+        viewport
+          ? "min-h-dvh p-6 sm:p-10"
+          : fullPage
           ? "min-h-[calc(100dvh-var(--topbar-h,0px)-48px)] p-8"
           : "min-h-72 rounded-3xl border border-[#819B56]/20 p-6",
       )}
     >
-      <div className="flex items-center gap-4 rounded-[18px] border border-[#DDE8D7] bg-[#EEF6E9] px-6 py-5 text-[#173C2A] shadow-sm">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#DDEED2]">
-          <Loader2
-            className="h-6 w-6 animate-spin text-[#00522C]"
-            aria-hidden="true"
+      <div className={cn(
+        "relative aspect-[1464/1024] w-full",
+        viewport ? "w-[min(100%,calc(88dvh*1.4296875))]" : fullPage ? "max-w-3xl" : "max-w-md",
+      )}>
+          <Image
+            src="/Cargando.png"
+            alt=""
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 1024px"
+            className="object-contain drop-shadow-[0_22px_35px_rgba(29,79,54,0.08)]"
           />
-        </div>
-        <div>
-          <p className="text-base font-extrabold text-[#003A22]">
-            Cargando {label}
-          </p>
-          <p className="text-sm font-medium text-[#5F6F68]">
-            Estamos preparando el listado de registros.
-          </p>
-        </div>
+          <svg
+            viewBox="0 0 100 100"
+            aria-hidden="true"
+            className="absolute left-1/2 top-[30.5%] z-10 aspect-square w-[18.75%] -translate-x-1/2 -translate-y-1/2"
+          >
+            <circle cx="50" cy="50" r="43" fill="none" stroke="#D9DDD8" strokeWidth="7" />
+            <circle
+              cx="50"
+              cy="50"
+              r="43"
+              fill="none"
+              stroke="#819B56"
+              strokeWidth="7"
+              strokeLinecap="round"
+              strokeDasharray="88 183"
+              className="origin-center animate-spin [animation-duration:1.45s]"
+            />
+          </svg>
+          <span className="sr-only">Cargando {label}. Estamos preparando la información.</span>
       </div>
     </section>
   );

@@ -10,7 +10,7 @@ import { Sidebar } from "@/components/layout/dashboard-sidebar/Sidebar";
 import { Menu } from "lucide-react";
 import { Topbar } from "@/components/layout/dashboard-topbar/Topbar";
 import { WorkspaceGuard } from "@/features/auth/components/WorkspaceGuard";
-import { usePathname } from "next/navigation";
+import { GeneralSettingsProvider } from "@/features/general-settings/components/GeneralSettingsProvider";
 
 type Props = {
   children: ReactNode;
@@ -23,7 +23,6 @@ type DashboardLayoutStyle = CSSProperties & {
 };
 
 export default function DashboardRootLayout({ children }: Props) {
-  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -52,8 +51,9 @@ export default function DashboardRootLayout({ children }: Props) {
 
   return (
     <RequireAuth>
+      <GeneralSettingsProvider>
       <MustChangePasswordGate>
-        <WorkspaceGuard workspace={pathname.startsWith("/access") || pathname === "/validar-qr" || pathname === "/busqueda-manual" ? "access" : "administration"}>
+        <WorkspaceGuard workspace="administration">
         <div className="lg:hidden fixed bottom-4 right-4 z-50">
           <button
             onClick={() => setCollapsed(false)}
@@ -88,6 +88,7 @@ export default function DashboardRootLayout({ children }: Props) {
         />
         </WorkspaceGuard>
       </MustChangePasswordGate>
+      </GeneralSettingsProvider>
     </RequireAuth>
   );
 }

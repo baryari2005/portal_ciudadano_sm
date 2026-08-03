@@ -46,6 +46,11 @@ export const createUserSchema = z.object({
   genero: z.nativeEnum(Genero).optional().nullable(),
   estadoCivil: z.nativeEnum(EstadoCivil).optional().nullable(),
   nacionalidad: z.nativeEnum(Nacionalidad).optional().nullable(),
+  professorProfile: z.object({
+    especialidad: z.string().trim().max(160).optional().nullable(),
+    matricula: z.string().trim().max(120).optional().nullable(),
+    descripcion: z.string().trim().max(1200).optional().nullable(),
+  }).optional(),
 });
 
 export type CreateUserDto = z.infer<typeof createUserSchema>;

@@ -21,7 +21,7 @@ type OwnNotificationsResponse = {
 
 const POLL_INTERVAL_MS = 60_000;
 
-export function usePendingUsersAlert() {
+export function usePendingUsersAlert(includePendingUsers = true) {
   const token = useAuth((state) => state.token);
   const user = useAuth((state) => state.user);
   const hasHydrated = useAuth((state) => state.hasHydrated);
@@ -31,17 +31,18 @@ export function usePendingUsersAlert() {
   const fetchPendingCount = useCallback(async () => {
     if (!hasHydrated || !token || !user) {
       setPendingCount(0);
+      setUnreadNotificationCount(0);
       return;
     }
 
     try {
       const [pendingResponse, notificationsResponse] = await Promise.all([
-        fetch("/api/users?estado=PENDIENTE&page=1&pageSize=1", {
+        includePendingUsers ? fetch("/api/users?estado=PENDIENTE&page=1&pageSize=1", {
           cache: "no-store",
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }),
+        }) : Promise.resolve(null),
         fetch("/api/citizen/notifications?unreadOnly=true&page=1&pageSize=1", {
           cache: "no-store",
           headers: {
@@ -50,7 +51,7 @@ export function usePendingUsersAlert() {
         }),
       ]);
 
-      const pendingData = pendingResponse.ok
+      const pendingData = pendingResponse?.ok
         ? ((await pendingResponse.json()) as PendingUsersResponse)
         : null;
       const notificationsData = notificationsResponse.ok
@@ -65,7 +66,7 @@ export function usePendingUsersAlert() {
       setPendingCount(0);
       setUnreadNotificationCount(0);
     }
-  }, [hasHydrated, token, user]);
+  }, [includePendingUsers, hasHydrated, token, user]);
 
   useEffect(() => {
     void fetchPendingCount();

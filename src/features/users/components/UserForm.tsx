@@ -5,15 +5,18 @@ import Link from "next/link";
 import type { FieldError, FieldErrors } from "react-hook-form";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
-import { ArrowLeft, Check, CheckCircle2, ChevronRight, ClipboardCheck, Images, KeyRound, Loader2, MapPin, Save, ShieldPlus, UserPlus, UserRound, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronRight, ClipboardCheck, Images, KeyRound, Loader2, MapPin, Save, ShieldPlus, Trash2, UserPlus, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { AdminFormHeader } from "@/components/layout/admin-form-page";
 import { adminPrimaryButtonClass, adminSecondaryButtonClass } from "@/components/shared/admin-patterns";
+import { AdminFormViewToggle } from "@/components/shared/admin-form-view-toggle";
+import { AdminWorkflowLayout } from "@/components/shared/admin-workflow-layout";
 
 import { UserFormFields } from "./UserFormFields";
 import { UserFormValues } from "../types/types";
-import { useUserForm } from "../hooks/useUserForm";
+import { useUserForm, type UserSubmissionMode } from "../hooks/useUserForm";
+import { deleteUserDraft, getUserDraft, saveUserDraft, type DraftStepStatus } from "../services/user-drafts.service";
 
 type Mode = "create" | "edit";
 
@@ -29,13 +32,16 @@ type Props = {
   title?: string;
   description?: string;
   headerIcon?: LucideIcon;
+  submissionMode?: UserSubmissionMode;
+  submitLabel?: string;
+  successMessage?: string;
 };
 
-type StepStatus = "pending" | "valid" | "invalid";
+type StepStatus = DraftStepStatus;
 
 const STEP_FIELDS: Record<number, Array<keyof UserFormValues>> = {
-  1: ["nombre", "apellido", "documento", "fechaNacimiento", "nacionalidad", "genero"],
-  2: ["userId", "password", "rolId"],
+  1: ["nombre", "apellido", "documento", "fechaNacimiento", "nacionalidad", "genero", "estadoCivil"],
+  2: ["userId", "password", "rolId", "profesorEspecialidad", "profesorMatricula", "profesorDescripcion"],
   3: ["domicilio", "localidad", "provincia", "codigoPostal"],
   4: ["email", "celular", "contactoEmergenciaNombre", "contactoEmergenciaTelefono"],
   5: ["coberturaMedicaId", "numeroAfiliado"],
@@ -63,15 +69,24 @@ function getFirstFieldError(
   return null;
 }
 
-export function UserForm({ mode, defaultValues, onSuccess, fixedRoleCode, backHref = "/users", title, description, headerIcon }: Props) {
-  const { form, onSubmit, submitting, roles, loadingRoles, identityTmpPath, avatarTmpPath, setIdentityTmpPath, setAvatarTmpPath } =
-    useUserForm({ mode, defaultValues, onSuccess });
+export function UserForm({ mode, defaultValues, onSuccess, fixedRoleCode, backHref = "/users", title, description, headerIcon, submissionMode = "admin-create", submitLabel, successMessage }: Props) {
   const [step, setStep] = useState(1);
+  const [viewMode, setViewMode] = useState<"workflow" | "full">("full");
+  const [draftId, setDraftId] = useState<string>();
+  const [savingDraft, setSavingDraft] = useState(false);
+  const goToFieldStep = (field: keyof UserFormValues) => {
+    const entry = Object.entries(STEP_FIELDS).find(([, fields]) => fields.includes(field));
+    if (entry) setStep(Number(entry[0]));
+  };
+  const { form, onSubmit, submitting, roles, loadingRoles, identityTmpPath, avatarTmpPath, setIdentityTmpPath, setAvatarTmpPath } =
+    useUserForm({ mode, defaultValues, onSuccess: (id) => { if (draftId) void deleteUserDraft(draftId); onSuccess?.(id); }, submissionMode, successMessage, onValidationError: goToFieldStep });
   const submitRequestedRef = useRef(false);
   const [mediaUploading, setMediaUploading] = useState(false);
   const [stepStatus, setStepStatus] = useState<Record<number, StepStatus>>({ 1: "pending", 2: "pending", 3: "pending", 4: "pending", 5: "pending", 6: "pending", 7: "pending" });
   const creating = mode === "create";
-  const workflow = true;
+  const workflow = viewMode === "workflow";
+  const roleCode = fixedRoleCode ?? defaultValues?.rol?.codigo ?? defaultValues?.rol?.nombre ?? "";
+  const draftScope: "citizen" | "personnel" = submissionMode === "reception-edit" || roleCode.toLowerCase().includes("citizen") || roleCode.toLowerCase().includes("ciudad") ? "citizen" : "personnel";
   useEffect(() => {
     if (!fixedRoleCode || loadingRoles) return;
     const normalizedCode = fixedRoleCode.toLowerCase();
@@ -86,10 +101,26 @@ export function UserForm({ mode, defaultValues, onSuccess, fixedRoleCode, backHr
     }
   }, [creating, fixedRoleCode, form, loadingRoles, roles]);
   useEffect(() => {
+    let active = true;
+    void getUserDraft<Record<string, unknown>>(draftScope, mode, defaultValues?.id).then((draft) => {
+      if (!active || !draft) return;
+      setDraftId(draft.id);
+      setStep(draft.currentStep);
+      setViewMode(draft.viewMode);
+      setStepStatus(mode === "create" ? { ...draft.stepStatuses, 2: "unsaved" } : draft.stepStatuses);
+      const { __identityTmpPath, __avatarTmpPath, ...payload } = draft.payload;
+      form.reset({ ...form.getValues(), ...payload } as UserFormValues);
+      if (typeof __identityTmpPath === "string") setIdentityTmpPath(__identityTmpPath);
+      if (typeof __avatarTmpPath === "string") setAvatarTmpPath(__avatarTmpPath);
+      toast.info(mode === "create" ? "Recuperamos el último borrador. Volvé a ingresar la contraseña." : "Recuperamos el último borrador guardado.");
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [defaultValues?.id, draftScope, form, mode, setAvatarTmpPath, setIdentityTmpPath]);
+  useEffect(() => {
     const subscription = form.watch((_values, info) => {
       if (!info.name) return;
       const changedStep = Object.entries(STEP_FIELDS).find(([, fields]) => fields.includes(info.name as keyof UserFormValues));
-      if (changedStep) setStepStatus((current) => ({ ...current, [Number(changedStep[0])]: "pending" }));
+      if (changedStep) setStepStatus((current) => ({ ...current, [Number(changedStep[0])]: "unsaved" }));
     });
     return () => subscription.unsubscribe();
   }, [form]);
@@ -99,20 +130,58 @@ export function UserForm({ mode, defaultValues, onSuccess, fixedRoleCode, backHr
     ["Revisión", ClipboardCheck],
   ] as const;
 
+  async function persistDraft(statuses: Record<number, StepStatus>, currentStep = step) {
+    setSavingDraft(true);
+    try {
+      const payload: Record<string, unknown> = { ...(form.getValues() as unknown as Record<string, unknown>), __identityTmpPath: identityTmpPath, __avatarTmpPath: avatarTmpPath };
+      delete payload.password;
+      const draft = await saveUserDraft({ id: draftId, scope: draftScope, mode, subjectUserId: defaultValues?.id, payload, currentStep, stepStatuses: statuses, viewMode });
+      setDraftId(draft.id);
+      setStepStatus(draft.stepStatuses);
+      toast.success("Borrador guardado.");
+    } catch {
+      toast.error("No pudimos guardar el borrador.");
+      throw new Error("DRAFT_SAVE_FAILED");
+    } finally { setSavingDraft(false); }
+  }
+
+  async function saveCurrentDraft() {
+    const statuses = { ...stepStatus };
+    if (workflow) {
+      const valid = await form.trigger(STEP_FIELDS[step]);
+      statuses[step] = valid ? "valid" : "invalid";
+    } else {
+      for (const [number, fields] of Object.entries(STEP_FIELDS)) statuses[Number(number)] = await form.trigger(fields) ? "valid" : "invalid";
+    }
+    await persistDraft(statuses);
+  }
+
+  async function discardDraft() {
+    if (!draftId) return;
+    await deleteUserDraft(draftId);
+    window.location.reload();
+  }
+
   async function continueToNextStep() {
     const valid = await form.trigger(STEP_FIELDS[step], { shouldFocus: true });
-    setStepStatus((current) => ({ ...current, [step]: valid ? "valid" : "invalid" }));
+    const statuses = { ...stepStatus, [step]: valid ? "valid" as const : "invalid" as const };
+    setStepStatus(statuses);
     if (!valid) {
       toast.error("Corregí los campos marcados antes de continuar.");
       return;
     }
-    setStep((current) => Math.min(7, current + 1));
+    const nextStep = Math.min(7, step + 1);
+    try { await persistDraft(statuses, nextStep); setStep(nextStep); } catch {}
   }
 
   const formActions = (
-    <div className="mt-8 flex flex-col-reverse gap-3 border-t border-[var(--brand-border)] pt-5 sm:flex-row sm:justify-between">
-      {step > 1 ? <Button type="button" variant="outline" className={`${adminSecondaryButtonClass} w-full justify-center gap-3 sm:w-auto`} onClick={()=>setStep((current)=>current-1)}><ArrowLeft className="h-5 w-5"/>Anterior</Button> : <Button asChild type="button" variant="outline" className={`${adminSecondaryButtonClass} w-full justify-center gap-3 sm:w-auto`}><Link href={backHref}><ArrowLeft className="h-5 w-5"/>Volver</Link></Button>}
-      {step < 7 ? <Button type="button" size="lg" disabled={submitting || mediaUploading || loadingRoles} onClick={continueToNextStep} className={`${adminPrimaryButtonClass} w-full justify-center gap-3 sm:w-auto`}>Guardar y continuar<ChevronRight className="h-5 w-5" /></Button> : <Button type="submit" size="lg" disabled={submitting || mediaUploading || loadingRoles} onClick={() => { submitRequestedRef.current = true; }} className={`${adminPrimaryButtonClass} w-full justify-center gap-3 sm:w-auto`}>{submitting || mediaUploading ? <Loader2 className="animate-spin" /> : null}Guardar cambios<Save /></Button>}
+    <div className="mt-8 flex flex-col-reverse gap-3 border-t border-[var(--brand-border)] pt-5 sm:flex-row sm:flex-wrap sm:justify-between">
+      {workflow && step > 1 ? <Button type="button" variant="outline" className={`${adminSecondaryButtonClass} w-full justify-center gap-3 sm:w-auto`} onClick={()=>setStep((current)=>current-1)}><ArrowLeft className="h-5 w-5"/>Anterior</Button> : <Button asChild type="button" variant="outline" className={`${adminSecondaryButtonClass} w-full justify-center gap-3 sm:w-auto`}><Link href={backHref}><ArrowLeft className="h-5 w-5"/>Volver</Link></Button>}
+      <div className="flex flex-col gap-3 sm:flex-row">
+        {draftId ? <Button type="button" variant="ghost" disabled={savingDraft || submitting} onClick={() => void discardDraft()} className="h-12 gap-2 rounded-xl text-red-700 hover:bg-red-50"><Trash2 />Descartar borrador</Button> : null}
+        <Button type="button" variant="outline" disabled={savingDraft || submitting || mediaUploading} onClick={() => void saveCurrentDraft()} className={`${adminSecondaryButtonClass} w-full justify-center gap-3 sm:w-auto`}>{savingDraft ? <Loader2 className="animate-spin" /> : <Save />}Guardar borrador</Button>
+        {workflow && step < 7 ? <Button type="button" size="lg" disabled={savingDraft || submitting || mediaUploading || loadingRoles} onClick={continueToNextStep} className={`${adminPrimaryButtonClass} w-full justify-center gap-3 sm:w-auto`}>Guardar y continuar<ChevronRight className="h-5 w-5" /></Button> : <Button type="submit" size="lg" disabled={savingDraft || submitting || mediaUploading || loadingRoles} onClick={() => { submitRequestedRef.current = true; }} className={`${adminPrimaryButtonClass} w-full justify-center gap-3 sm:w-auto`}>{submitting || mediaUploading ? <Loader2 className="animate-spin" /> : null}{submitLabel ?? (mode === "create" ? "Crear usuario" : "Guardar cambios")}<Save /></Button>}
+      </div>
     </div>
   );
 
@@ -185,14 +254,14 @@ export function UserForm({ mode, defaultValues, onSuccess, fixedRoleCode, backHr
       description={description ?? "Completá y validá cada sección antes de guardar los cambios."}
       className="mb-5"
     />
+    <AdminFormViewToggle value={viewMode} onChange={setViewMode} />
     <form
       id="user-form"
       className="w-full"
-      onSubmit={(event) => { if (step !== 7 || mediaUploading || !submitRequestedRef.current) { event.preventDefault(); return; } submitRequestedRef.current = false; void form.handleSubmit(async (values) => { setStepStatus({ 1: "valid", 2: "valid", 3: "valid", 4: "valid", 5: "valid", 6: "valid", 7: "valid" }); await onSubmit(values); }, onInvalid)(event); }}
+      onSubmit={(event) => { if ((workflow && step !== 7) || mediaUploading || !submitRequestedRef.current) { event.preventDefault(); return; } submitRequestedRef.current = false; void form.handleSubmit(async (values) => { setStepStatus({ 1: "valid", 2: "valid", 3: "valid", 4: "valid", 5: "valid", 6: "valid", 7: "valid" }); await onSubmit(values); }, onInvalid)(event); }}
       noValidate
     >
-      <div className="grid items-start gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
-      <aside className="h-fit self-start rounded-3xl bg-[#1D4F36] p-4 text-white shadow-sm lg:sticky lg:top-0"><p className="px-3 pb-3 text-xs font-bold uppercase text-[#BFD0C5]">{creating ? "Pasos del alta" : "Pasos de edición"}</p><nav className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-1">{steps.map(([label, Icon], index) => { const number=index+1, active=step===number, status=stepStatus[number]; return <button key={label} type="button" onClick={()=>setStep(number)} className={`flex min-h-12 items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-bold ${active?"bg-[#DDF28A] text-[#173C2A]":"hover:bg-white/10"}`}><span className="grid size-8 shrink-0 place-items-center rounded-lg bg-white/10"><Icon className="size-5"/></span><span className="min-w-0 flex-1">{label}</span>{status === "valid" ? <Check className="size-5 text-emerald-300" /> : status === "invalid" ? <X className="size-5 text-red-300" /> : null}</button>})}</nav></aside>
+      <AdminWorkflowLayout sections={steps.filter((_, index) => workflow || index < 6).map(([label, icon], index) => ({ id: index + 1, label, icon, status: stepStatus[index + 1] }))} activeSection={step} onSectionChange={setStep} navigationLabel={creating ? "Pasos del alta" : "Pasos de edición"} fullWidth={!workflow}>
       <UserFormFields
         mode={mode}
         form={form}
@@ -202,14 +271,15 @@ export function UserForm({ mode, defaultValues, onSuccess, fixedRoleCode, backHr
         onTempAvatarUploaded={setIdentityTmpPath}
         onTempAvatarCleared={() => setIdentityTmpPath(null)}
         onTempPortalAvatarUploaded={setAvatarTmpPath}
-        step={step}
+        step={workflow ? step : undefined}
         footer={formActions}
         fixedRoleLabel={fixedRoleCode ? "Ciudadano" : undefined}
         hasPortalAvatar={Boolean(avatarTmpPath || defaultValues?.avatarUrl)}
         hasIdentityPhoto={Boolean(identityTmpPath || defaultValues?.fotoPerfilUrl)}
         onMediaUploadingChange={setMediaUploading}
+        showReview={workflow}
       />
-      </div>
+      </AdminWorkflowLayout>
 
     </form>
     </>

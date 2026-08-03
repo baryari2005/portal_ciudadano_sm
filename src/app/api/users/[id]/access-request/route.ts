@@ -9,7 +9,7 @@ import {
 } from "@/features/auth/request-access/services/requestAccess.server";
 import { getAuditRequestContext } from "@/features/audit-log/helpers/audit-log.helpers";
 import { createAuditLog } from "@/features/audit-log/services/audit-log.server";
-import { requireAuth, requirePermission } from "@/lib/server-auth";
+import { requireAccessRequestReviewPermission, requireAuth } from "@/lib/server-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,14 +18,14 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(req: NextRequest, context: RouteContext) {
   const reviewer = await requireAuth(req);
-  requirePermission(reviewer, "usuarios", "editar");
+  requireAccessRequestReviewPermission(reviewer);
   const { id } = await context.params;
   return NextResponse.json({ data: await listAccessRequests(id) });
 }
 
 export async function PATCH(req: NextRequest, context: RouteContext) {
   const reviewer = await requireAuth(req);
-  requirePermission(reviewer, "usuarios", "editar");
+  requireAccessRequestReviewPermission(reviewer);
 
   try {
     const { id } = await context.params;

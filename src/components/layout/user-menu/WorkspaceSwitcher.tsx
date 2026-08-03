@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { DoorOpen, GraduationCap, LayoutDashboard, UserRound } from "lucide-react";
 import { DropdownMenuItem, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { getTeacherProfileClient } from "@/features/teacher/services/teacher.service";
-import { hasAccessWorkspace, hasAdministrativeWorkspace, hasTeacherPermissions, WORKSPACE_STORAGE_KEY, type WorkspaceKey } from "@/features/auth/libs/workspaces";
+import { hasReceptionWorkspace, hasAdministrativeWorkspace, hasTeacherPermissions, WORKSPACE_STORAGE_KEY, type WorkspaceKey } from "@/features/auth/libs/workspaces";
 import { useAuth } from "@/stores/auth";
 export function WorkspaceSwitcher() {
   const user = useAuth((state) => state.user), [teacherEnabled, setTeacherEnabled] = useState(false), teacherPermissions = hasTeacherPermissions(user);
@@ -12,7 +12,7 @@ export function WorkspaceSwitcher() {
   if (!user) return null;
   const links: Array<{ key: WorkspaceKey; href: string; label: string; icon: typeof LayoutDashboard }> = [
     ...(hasAdministrativeWorkspace(user) ? [{ key: "administration" as const, href: "/", label: "Administración", icon: LayoutDashboard }] : []),
-    ...(hasAccessWorkspace(user) ? [{ key: "access" as const, href: "/access", label: "Recepción", icon: DoorOpen }] : []),
+    ...(hasReceptionWorkspace(user) ? [{ key: "reception" as const, href: "/reception", label: "Recepción", icon: DoorOpen }] : []),
     ...(teacherEnabled && teacherPermissions ? [{ key: "teacher" as const, href: "/teacher", label: "Portal del Profesor", icon: GraduationCap }] : []),
     { key: "citizen", href: "/citizen", label: "Portal Ciudadano", icon: UserRound },
   ];

@@ -5,7 +5,7 @@ import { CatalogValidationError } from "@/lib/errors/catalog-errors";
 
 export const DATABASE_RESET_CONFIRMATION = "REINICIAR BASE DE DATOS";
 const BASE_ROLE_CODES = ["admin", "reception", "teacher", "citizen"];
-const PRESERVED_TABLES = new Set(["Usuario", "Rol", "Permiso", "RolPermiso", "CoberturaMedica"]);
+const PRESERVED_TABLES = new Set(["Usuario", "Rol", "Permiso", "RolPermiso", "CoberturaMedica", "ParametrosGenerales"]);
 
 const TABLES_TO_CLEAR = Prisma.dmmf.datamodel.models
   .map((model) => model.dbName ?? model.name)

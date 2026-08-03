@@ -19,9 +19,10 @@ import { availableWorkspaces, getDefaultWorkspace, hasTeacherPermissions, WORKSP
 
 type Props = {
   nextParam?: string;
+  imageSources?: readonly string[];
 };
 
-export default function LoginForm({ nextParam }: Props) {
+export default function LoginForm({ nextParam, imageSources }: Props) {
   const {
     form,
     onSubmit,
@@ -63,7 +64,7 @@ export default function LoginForm({ nextParam }: Props) {
   }, [triedMe, token, user, next, nextParam, router]);
 
   return (
-    <LoginPageLayout>
+    <LoginPageLayout imageSources={imageSources}>
       <section className="space-y-7">
         <LoginLogo />
 

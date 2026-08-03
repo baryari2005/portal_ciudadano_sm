@@ -67,7 +67,9 @@ function mapCitizen(user: Prisma.UsuarioGetPayload<{ select: typeof citizenSelec
 }
 
 export async function searchEnrollmentCitizens(query: string, page = 1, pageSize = 6) {
-  const q = query.trim();
+  const q = query.trim().replace(/\s+/g, " ");
+  const documentQuery = q.replace(/[.\s-]/g, "");
+  const nameParts = q.split(" ").filter(Boolean);
   const where: Prisma.UsuarioWhereInput = {
     deletedAt: null,
     estado: "ACTIVO",
@@ -77,8 +79,10 @@ export async function searchEnrollmentCitizens(query: string, page = 1, pageSize
           OR: [
             { nombre: { contains: q, mode: "insensitive" } },
             { apellido: { contains: q, mode: "insensitive" } },
-            { documento: { contains: q } },
+            { documento: { contains: documentQuery } },
+            { email: { contains: q, mode: "insensitive" } },
             { userId: { contains: q, mode: "insensitive" } },
+            ...(nameParts.length > 1 ? [{ AND: nameParts.map((part) => ({ OR: [{ nombre: { contains: part, mode: "insensitive" as const } }, { apellido: { contains: part, mode: "insensitive" as const } }] })) }] : []),
           ],
         }
       : {}),

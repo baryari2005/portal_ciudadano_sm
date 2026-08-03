@@ -1,2 +1,2 @@
-import { AccessManualPage } from "@/features/access/components/AccessManualPage";
-export default function Page() { return <AccessManualPage />; }
+import { redirect } from "next/navigation";
+export default function Page() { redirect("/reception/manual"); }

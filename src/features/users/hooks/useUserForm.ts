@@ -13,11 +13,13 @@ import {
 import { normalize, pathFromPublicUrl } from "@/features/users/lib/utils";
 import { useRoles } from "@/features/users/hooks/useRoles";
 import { useAvatarStaging } from "@/features/users/hooks/useAvatarStaging";
-import { createUser, updateUser } from "@/features/users/services/api.service";
+import { createReceptionAccessRequest, createUser, updateReceptionCitizen, updateUser } from "@/features/users/services/api.service";
 import { toYmdLocal } from "@/features/users/lib/user-form.helpers";
+import { toReceptionRequestPayload } from "@/features/reception/lib/reception-request.mapper";
 import { UserFormValues } from "../types/types";
 
 type Mode = "create" | "edit";
+export type UserSubmissionMode = "admin-create" | "reception-request" | "reception-edit";
 
 function isDateValue(v: unknown): v is Date {
   return v instanceof Date && !Number.isNaN(v.getTime());
@@ -54,12 +56,16 @@ type UserPayload = {
   contactoEmergenciaTelefono: string | null;
   coberturaMedicaId: string | null;
   numeroAfiliado: string | null;
+  professorProfile?: { especialidad: string | null; matricula: string | null; descripcion: string | null };
 };
 
 export function useUserForm({
   mode,
   defaultValues,
   onSuccess,
+  submissionMode = "admin-create",
+  onValidationError,
+  successMessage,
 }: {
   mode: Mode;
   defaultValues?: Partial<UserFormValues> & {
@@ -68,6 +74,9 @@ export function useUserForm({
     fechaNacimiento?: string | Date | null;
   };
   onSuccess?: (id: string) => void;
+  submissionMode?: UserSubmissionMode;
+  onValidationError?: (field: keyof UserFormValues) => void;
+  successMessage?: string;
 }) {
   const schema = mode === "create" ? createUserSchema : editUserSchema;
 
@@ -90,12 +99,12 @@ export function useUserForm({
       apellido: defaultValues?.apellido ?? "",
       avatarUrl: defaultValues?.avatarUrl ?? "",
       fotoPerfilUrl: defaultValues?.fotoPerfilUrl ?? "",
-      rolId: defaultValues?.rolId ?? defaultValues?.rol?.id ?? 0,
+      rolId: defaultValues?.rolId ?? defaultValues?.rol?.id ?? (submissionMode === "reception-request" ? 1 : 0),
       tipoDocumento:
         (defaultValues?.tipoDocumento as UserFormValues["tipoDocumento"]) ??
         (mode === "create" ? "DNI" : undefined),
       documento: defaultValues?.documento ?? "",
-      cuil: defaultValues?.cuil ?? "",
+      cuil: submissionMode === "reception-edit" ? "" : defaultValues?.cuil ?? "",
       celular: defaultValues?.celular ?? "",
       domicilio: defaultValues?.domicilio ?? "",
       localidad: defaultValues?.localidad ?? "",
@@ -116,8 +125,11 @@ export function useUserForm({
       nacionalidad:
         (defaultValues?.nacionalidad as UserFormValues["nacionalidad"]) ??
         undefined,
+      profesorEspecialidad: defaultValues?.profesorEspecialidad ?? "",
+      profesorMatricula: defaultValues?.profesorMatricula ?? "",
+      profesorDescripcion: defaultValues?.profesorDescripcion ?? "",
     };
-  }, [defaultValues, mode]);
+  }, [defaultValues, mode, submissionMode]);
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(schema) as Resolver<UserFormValues>,
@@ -130,7 +142,7 @@ export function useUserForm({
   }, [derivedDefaults, form]);
 
   const submitting = form.formState.isSubmitting;
-  const { roles, loading: loadingRoles } = useRoles();
+  const { roles, loading: loadingRoles } = useRoles(submissionMode === "admin-create");
   const identityPhoto = useAvatarStaging();
   const avatar = useAvatarStaging();
 
@@ -168,27 +180,41 @@ export function useUserForm({
         numeroAfiliado: toNullableString(values.numeroAfiliado),
       };
 
+      const selectedRole = roles.find((role) => role.id === Number(values.rolId));
+      const selectedRoleCode = selectedRole?.codigo?.trim().toLowerCase();
+      const selectedRoleName = selectedRole?.nombre.trim().toLowerCase();
+      if (["teacher", "profesor"].includes(selectedRoleCode ?? "") || selectedRoleName === "profesor") {
+        payload.professorProfile = {
+          especialidad: toNullableString(values.profesorEspecialidad),
+          matricula: toNullableString(values.profesorMatricula),
+          descripcion: toNullableString(values.profesorDescripcion),
+        };
+      }
+
       if (mode === "edit" && !payload.password?.trim()) {
         delete payload.password;
       }
 
       if (mode === "create") {
-        const created = await createUser(payload);
+        const created = submissionMode === "reception-request"
+          ? await createReceptionAccessRequest(toReceptionRequestPayload(values))
+          : await createUser(payload);
+        const updateCreated = submissionMode === "reception-request" ? updateReceptionCitizen : updateUser;
 
         if (identityPhoto.tmpPath) {
           try {
             const r = await identityPhoto.commit(`identity-photos/${created.id}`);
-            await updateUser(created.id, { fotoPerfilUrl: r.publicUrl });
+            await updateCreated(created.id, { fotoPerfilUrl: r.publicUrl });
           } catch {}
         }
         if (avatar.tmpPath) {
           try {
             const r = await avatar.commit(`users/${created.id}`);
-            await updateUser(created.id, { avatarUrl: r.publicUrl });
+            await updateCreated(created.id, { avatarUrl: r.publicUrl });
           } catch {}
         }
 
-        toast.success("Usuario creado correctamente");
+        toast.success(submissionMode === "reception-request" ? "Solicitud enviada" : "Usuario creado correctamente");
         onSuccess?.(created.id);
         return;
       }
@@ -199,25 +225,33 @@ export function useUserForm({
         throw new Error("Falta el id del usuario para actualizar");
       }
 
-      await updateUser(id, payload);
+      const updatePayload: Partial<UserPayload> = { ...payload };
+      if (submissionMode === "reception-edit") {
+        delete updatePayload.userId;
+        delete updatePayload.rolId;
+        delete updatePayload.tipoDocumento;
+        delete updatePayload.cuil;
+      }
+      const update = submissionMode === "reception-edit" ? updateReceptionCitizen : updateUser;
+      await update(id, updatePayload);
 
       if (identityPhoto.tmpPath) {
         try {
           const r = await identityPhoto.commit(`identity-photos/${id}`, oldProfilePhotoPath);
-          await updateUser(id, { fotoPerfilUrl: r.publicUrl });
+          await update(id, { fotoPerfilUrl: r.publicUrl });
         } catch {}
       }
       if (avatar.tmpPath) {
         try {
           const r = await avatar.commit(`users/${id}`);
-          await updateUser(id, { avatarUrl: r.publicUrl });
+          await update(id, { avatarUrl: r.publicUrl });
         } catch {}
       }
 
-      toast.success("Usuario actualizado correctamente");
+      toast.success(successMessage ?? "Usuario actualizado correctamente");
       onSuccess?.(id);
     } catch (err: unknown) {
-      const ax = err as AxiosError<{ message?: string | string[] }>;
+      const ax = err as AxiosError<{ message?: string | string[]; issues?: Array<{ path: string; message: string }> }>;
       const status = ax.response?.status;
       const rawMsg = ax.response?.data?.message;
       const serverMsg = Array.isArray(rawMsg)
@@ -225,6 +259,19 @@ export function useUserForm({
         : rawMsg || (err instanceof Error ? err.message : "Error al guardar");
 
       toast.error(serverMsg);
+
+      if (status === 400 && ax.response?.data?.issues?.length) {
+        const validFields = new Set<keyof UserFormValues>(["userId", "email", "password", "rolId", "nombre", "apellido", "avatarUrl", "fotoPerfilUrl", "tipoDocumento", "documento", "cuil", "celular", "domicilio", "localidad", "provincia", "domicilioPlaceId", "domicilioLat", "domicilioLng", "codigoPostal", "contactoEmergenciaNombre", "contactoEmergenciaTelefono", "coberturaMedicaId", "numeroAfiliado", "fechaNacimiento", "genero", "estadoCivil", "nacionalidad"]);
+        let firstField: keyof UserFormValues | undefined;
+        for (const issue of ax.response.data.issues) {
+          const field = issue.path.split(".")[0] as keyof UserFormValues;
+          if (!validFields.has(field)) continue;
+          firstField ??= field;
+          form.setError(field, { type: "server", message: issue.message });
+        }
+        if (firstField) onValidationError?.(firstField);
+        return;
+      }
 
       if (status === 409) {
         if (/email/i.test(serverMsg)) {
@@ -256,6 +303,7 @@ export function useUserForm({
         }
       }
 
+      if (status !== undefined && status < 500) return;
       throw err;
     }
   };

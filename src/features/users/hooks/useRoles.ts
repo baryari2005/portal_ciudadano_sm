@@ -5,11 +5,12 @@ import { listRoles } from "../services/api.service";
 import { toast } from "sonner";
 import { Role } from "../types/types";
 
-export function useRoles() {
+export function useRoles(enabled = true) {
   const [roles, setRoles] = useState<Role[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
 
   useEffect(() => {
+    if (!enabled) { setRoles([]); setLoading(false); return; }
     (async () => {
       try {
         setRoles(await listRoles());
@@ -19,7 +20,7 @@ export function useRoles() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [enabled]);
 
   return { roles, loading };
 }

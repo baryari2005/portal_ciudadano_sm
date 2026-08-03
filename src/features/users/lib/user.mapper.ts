@@ -6,7 +6,7 @@ export type UserWithRole = Prisma.UsuarioGetPayload<{
 }>;
 
 type UserDetailWithRelations = Prisma.UsuarioGetPayload<{
-  include: { rol: true; coberturaMedica: true };
+  include: { rol: true; coberturaMedica: true; profesor: true };
 }>;
 
 export function toUserListItem(u: UserWithRole) {
@@ -81,6 +81,7 @@ export function toUserDetail(user: UserDetailWithRelations) {
     umbralAusenciasJustificadas: user.umbralAusenciasJustificadas,
     umbralAusenciasInjustificadas: user.umbralAusenciasInjustificadas,
     participacionObservaciones: user.participacionObservaciones,
+    profesor: user.profesor ? { especialidad: user.profesor.especialidad, matricula: user.profesor.matricula, descripcion: user.profesor.descripcion } : null,
     createdAt: user.createdAt,
   };
 }
