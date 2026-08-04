@@ -15,9 +15,11 @@ export function useActividades() {
   const [items, setItems] = useState<Actividad[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   async function refresh() {
     setLoading(true);
+    setError(null);
     try {
       const data = await listActividadesClient();
       setItems(data);
@@ -25,6 +27,7 @@ export function useActividades() {
         current && data.some((item) => item.id === current) ? current : "",
       );
     } catch {
+      setError("No pudimos cargar las actividades.");
       toast.error("No pudimos cargar actividades.");
     } finally {
       setLoading(false);
@@ -73,6 +76,7 @@ export function useActividades() {
     selectedId,
     setSelectedId,
     loading,
+    error,
     save,
     remove,
     refresh,

@@ -118,9 +118,10 @@ export function CitizenActivitiesPage() {
                       type="button"
                       onClick={() => setSelectedId(item.id)}
                       className={cn(
-                        "grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 rounded-2xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#819B56]",
+                        "grid w-full self-start grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#819B56]",
                         selectedId === item.id ? "border-[#1D4F36] bg-[#EEF6E9] shadow-sm" : "border-[#DDE8D7] bg-white hover:border-[#819B56] hover:shadow-sm",
                       )}
+                      data-admin-list-card=""
                     >
                       <ActivityImagePreview source={item.imageUrl} alt={`Imagen de ${item.name}`} className="size-12 shrink-0 rounded-xl" />
                       <span className="min-w-0">

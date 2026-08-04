@@ -298,3 +298,34 @@ main > header > div.flex.items-start.gap-3 > div > p.mt-2:not(.flex)::before {
 .brand-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--brand-primary);
 }
+
+.sidebar-brand-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-secondary) var(--brand-primary);
+}
+
+.sidebar-brand-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.sidebar-brand-scrollbar::-webkit-scrollbar-track {
+  background: var(--brand-primary);
+  border-radius: 999px;
+}
+
+.sidebar-brand-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--brand-secondary);
+  border: 2px solid var(--brand-primary);
+  border-radius: 999px;
+}
+
+.sidebar-brand-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #ddef8f;
+}
+
+/* Conserva la altura natural de todas las tarjetas selectoras aunque el listado
+   sea un grid que ocupa el alto disponible. */
+.grid:has(> [data-admin-list-card]) {
+  align-content: start;
+  grid-auto-rows: max-content;
+}

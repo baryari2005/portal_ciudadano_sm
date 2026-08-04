@@ -10,7 +10,6 @@ import {
   Edit3,
   FileCheck2,
   FileText,
-  Hash,
   Info,
   ListOrdered,
   PackageCheck,
@@ -30,7 +29,6 @@ import {
   AdminPageShell,
   AdminSplitLayout,
 } from "@/components/shared/admin-patterns";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
@@ -151,7 +149,7 @@ export function RequirementsPage() {
   }
 
   return (
-    <AdminPageShell>
+    <AdminPageShell className="grid grid-rows-[auto_minmax(0,1fr)] gap-5 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden">
       <CatalogPageHeader
         icon={ScrollText}
         title="Requisitos"
@@ -163,6 +161,7 @@ export function RequirementsPage() {
       />
 
       <AdminSplitLayout
+        className="mt-0"
         list={
           <AdminListPane detailOpen={Boolean(selectedId)}>
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
@@ -226,8 +225,8 @@ export function RequirementsPage() {
                 }
               />
             ) : (
-              <div className="flex min-h-0 flex-col gap-3">
-                <div className="grid gap-3 overflow-y-auto pr-1 lg:max-h-[calc(100dvh-var(--topbar-h)-310px)]">
+              <div className="flex min-h-0 flex-1 flex-col gap-3">
+                <div className="brand-scrollbar grid min-h-0 flex-1 gap-3 overflow-y-auto pr-1">
                   {shown.map((item) => {
                     const Icon = TYPE_ICONS[item.tipo];
                     return (
@@ -249,18 +248,7 @@ export function RequirementsPage() {
                             inactiveLabel="Inactivo"
                           />
                         }
-                        description={item.descripcion || "Sin descripción"}
-                        meta={
-                          <span className="flex flex-wrap items-center gap-2">
-                            <Badge variant="outline">{TYPES[item.tipo]}</Badge>
-                            {item.requiereDocumento ? (
-                              <Badge variant="secondary">Documento requerido</Badge>
-                            ) : null}
-                            <span className="flex items-center gap-1">
-                              <Hash className="size-3.5" /> Orden {item.orden}
-                            </span>
-                          </span>
-                        }
+                        description={TYPES[item.tipo]}
                         trailing={<ChevronRight />}
                       />
                     );
@@ -276,7 +264,7 @@ export function RequirementsPage() {
           </AdminListPane>
         }
         detail={
-          <div className={cn(!selectedId && "hidden lg:block")}>
+          <div className={cn("min-h-0", !selectedId && "hidden lg:block")}>
             {loading && selectedId ? (
               <AdminDetailPanel loading loadingLabel="el detalle" />
             ) : (
@@ -327,7 +315,7 @@ function RequirementDetail({
   }
   const Icon = TYPE_ICONS[item.tipo];
   return (
-    <AdminDetailPanel onBack={onBack}>
+    <AdminDetailPanel onBack={onBack} className="lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-hidden">
       <AdminDetailHeader
         title={item.nombre}
         leading={
@@ -343,7 +331,7 @@ function RequirementDetail({
           />
         }
       />
-      <dl className="mt-6 grid gap-3">
+      <div className="brand-scrollbar lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-2"><dl className="mt-6 grid gap-3">
         <CatalogDetailField icon={FileText} label="Slug">{item.slug}</CatalogDetailField>
         <CatalogDetailField icon={Icon} label="Tipo">{TYPES[item.tipo]}</CatalogDetailField>
         <CatalogDetailField icon={Info} label="Descripción">{item.descripcion || "Sin descripción"}</CatalogDetailField>
@@ -359,9 +347,9 @@ function RequirementDetail({
         <CatalogDetailField icon={ListOrdered} label="Orden">{item.orden}</CatalogDetailField>
         <CatalogDetailField icon={FileText} label="Creación">{formatCatalogDate(item.createdAt)}</CatalogDetailField>
         <CatalogDetailField icon={FileText} label="Actualización">{formatCatalogDate(item.updatedAt)}</CatalogDetailField>
-      </dl>
+      </dl></div>
       {canEdit || canChangeStatus ? (
-        <AdminDetailActions>
+        <AdminDetailActions className="lg:shrink-0">
           {canEdit ? <Button onClick={() => onEdit(item.id)} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]"><Edit3 /> Editar</Button> : null}
           {canChangeStatus ? <Button variant="outline" onClick={onChangeStatus} className={item.activo ? "text-red-700 hover:bg-red-50" : "text-[var(--brand-primary)]"}>{item.activo ? <PowerOff /> : <Power />}{item.activo ? "Desactivar" : "Reactivar"}</Button> : null}
         </AdminDetailActions>

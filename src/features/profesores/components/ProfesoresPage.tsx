@@ -94,7 +94,7 @@ export function ProfesoresPage() {
       <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(340px,.9fr)_minmax(430px,1.1fr)]">
         <div className={cn("space-y-4", list.selectedId && "hidden lg:block")}>
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-            <CatalogSearchInput value={search} onChange={setSearch} placeholder="Nombre, DNI, email, especialidad..." />
+            <CatalogSearchInput value={search} onChange={setSearch} placeholder="Buscar profesor..." />
             <CatalogFilterPopover sections={[{ id: "teacher-status", title: "Estado", value: estado === "TODOS" ? "all" : estado, options: [{ value: "all", label: "Todos" }, { value: "ACTIVO", label: "Activo" }, { value: "INACTIVO", label: "Inactivo" }], onChange: (value) => setEstado((value === "all" ? "TODOS" : value) as typeof estado) }]} />
           </div>
           {list.error ? (
@@ -113,11 +113,12 @@ export function ProfesoresPage() {
                   key={p.id}
                   onClick={() => list.setSelectedId(p.id)}
                   className={cn(
-                    "grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 rounded-2xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-secondary)]",
+                    "grid w-full self-start grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-secondary)]",
                     list.selectedId === p.id
                       ? "border-[var(--brand-primary)] bg-[var(--brand-panel)] shadow-sm"
                       : "border-[var(--brand-border-soft)] bg-white hover:border-[var(--brand-secondary)] hover:shadow-sm",
                   )}
+                  data-admin-list-card=""
                 >
                   <ProfesorAvatar profesor={p} className="h-12 w-12" />
                   <span className="min-w-0 flex-1">

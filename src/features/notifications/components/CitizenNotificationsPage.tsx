@@ -337,7 +337,6 @@ function NotificationListItem({
   active: boolean;
   onSelect: () => void;
 }) {
-  const requestStatus = accessRequestStatus(item);
   return (
     <AdminListCard
       selected={active}
@@ -348,19 +347,8 @@ function NotificationListItem({
         </span>
       }
       title={item.title}
-      badges={
-        <>
-          {requestStatus ? <RequestBadge status={requestStatus} /> : null}
-          {item.deliveryOrigin === "ROL" ? <Badge className="rounded-full border border-[#819B56]/40 bg-[#819B56]/15 text-[#1D4F36]">Por rol</Badge> : null}
-          {item.priority === "ALTA" ? <Badge variant="destructive" className="rounded-full">Importante</Badge> : null}
-        </>
-      }
-      description={
-        <span className="flex items-start gap-2">
-          <span className="line-clamp-2 min-w-0 flex-1">{item.message}</span>
-          <Badge className={statusBadgeClass(item.status)}>{statuses[item.status]}</Badge>
-        </span>
-      }
+      badges={<Badge className={statusBadgeClass(item.status)}>{statuses[item.status]}</Badge>}
+      description={item.message}
       meta={formatCatalogDate(item.createdAt)}
       trailing={<ChevronRight />}
     />

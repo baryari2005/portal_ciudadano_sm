@@ -366,6 +366,7 @@ Evitar:
 ## Patrones permanentes del proyecto
 
 * Las ediciones deben ser diferenciales: un cambio visual o informativo no debe regenerar horarios, clases, cupos, reservas ni relaciones operativas.
+* Las tarjetas selectoras de listados deben conservar altura natural y uniforme: nunca deben estirarse para completar el alto disponible de un `grid` o contenedor. Usar `AdminListCard` con alineación al inicio (`self-start`/`content-start`), la misma geometría, tipografía, avatar, pastillas y espaciados del listado de Ciudadanos. La información visible debe limitarse a la mínima necesaria para identificar el registro; los datos ampliados pertenecen al panel derecho.
 * Solo propagar o regenerar datos derivados cuando cambie el campo que realmente los determina.
 * Los encabezados de altas, ediciones y workflows deben conservar el patrón visual compartido: avatar o icono a la izquierda, título, descripción con icono informativo y separador sutil.
 * Reutilizar los mismos componentes para buscadores, filtros, tarjetas, estados, botones, cargas, vacíos, avatares y pastillas en todas las pantallas equivalentes.

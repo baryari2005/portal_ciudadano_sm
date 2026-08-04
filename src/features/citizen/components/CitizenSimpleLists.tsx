@@ -72,7 +72,7 @@ export function CitizenAttendancePage() {
 
             <div className="grid gap-3 overflow-y-auto pr-1 lg:max-h-[calc(100dvh-var(--topbar-h)-290px)]">
               {filtered.map((item) => (
-                <button key={item.id} type="button" onClick={() => setSelectedId(item.id)} className={cn("grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 rounded-2xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#819B56]", selectedId === item.id ? "border-[#1D4F36] bg-[#EEF6E9] shadow-sm" : "border-[#DDE8D7] bg-white hover:border-[#819B56] hover:shadow-sm")}>
+                <button key={item.id} type="button" data-admin-list-card="" onClick={() => setSelectedId(item.id)} className={cn("grid w-full self-start grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#819B56]", selectedId === item.id ? "border-[#1D4F36] bg-[#EEF6E9] shadow-sm" : "border-[#DDE8D7] bg-white hover:border-[#819B56] hover:shadow-sm")}>
                   <AttendanceIcon status={item.status} />
                   <span className="min-w-0">
                     <span className="flex flex-wrap items-center gap-2"><span className="truncate font-extrabold text-[#173C2A]">{item.activity.nombre}</span><AttendanceBadge status={item.status} /></span>

@@ -82,19 +82,31 @@ export function CitizenSchedulePage() {
         total={data?.total ?? 0}
       />
 
-      <div className="mt-6 grid items-center gap-3 rounded-2xl border border-[#DDE8D7] bg-white p-3 shadow-sm sm:grid-cols-[auto_1fr_auto] sm:px-5">
-        <Button type="button" size="icon" variant="outline" aria-label="Mes anterior" className="rounded-xl border-[#C9D9C3] text-[#1D4F36]" onClick={() => setVisibleMonth((month) => addMonths(month, -1))}>
-          <ChevronLeft />
-        </Button>
-        <h2 className="text-center text-lg font-extrabold capitalize text-[#1D4F36] sm:text-xl">{format(visibleMonth, "MMMM yyyy", { locale: es })}</h2>
-        <div className="flex items-center justify-end gap-2">
-          <div className="flex rounded-xl bg-[#EEF6E9] p-1" aria-label="Tipo de vista">
-            <Button type="button" size="sm" variant="ghost" aria-pressed={view === "list"} className={cn("h-9 rounded-lg px-3 text-[#315644]", view === "list" && "bg-[#1D4F36] text-white hover:bg-[#143A27] hover:text-white")} onClick={() => setView("list")}><List />Listado</Button>
-            <Button type="button" size="sm" variant="ghost" aria-pressed={view === "calendar"} className={cn("h-9 rounded-lg px-3 text-[#315644]", view === "calendar" && "bg-[#1D4F36] text-white hover:bg-[#143A27] hover:text-white")} onClick={() => setView("calendar")}><CalendarRange />Calendario</Button>
+      <div className="mt-6 flex flex-col gap-4 rounded-3xl border border-[#C9D9C3] bg-white p-4 shadow-sm sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="hidden size-11 shrink-0 place-items-center rounded-xl bg-[#DDEED2] text-[#1D4F36] sm:grid">
+            <CalendarDays className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#819B56]">Período de consulta</p>
+            <div className="mt-1 grid grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center gap-2">
+              <Button type="button" size="icon" variant="outline" aria-label="Mes anterior" className="size-10 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] text-[#1D4F36] hover:border-[#819B56] hover:bg-[#EEF6E9]" onClick={() => setVisibleMonth((month) => addMonths(month, -1))}>
+                <ChevronLeft className="size-5" />
+              </Button>
+              <h2 className="min-w-36 text-center text-lg font-extrabold capitalize text-[#1D4F36] sm:min-w-44 sm:text-xl">{format(visibleMonth, "MMMM yyyy", { locale: es })}</h2>
+              <Button type="button" size="icon" variant="outline" aria-label="Mes siguiente" className="size-10 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] text-[#1D4F36] hover:border-[#819B56] hover:bg-[#EEF6E9]" onClick={() => setVisibleMonth((month) => addMonths(month, 1))}>
+                <ChevronRight className="size-5" />
+              </Button>
+            </div>
           </div>
-          <Button type="button" size="icon" variant="outline" aria-label="Mes siguiente" className="rounded-xl border-[#C9D9C3] text-[#1D4F36]" onClick={() => setVisibleMonth((month) => addMonths(month, 1))}>
-            <ChevronRight />
-          </Button>
+        </div>
+
+        <div className="border-t border-[#E5EEE1] pt-4 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
+          <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.08em] text-[#819B56]">Visualización</p>
+          <div className="grid grid-cols-2 rounded-xl border border-[#DDE8D7] bg-[#EEF6E9] p-1" aria-label="Tipo de vista">
+            <Button type="button" size="sm" variant="ghost" aria-pressed={view === "list"} className={cn("h-10 rounded-lg px-4 font-bold text-[#315644]", view === "list" && "bg-[#1D4F36] text-white shadow-sm hover:bg-[#143A27] hover:text-white")} onClick={() => setView("list")}><List className="size-4" />Listado</Button>
+            <Button type="button" size="sm" variant="ghost" aria-pressed={view === "calendar"} className={cn("h-10 rounded-lg px-4 font-bold text-[#315644]", view === "calendar" && "bg-[#1D4F36] text-white shadow-sm hover:bg-[#143A27] hover:text-white")} onClick={() => setView("calendar")}><CalendarRange className="size-4" />Calendario</Button>
+          </div>
         </div>
       </div>
 
@@ -173,7 +185,7 @@ function CalendarView({ month, items, selectedId, onSelect }: { month: Date; ite
 
 function ScheduleCard({ item, active, onClick }: { item: CitizenScheduleItem; active: boolean; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className={cn("grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 rounded-2xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#819B56]", active ? "border-[#1D4F36] bg-[#EEF6E9] shadow-sm" : "border-[#DDE8D7] bg-white hover:border-[#819B56] hover:shadow-sm")}>
+    <button type="button" data-admin-list-card="" onClick={onClick} className={cn("grid w-full self-start grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#819B56]", active ? "border-[#1D4F36] bg-[#EEF6E9] shadow-sm" : "border-[#DDE8D7] bg-white hover:border-[#819B56] hover:shadow-sm")}>
       <span className="grid size-12 place-items-center rounded-xl bg-[#1D4F36] text-white shadow-sm"><CalendarDays className="size-6" /></span>
       <span className="min-w-0"><span className="block truncate font-extrabold text-[#173C2A]">{item.activity.name}</span><span className="mt-1 block text-sm font-semibold text-[#315644]">{item.startTime} a {item.endTime}</span><span className="mt-1 block truncate text-xs text-[#5F6F68]">{item.establishment.name}</span></span>
       <span className="flex flex-col items-end gap-2"><StatusBadge status={item.displayStatus} /><ChevronRight className="size-5 text-[#819B56]" /></span>

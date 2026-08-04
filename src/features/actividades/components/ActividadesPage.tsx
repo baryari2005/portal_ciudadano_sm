@@ -6,7 +6,7 @@ import {
   BadgeDollarSign,
   ArchiveX,
   CalendarRange,
-  ChevronDown,
+  ChevronRight,
   CircleAlert,
   Clock3,
   Dumbbell,
@@ -15,7 +15,6 @@ import {
   GraduationCap,
   RefreshCcw,
   ShieldCheck,
-  SlidersHorizontal,
   Tags,
   Trash2,
   UsersRound,
@@ -28,16 +27,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   CATALOG_PAGE_SIZE,
   CatalogDetailField,
   CatalogEmptyState,
+  CatalogErrorState,
+  CatalogFilterPopover,
   CatalogLoadingState,
   CatalogPageHeader,
   CatalogPagination,
@@ -197,7 +193,7 @@ export function ActividadesPage() {
   if (activityList.loading || draftsLoading || catalogs.loading) return <CatalogLoadingState label="actividades" fullPage />;
 
   return (
-    <div className="min-h-[calc(100dvh-var(--topbar-h)-48px)] bg-[#F7FBF5] p-4 sm:p-6 lg:p-8">
+    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_minmax(0,1fr)] gap-5 bg-[#F7FBF5] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
       <CatalogPageHeader
         icon={Dumbbell}
         title="Actividades"
@@ -207,34 +203,31 @@ export function ActividadesPage() {
         canCreate={canCreate}
         onCreate={() => router.push("/activities/new")}
       />
-      <section className="mt-6 grid min-h-0 gap-6 xl:grid-cols-[minmax(390px,.95fr)_minmax(450px,1.05fr)]">
-        <div className={cn("min-h-0 space-y-4", (activityList.selectedId || selectedDraft) && "hidden xl:block")}>
+      <section className="grid min-h-0 gap-6 lg:grid-cols-[minmax(340px,.95fr)_minmax(420px,1.05fr)]">
+        <div className={cn("min-h-0 flex-col gap-4", (activityList.selectedId || selectedDraft) ? "hidden lg:flex" : "flex")}>
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <CatalogSearchInput value={query} onChange={setQuery} placeholder="Buscar por nombre o descripción..." />
-            <ActivityFiltersPanel
-              state={stateFilter}
-              category={categoryFilter}
-              publicId={publicFilter}
-              level={levelFilter}
-              economic={economicFilter}
-              categories={catalogs.categories.map((item) => ({ value: item.id, label: item.nombre }))}
-              publics={catalogs.publics.map((item) => ({ value: item.id, label: item.nombre }))}
-              onStateChange={setStateFilter}
-              onCategoryChange={setCategoryFilter}
-              onPublicChange={setPublicFilter}
-              onLevelChange={setLevelFilter}
-              onEconomicChange={(value) => setEconomicFilter(value as EconomicFilter)}
-            />
+            <CatalogFilterPopover sections={[
+              { id: "activity-state", title: "Estado", value: stateFilter, options: [{ value: "all", label: "Todos" }, ...STATE_OPTIONS], onChange: setStateFilter },
+              { id: "activity-category", title: "Categoría", value: categoryFilter, options: [{ value: "all", label: "Todas" }, ...catalogs.categories.map((item) => ({ value: item.id, label: item.nombre }))], onChange: setCategoryFilter },
+              { id: "activity-public", title: "Dirigido a", value: publicFilter, options: [{ value: "all", label: "Todos" }, ...catalogs.publics.map((item) => ({ value: item.id, label: item.nombre }))], onChange: setPublicFilter },
+              { id: "activity-level", title: "Nivel", value: levelFilter, options: [{ value: "all", label: "Todos" }, { value: "INICIAL", label: "Inicial" }, { value: "INTERMEDIO", label: "Intermedio" }, { value: "AVANZADO", label: "Avanzado" }], onChange: setLevelFilter },
+              { id: "activity-economic", title: "Modalidad económica", value: economicFilter, options: [{ value: "all", label: "Todas" }, { value: "free", label: "Gratuita" }, { value: "paid", label: "Paga" }], onChange: (value) => setEconomicFilter(value as EconomicFilter) },
+            ]} />
           </div>
+          {activityList.error || catalogs.error ? <CatalogErrorState message={activityList.error || catalogs.error || "No pudimos cargar las actividades."} onRetry={() => { void activityList.refresh(); void catalogs.refresh(); }} /> : null}
+          <div className="min-h-0 flex-1 overflow-y-auto pr-2">
           <div className="grid gap-3">
             <ActivityDraftsPanel items={drafts} selectedId={selectedDraft?.id} onSelect={(item) => { setSelectedDraft(item); activityList.setSelectedId(""); }} />
             {visibleItems.map((item) => <ActivityListItem key={item.id} item={item} selected={item.id === activityList.selectedId} onSelect={() => { setSelectedDraft(null); activityList.setSelectedId(item.id); }} />)}
             {!visibleItems.length && !drafts.length ? <CatalogEmptyState title="No hay actividades cargadas." description="Creá la primera actividad para comenzar." filtered={Boolean(query || stateFilter !== "all" || categoryFilter !== "all" || publicFilter !== "all" || levelFilter !== "all" || economicFilter !== "all")} /> : null}
           </div>
+          </div>
           <CatalogPagination page={page} total={filteredItems.length} onPageChange={setPage} />
         </div>
 
-        {selectedDraft ? <DraftDetail item={selectedDraft} onContinue={() => router.push(`/activities/workflow/${selectedDraft.id}`)} onDiscard={()=>setDraftToDiscard(selectedDraft)} /> : <ActivityDetail
+        <div className={cn("min-h-0", !(activityList.selectedId || selectedDraft) && "hidden lg:block")}>
+        {selectedDraft ? <DraftDetail item={selectedDraft} onBack={() => setSelectedDraft(null)} onContinue={() => router.push(`/activities/workflow/${selectedDraft.id}`)} onDiscard={()=>setDraftToDiscard(selectedDraft)} /> : <ActivityDetail
           item={activityList.selected}
           canEdit={canEdit}
           canChangeState={canChangeState}
@@ -244,6 +237,7 @@ export function ActividadesPage() {
           onArchive={() => void openLifecycle("archive")}
           onPurge={() => void openLifecycle("purge")}
         />}
+        </div>
       </section>
 
       <ConfirmDialog
@@ -298,54 +292,18 @@ export function ActividadesPage() {
   );
 }
 
-function ActivityFiltersPanel({ state, category, publicId, level, economic, categories, publics, onStateChange, onCategoryChange, onPublicChange, onLevelChange, onEconomicChange }: { state: string; category: string; publicId: string; level: string; economic: string; categories: Array<{ value: string; label: string }>; publics: Array<{ value: string; label: string }>; onStateChange: (value: string) => void; onCategoryChange: (value: string) => void; onPublicChange: (value: string) => void; onLevelChange: (value: string) => void; onEconomicChange: (value: string) => void }) {
-  const activeCount = [state, category, publicId, level, economic].filter((value) => value !== "all").length;
-  const clear = () => { onStateChange("all"); onCategoryChange("all"); onPublicChange("all"); onLevelChange("all"); onEconomicChange("all"); };
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button type="button" variant="outline" className="h-12 gap-2 rounded-xl border-0 bg-[#F1F5EC] px-5 font-bold text-[#1D4F36] shadow-sm hover:bg-[#E7EFE1]">
-          <SlidersHorizontal className="size-5" />
-          Filtros
-          {activeCount ? <Badge className="ml-1 rounded-full bg-[#1D4F36] px-2 text-white">{activeCount}</Badge> : null}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-[min(360px,calc(100vw-2rem))] rounded-2xl border-[#DDE8D7] p-0 shadow-xl">
-        <div className="flex items-center justify-between border-b border-[#DDE8D7] px-5 py-4">
-          <div><p className="font-extrabold text-[#1D4F36]">Filtros</p><p className="text-xs text-[#5F6F68]">Refiná el listado de actividades</p></div>
-          {activeCount ? <Button type="button" variant="ghost" size="sm" onClick={clear} className="text-[#1D4F36]">Limpiar</Button> : null}
-        </div>
-        <div className="max-h-[65dvh] overflow-y-auto px-5 pb-3">
-          <FilterSection title="Estado" open><FilterChoices group="state" value={state} onChange={onStateChange} options={[{ value: "all", label: "Todos" }, ...STATE_OPTIONS]} /></FilterSection>
-          <FilterSection title="Categoría"><FilterChoices group="category" value={category} onChange={onCategoryChange} options={[{ value: "all", label: "Todas" }, ...categories]} /></FilterSection>
-          <FilterSection title="Dirigido a"><FilterChoices group="public" value={publicId} onChange={onPublicChange} options={[{ value: "all", label: "Todos" }, ...publics]} /></FilterSection>
-          <FilterSection title="Nivel"><FilterChoices group="level" value={level} onChange={onLevelChange} options={[{ value: "all", label: "Todos" }, { value: "INICIAL", label: "Inicial" }, { value: "INTERMEDIO", label: "Intermedio" }, { value: "AVANZADO", label: "Avanzado" }]} /></FilterSection>
-          <FilterSection title="Modalidad económica"><FilterChoices group="economic" value={economic} onChange={onEconomicChange} options={[{ value: "all", label: "Todas" }, { value: "free", label: "Gratuita" }, { value: "paid", label: "Paga" }]} /></FilterSection>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function FilterSection({ title, open = false, children }: { title: string; open?: boolean; children: React.ReactNode }) {
-  return <details open={open} className="group border-b border-[#DDE8D7] py-1"><summary className="flex cursor-pointer list-none items-center justify-between py-4 font-bold text-[#173C2A]">{title}<ChevronDown aria-hidden="true" className="size-4 transition-transform duration-200 group-open:rotate-180" /></summary><div className="grid gap-2 pb-4">{children}</div></details>;
-}
-
-function FilterChoices({ group, value, onChange, options }: { group: string; value: string; onChange: (value: string) => void; options: Array<{ value: string; label: string }> }) {
-  return options.map((option) => <label key={option.value} className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-sm text-[#315644] hover:bg-[#819B56]/10"><input type="radio" name={`activity-filter-${group}`} value={option.value} checked={value === option.value} onChange={() => onChange(option.value)} className="size-4 accent-[#1D4F36]" />{option.label}</label>);
-}
-
 function ActivityListItem({ item, selected, onSelect }: { item: Actividad; selected: boolean; onSelect: () => void }) {
   const color = resolveActividadColor(item.color, item.categoriaActividad?.color);
-  return <AdminListCard onClick={onSelect} selected={selected} leading={<div className="rounded-2xl border-2" style={{ borderColor: color }}><ActivityImagePreview source={item.imagenUrl} alt={`Imagen de ${item.nombre}`} className="size-16" /></div>} title={item.nombre} badges={<ActivityStateBadge state={item.estado} />} description={item.descripcionCorta || "Sin descripción corta"} meta={`${item.categoriaActividad?.nombre ?? legacyCategoryLabel(item.categoria)} · ${formatActividadLevel(item.nivel)} · ${formatActividadPrice(item)}`} />;
+  return <AdminListCard onClick={onSelect} selected={selected} leading={<div className="overflow-hidden rounded-xl border-2" style={{ borderColor: color }}><ActivityImagePreview source={item.imagenUrl} alt={`Imagen de ${item.nombre}`} className="size-12" /></div>} title={item.nombre} badges={<ActivityStateBadge state={item.estado} />} description={item.descripcionCorta || "Sin descripción corta"} meta={`${item.categoriaActividad?.nombre ?? legacyCategoryLabel(item.categoria)} · ${formatActividadLevel(item.nivel)} · ${formatActividadPrice(item)}`} trailing={<ChevronRight />} />;
 }
 
 function ActivityDetail({ item, canEdit, canChangeState, onBack, onEdit, onStateChange, onArchive, onPurge }: { item: Actividad | null; canEdit: boolean; canChangeState: boolean; onBack: () => void; onEdit: (id: string) => void; onStateChange: (state: ActividadEstado) => void; onArchive: () => void; onPurge: () => void }) {
   if (!item) return <AdminDetailPanel empty="Seleccioná una actividad para consultar su detalle." />;
   const color = resolveActividadColor(item.color, item.categoriaActividad?.color);
   return (
-    <AdminDetailPanel onBack={onBack}>
+    <AdminDetailPanel className="lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-hidden" onBack={onBack}>
       <AdminDetailHeader title={item.nombre} leading={<div className="rounded-2xl border-2" style={{ borderColor: color }}><ActivityImagePreview source={item.imagenUrl} alt={`Imagen de ${item.nombre}`} className="h-20 w-24" /></div>} badge={<ActivityStateBadge state={item.estado} />} />
+      <div className="brand-scrollbar min-h-0 flex-1 overflow-y-auto pr-2">
       <dl className="mt-6 grid gap-3">
         <CatalogDetailField icon={FileText} label="Descripción corta">{item.descripcionCorta || "Sin descripción corta"}</CatalogDetailField>
         <CatalogDetailField icon={Clock3} label="Días y horarios">{formatActivitySchedules(item.horarios)}</CatalogDetailField>
@@ -356,7 +314,8 @@ function ActivityDetail({ item, canEdit, canChangeState, onBack, onEdit, onState
         <CatalogDetailField icon={ShieldCheck} label="Requisitos">{item.requirements.length ? item.requirements.map((entry) => `${entry.name} (${entry.mandatory ? "obligatorio" : "opcional"}${entry.active ? "" : ", inactivo"})`).join(", ") : "Esta actividad no tiene requisitos configurados."}</CatalogDetailField>
         <CatalogDetailField icon={BadgeDollarSign} label="Modalidad económica">{formatActividadPrice(item)}</CatalogDetailField>
       </dl>
-      {canEdit || canChangeState ? <AdminDetailActions>{canEdit ? <Button type="button" onClick={() => onEdit(item.id)} className="bg-[#1D4F36] hover:bg-[#143A27]"><Edit3 /> Editar</Button> : null}{canChangeState ? <Select onValueChange={(value) => onStateChange(value as ActividadEstado)}><SelectTrigger className="h-12 w-full rounded-xl border-[var(--brand-border)] bg-white text-base font-bold text-[var(--brand-primary)]"><RefreshCcw className="size-5 text-[var(--brand-primary)]" /><SelectValue placeholder="Cambiar estado" /></SelectTrigger><SelectContent>{STATE_OPTIONS.filter((option) => option.value !== item.estado && option.value !== "CANCELADA" && option.value !== "BORRADOR").map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select> : null}{canChangeState && item.estado !== "CANCELADA" ? <Button type="button" variant="outline" onClick={onArchive} className="text-[var(--brand-primary)]"><ArchiveX />Dar de baja</Button> : null}{canChangeState ? <Button type="button" variant="outline" onClick={onPurge} className="text-red-700 hover:bg-red-50"><Trash2 />Eliminar definitivamente</Button> : null}</AdminDetailActions> : null}
+      </div>
+      {canEdit || canChangeState ? <AdminDetailActions className="lg:shrink-0">{canEdit ? <Button type="button" onClick={() => onEdit(item.id)} className="bg-[#1D4F36] hover:bg-[#143A27]"><Edit3 /> Editar</Button> : null}{canChangeState ? <Select onValueChange={(value) => onStateChange(value as ActividadEstado)}><SelectTrigger className="h-12 w-full rounded-xl border-[var(--brand-border)] bg-white text-base font-bold text-[var(--brand-primary)]"><RefreshCcw className="size-5 text-[var(--brand-primary)]" /><SelectValue placeholder="Cambiar estado" /></SelectTrigger><SelectContent>{STATE_OPTIONS.filter((option) => option.value !== item.estado && option.value !== "CANCELADA" && option.value !== "BORRADOR").map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select> : null}{canChangeState && item.estado !== "CANCELADA" ? <Button type="button" variant="outline" onClick={onArchive} className="text-[var(--brand-primary)]"><ArchiveX />Dar de baja</Button> : null}{canChangeState ? <Button type="button" variant="outline" onClick={onPurge} className="text-red-700 hover:bg-red-50"><Trash2 />Eliminar definitivamente</Button> : null}</AdminDetailActions> : null}
     </AdminDetailPanel>
   );
 }
@@ -365,8 +324,8 @@ function LifecycleCount({ label, value }: { label: string; value: number }) {
   return <div className="rounded-xl bg-[var(--brand-control)] p-3"><p className="text-xs font-bold uppercase text-[var(--brand-muted)]">{label}</p><p className="mt-1 text-lg font-extrabold text-[var(--brand-primary)]">{value}</p></div>;
 }
 
-function DraftDetail({ item, onContinue, onDiscard }: { item: ActivityDraft; onContinue: () => void; onDiscard: () => void }) {
-  return <aside className="rounded-3xl border border-[#DDE8D7] bg-[#EEF6E9] p-6 text-[#173C2A] shadow-sm"><div className="flex items-start gap-3"><div className="grid size-14 place-items-center rounded-2xl bg-[#DDEED2]"><FileText className="text-[#1D4F36]" /></div><div><p className="text-xs font-bold uppercase text-[#819B56]">Actividad en preparación</p><h2 className="text-2xl font-extrabold text-[#1D4F36]">{item.name}</h2></div></div><dl className="mt-6 grid gap-3"><CatalogDetailField icon={FileText} label="Descripción">{item.payload.descripcionCorta || item.payload.descripcion || "Todavía no se cargó una descripción."}</CatalogDetailField><CatalogDetailField icon={CalendarRange} label="Modalidad">{item.modality || "Pendiente"}</CatalogDetailField><CatalogDetailField icon={ShieldCheck} label="Progreso">{item.completion}% completo · paso {item.currentStep} de 10</CatalogDetailField><CatalogDetailField icon={CircleAlert} label="Pendientes">{item.pending.length ? item.pending.map((entry) => entry.label).join(", ") : "Sin datos pendientes"}</CatalogDetailField></dl><div className="mt-6 grid gap-3 sm:grid-cols-2"><Button onClick={onContinue} className="h-12 rounded-xl bg-[#1D4F36] font-bold hover:bg-[#143A27]"><Edit3 />Continuar configuración</Button><Button type="button" variant="outline" onClick={onDiscard} className="h-12 rounded-xl border-red-200 font-bold text-red-700 hover:bg-red-50 hover:text-red-800"><Trash2 />Descartar borrador</Button></div></aside>;
+function DraftDetail({ item, onBack, onContinue, onDiscard }: { item: ActivityDraft; onBack: () => void; onContinue: () => void; onDiscard: () => void }) {
+  return <AdminDetailPanel className="lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-hidden" onBack={onBack}><AdminDetailHeader title={item.name} subtitle="Actividad en preparación" leading={<span className="grid size-16 place-items-center rounded-2xl bg-[var(--brand-border-soft)] text-[var(--brand-primary)]"><FileText className="size-8" /></span>} badge={<Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-900">{item.completion}% completo</Badge>} /><div className="brand-scrollbar min-h-0 flex-1 overflow-y-auto pr-2"><dl className="mt-6 grid gap-3"><CatalogDetailField icon={FileText} label="Descripción">{item.payload.descripcionCorta || item.payload.descripcion || "Todavía no se cargó una descripción."}</CatalogDetailField><CatalogDetailField icon={CalendarRange} label="Modalidad">{item.modality || "Pendiente"}</CatalogDetailField><CatalogDetailField icon={ShieldCheck} label="Progreso">{item.completion}% completo · paso {item.currentStep} de 10</CatalogDetailField><CatalogDetailField icon={CircleAlert} label="Pendientes">{item.pending.length ? item.pending.map((entry) => entry.label).join(", ") : "Sin datos pendientes"}</CatalogDetailField></dl></div><AdminDetailActions className="lg:shrink-0"><Button onClick={onContinue} className="bg-[#1D4F36] hover:bg-[#143A27]"><Edit3 />Continuar configuración</Button><Button type="button" variant="outline" onClick={onDiscard} className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"><Trash2 />Descartar borrador</Button></AdminDetailActions></AdminDetailPanel>;
 }
 
 function ActivityStateBadge({ state }: { state: ActividadEstado }) {

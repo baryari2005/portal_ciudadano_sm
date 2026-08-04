@@ -153,7 +153,7 @@ export function Sidebar({ collapsed, experience = "administration" }: Props) {
         className={collapsed ? "mx-4 w-auto shrink-0 bg-white/15" : "mx-7 w-auto shrink-0 bg-white/15"}
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-5 [scrollbar-gutter:stable]">
+      <div className="sidebar-brand-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain pb-5 [scrollbar-gutter:stable]">
         {Object.entries(grouped).sort(([left], [right]) => {
           const leftIndex = SIDEBAR_SECTION_ORDER.indexOf(left);
           const rightIndex = SIDEBAR_SECTION_ORDER.indexOf(right);

@@ -97,7 +97,7 @@ export function EstablecimientosPage() {
   }
 
   return (
-    <div className="min-h-[calc(100dvh-var(--topbar-h)-48px)] bg-[#F7FBF5] p-4 sm:p-6 lg:p-8">
+    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] grid-rows-[auto_minmax(0,1fr)] gap-5 bg-[#F7FBF5] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
       <CatalogPageHeader
         icon={School}
         title="Establecimientos"
@@ -108,7 +108,7 @@ export function EstablecimientosPage() {
         onCreate={() => router.push("/facilities/new")}
       />
 
-      <section className="mt-6 grid min-h-0 gap-6 lg:grid-cols-[minmax(340px,0.95fr)_minmax(420px,1.05fr)]">
+      <section className="grid min-h-0 gap-6 lg:grid-cols-[minmax(340px,0.95fr)_minmax(420px,1.05fr)]">
         <div
           className={cn(
             "min-h-0 flex-col gap-4",
@@ -127,8 +127,8 @@ export function EstablecimientosPage() {
               filtered={Boolean(query.trim()) || status !== "all"}
             />
           ) : (
-            <div className="flex min-h-0 flex-col gap-3">
-              <div className="grid gap-3 overflow-y-auto pr-1 lg:max-h-[calc(100dvh-var(--topbar-h)-310px)]">
+            <div className="flex min-h-0 flex-1 flex-col gap-3">
+              <div className="brand-scrollbar grid min-h-0 flex-1 gap-3 overflow-y-auto pr-1">
               {pageItems.map((item) => (
                 <AdminListCard
                   key={item.id}
@@ -153,7 +153,7 @@ export function EstablecimientosPage() {
           )}
         </div>
 
-        <div className={cn(!selectedId && "hidden lg:block")}>
+        <div className={cn("min-h-0", !selectedId && "hidden lg:block")}>
           <EstablecimientoDetail
             item={selected}
             canEdit={canEdit}
@@ -196,10 +196,10 @@ function EstablecimientoDetail({
   if (!item) return <AdminDetailPanel empty="Seleccioná un establecimiento para consultar su detalle." />;
 
   return (
-    <AdminDetailPanel onBack={onBack}>
+    <AdminDetailPanel onBack={onBack} className="lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-hidden">
       <AdminDetailHeader title={item.nombre} leading={item.imagenUrl ? <ActivityImagePreview source={item.imagenUrl} alt={`Imagen de ${item.nombre}`} className="size-16 rounded-2xl" /> : <div className="grid size-16 place-items-center rounded-2xl bg-[var(--brand-primary)] text-white shadow-sm"><School className="size-8" /></div>} badge={<CatalogStatusBadge active={item.estado.toLowerCase() === "activo"} />} action={<Button variant="outline" onClick={() => window.location.assign(`/facilities/${item.id}/record/overview`)} className="w-full border-[#819B56] bg-white font-bold text-[#1D4F36]"><Eye />Ver ficha completa</Button>} />
 
-      <dl className="mt-6 grid gap-3">
+      <div className="brand-scrollbar lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-2"><dl className="mt-6 grid gap-3">
         <CatalogDetailField icon={MapPin} label="Dirección">{item.direccion}</CatalogDetailField>
         <CatalogDetailField icon={MapPin} label="Localidad y provincia">{[item.localidad, item.provincia].filter(Boolean).join(", ") || "Sin registrar"}</CatalogDetailField>
         <CatalogDetailField icon={Mail} label="Email">{item.email || "Sin registrar"}</CatalogDetailField>
@@ -221,8 +221,8 @@ function EstablecimientoDetail({
             )) : "Sin actividades asociadas."}
           </div>
         </CatalogDetailField>
-      </dl>
-      {canEdit || canDelete ? <AdminDetailActions>
+      </dl></div>
+      {canEdit || canDelete ? <AdminDetailActions className="lg:shrink-0">
           {canEdit ? (
             <Button onClick={() => onEdit(item.id)} className="bg-[#1D4F36] hover:bg-[#143A27]">
               <Edit3 /> Editar

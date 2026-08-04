@@ -203,7 +203,7 @@ export function RolesManagementPage() {
   }
 
   return (
-    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_auto_minmax(0,1fr)] gap-5 bg-[#F7FBF5] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
+    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_minmax(0,1fr)] gap-5 bg-[#F7FBF5] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
       <CatalogPageHeader
         icon={ShieldCheck}
         title="Roles y permisos"
@@ -214,11 +214,11 @@ export function RolesManagementPage() {
         onCreate={() => router.push("/roles/new")}
       />
 
-      <section className="grid min-h-0 gap-6 xl:grid-cols-[minmax(360px,.95fr)_minmax(440px,1.05fr)]">
+      <section className="grid min-h-0 gap-6 lg:grid-cols-[minmax(340px,.95fr)_minmax(420px,1.05fr)]">
         <div
-          className={`min-h-0 flex-col ${selectedRoleId ? "hidden xl:flex" : "flex"}`}
+          className={`min-h-0 flex-col gap-4 ${selectedRoleId ? "hidden lg:flex" : "flex"}`}
         >
-          <div className="mb-4">
+          <div>
             <CatalogFilters
               query={query}
               status={status}
@@ -230,12 +230,12 @@ export function RolesManagementPage() {
           {error ? <CatalogErrorState message={error} onRetry={() => setReloadToken((value) => value + 1)} /> : null}
 
           <div className="min-h-0 flex-1 overflow-y-auto pr-2">
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {loading ? (
                 Array.from({ length: 4 }).map((_, index) => (
                   <div
                     key={index}
-                    className="h-[120px] animate-pulse rounded-[20px] border border-[#DDE8D7] bg-[#EEF6E9]"
+                    className="h-[94px] animate-pulse rounded-2xl border border-[#DDE8D7] bg-[#EEF6E9]"
                   />
                 ))
               ) : roles.length > 0 ? (
@@ -269,11 +269,11 @@ export function RolesManagementPage() {
           <CatalogPagination page={page} total={meta.total} onPageChange={setPage} />
         </div>
 
-        <div className={`min-h-0 ${selectedRoleId ? "block" : "hidden xl:block"}`}>
+        <div className={`min-h-0 ${selectedRoleId ? "block" : "hidden lg:block"}`}>
           {detailLoading && selectedRoleId ? (
-            <AdminDetailPanel className="xl:h-full" loading loadingLabel="el detalle del rol" />
+            <AdminDetailPanel className="lg:h-full" loading loadingLabel="el detalle del rol" />
           ) : selectedRole ? (
-            <AdminDetailPanel className="xl:flex xl:h-full xl:min-h-0 xl:flex-col xl:overflow-hidden" onBack={() => { setSelectedRoleId(null); setSelectedRole(null); }}>
+            <AdminDetailPanel className="lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-hidden" onBack={() => { setSelectedRoleId(null); setSelectedRole(null); }}>
               <AdminDetailHeader
                 title={selectedRole.nombre}
                 leading={<span className="grid size-16 place-items-center rounded-2xl bg-[var(--brand-primary)] text-xl font-extrabold text-white shadow-sm">
@@ -283,8 +283,8 @@ export function RolesManagementPage() {
                 action={<Button asChild variant="outline" className="w-full border-[var(--brand-secondary)] bg-white font-bold text-[var(--brand-primary)]"><Link href={`/roles/${selectedRole.id}/record/overview`}><Eye />Ver ficha completa</Link></Button>}
               />
 
-              <div className="brand-scrollbar xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-2">
-              <dl className="mt-6 grid gap-3 sm:grid-cols-3">
+              <div className="brand-scrollbar lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-2">
+              <dl className="mt-6 grid gap-3">
                 <CatalogDetailField icon={KeyRound} label="Código interno">
                   {resolveRoleCode(selectedRole)}
                 </CatalogDetailField>
@@ -301,7 +301,7 @@ export function RolesManagementPage() {
               </div>
 
               {canEdit ? (
-                <AdminDetailActions className="xl:shrink-0">
+                <AdminDetailActions className="lg:shrink-0">
                   <Button
                     asChild
                     className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]"

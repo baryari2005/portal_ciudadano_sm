@@ -27,7 +27,7 @@ export function AdminWorkflowLayout({
   children: ReactNode;
 }) {
   return (
-    <div className={fullWidth ? "grid items-start gap-5" : "grid items-start gap-5 lg:grid-cols-[260px_minmax(0,1fr)]"}>
+    <div className={fullWidth ? "grid items-start gap-5" : "grid items-start gap-5 lg:grid-cols-[190px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)] 2xl:grid-cols-[260px_minmax(0,1fr)] 2xl:gap-6"}>
       {!fullWidth ? <aside className="h-fit self-start rounded-3xl bg-[#1D4F36] p-4 text-white shadow-sm lg:sticky lg:top-0">
         <p className="px-3 pb-3 text-xs font-bold uppercase text-[#BFD0C5]">{navigationLabel}</p>
         <nav className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-1">
