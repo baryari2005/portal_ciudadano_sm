@@ -7,7 +7,7 @@ import { HelpCircle } from "lucide-react";
 
 import { Separator } from "@/components/ui/separator";
 import { UserAvatar } from "@/components/layout/user-menu/UserAvatar";
-import { RECEPTION_SIDEBAR_CONFIG, SIDEBAR_CONFIG } from "@/config/sidebar.config";
+import { RECEPTION_SIDEBAR_CONFIG, SIDEBAR_CONFIG, TEACHER_SIDEBAR_CONFIG } from "@/config/sidebar.config";
 import { hasPermission } from "@/features/auth/libs/permissions";
 import { useAuth } from "@/stores/auth";
 import { hasAdministrativeWorkspace } from "@/features/auth/libs/workspaces";
@@ -18,7 +18,7 @@ import { SidebarSection } from "./SidebarSection";
 
 type Props = {
   collapsed: boolean;
-  experience?: "administration" | "reception";
+  experience?: "administration" | "reception" | "teacher";
 };
 
 const SIDEBAR_SECTION_ORDER = [
@@ -33,6 +33,7 @@ const SIDEBAR_SECTION_ORDER = [
   "Recepción",
   "Catálogos y Configuración",
   "Administración",
+  "Docencia",
   "Comunicación",
   "Mi cuenta",
 ];
@@ -57,7 +58,7 @@ export function Sidebar({ collapsed, experience = "administration" }: Props) {
   };
 
   const visibleItems = useMemo(() => {
-    const items = experience === "reception" ? RECEPTION_SIDEBAR_CONFIG : SIDEBAR_CONFIG;
+    const items = experience === "reception" ? RECEPTION_SIDEBAR_CONFIG : experience === "teacher" ? TEACHER_SIDEBAR_CONFIG : SIDEBAR_CONFIG;
     return items.filter((item) => {
       if (item.href === "/" && !hasAdministrativeWorkspace(user)) {
         return false;
@@ -91,7 +92,7 @@ export function Sidebar({ collapsed, experience = "administration" }: Props) {
   const activeSection = useMemo(
     () =>
       visibleItems.find((item) =>
-        item.href === "/" || item.href === "/reception"
+        item.href === "/" || item.href === "/reception" || item.href === "/teacher"
           ? pathname === item.href
           : pathname === item.href || pathname.startsWith(`${item.href}/`),
       )?.section,
@@ -104,7 +105,7 @@ export function Sidebar({ collapsed, experience = "administration" }: Props) {
   }, [activeSection]);
 
   function isItemActive(href: string) {
-    return href === "/" || href === "/reception"
+    return href === "/" || href === "/reception" || href === "/teacher"
       ? pathname === href
       : pathname === href || pathname.startsWith(`${href}/`);
   }
@@ -153,7 +154,7 @@ export function Sidebar({ collapsed, experience = "administration" }: Props) {
         className={collapsed ? "mx-4 w-auto shrink-0 bg-white/15" : "mx-7 w-auto shrink-0 bg-white/15"}
       />
 
-      <div className="sidebar-brand-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain pb-5 [scrollbar-gutter:stable]">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-5 [scrollbar-gutter:stable]">
         {Object.entries(grouped).sort(([left], [right]) => {
           const leftIndex = SIDEBAR_SECTION_ORDER.indexOf(left);
           const rightIndex = SIDEBAR_SECTION_ORDER.indexOf(right);
@@ -194,8 +195,8 @@ export function Sidebar({ collapsed, experience = "administration" }: Props) {
         <SidebarNavIcon
           Icon={HelpCircle}
           title="Ayuda"
-          href={experience === "reception" ? "/reception/help" : "/help"}
-          active={pathname === (experience === "reception" ? "/reception/help" : "/help")}
+          href={experience === "reception" ? "/reception/help" : experience === "teacher" ? "/teacher/help" : "/help"}
+          active={pathname === (experience === "reception" ? "/reception/help" : experience === "teacher" ? "/teacher/help" : "/help")}
           collapsed={collapsed}
         />
 

@@ -2,7 +2,7 @@ import type { UserDTO } from "../types/auth.types";
 
 export type WorkspaceKey = "administration" | "reception" | "teacher" | "citizen";
 export const WORKSPACE_STORAGE_KEY = "massm:last-workspace";
-export const RECEPTION_ESTABLISHMENT_STORAGE_KEY = "massm:reception:establishment";
+export const workspaceEstablishmentStorageKey = (userId: string, workspace: "reception" | "teacher") => `massm:${userId}:${workspace}:establishment`;
 
 const ADMIN_MODULES = new Set(["usuarios", "roles", "actividades", "establecimientos", "profesores", "activity_schedules", "activity_sessions", "enrollments", "attendance", "requirements", "enrollment_documents", "audit_log", "reports", "notifications", "categorias_actividades", "publicos_objetivo", "general_settings"]);
 const TEACHER_MINIMUM = ["activity_schedules:ver", "activity_sessions:ver", "enrollments:ver", "attendance:ver"];

@@ -1,5 +1,28 @@
 "use client";
-import Link from "next/link"; import { usePathname } from "next/navigation"; import { Bell, CalendarClock, CalendarDays, CircleHelp, ClipboardCheck, Home, LogOut, UserRound } from "lucide-react"; import { RequireAuth } from "@/features/auth/components/RequireAuth"; import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
-import { ExperienceBar } from "@/components/layout/ExperienceBar";
-const links=[["/teacher","Inicio",Home],["/teacher/schedules","Mis horarios",CalendarClock],["/teacher/sessions","Mis clases",CalendarDays],["/teacher/attendance","Tomar asistencia",ClipboardCheck],["/teacher/notifications","Notificaciones",Bell],["/teacher/profile","Mi perfil",UserRound],["/teacher/help","Ayuda",CircleHelp]] as const;
-export function TeacherShell({children}:{children:React.ReactNode}){const path=usePathname(),{user}=useCurrentUser();return <RequireAuth><div className="min-h-dvh bg-[#F7FBF5] text-[#173C2A]"><header className="sticky top-0 z-30 border-b border-[#DDE8D7] bg-[#1D4F36] text-white"><div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3"><Link href="/teacher" className="text-lg font-extrabold sm:text-xl">MÁS · Portal del Profesor</Link><div className="flex items-center gap-3"><Link href="/teacher/notifications" aria-label="Notificaciones"><Bell className="size-5"/></Link><span className="hidden text-sm sm:inline">{[user?.nombre,user?.apellido].filter(Boolean).join(" ")||"Profesor"}</span><Link href="/logout" aria-label="Cerrar sesión"><LogOut className="size-5"/></Link></div></div><ExperienceBar experience="teacher" className="mx-auto max-w-7xl px-4" /></header><div className="mx-auto grid max-w-7xl gap-6 px-4 pb-24 pt-5 lg:grid-cols-[220px_1fr] lg:pb-8"><nav className="hidden rounded-3xl bg-[#EEF6E9] p-3 lg:block">{links.map(([href,label,Icon],index)=><Link key={`${href}-${label}`} href={href} className={`mb-1 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold ${(path===href||(index===3&&path.startsWith("/teacher/attendance")))?"bg-[#1D4F36] text-white":"hover:bg-white"}`}><Icon className="size-5"/>{label}</Link>)}</nav><main className="min-w-0">{children}</main></div><nav className="fixed inset-x-0 bottom-0 z-30 flex overflow-x-auto border-t border-[#DDE8D7] bg-white p-2 lg:hidden">{links.map(([href,label,Icon])=><Link key={`${href}-${label}`} href={href} className={`min-w-20 flex-1 rounded-xl p-2 text-center text-[10px] font-bold ${path===href?"bg-[#EEF6E9] text-[#1D4F36]":"text-[#5F6F68]"}`}><Icon className="mx-auto mb-1 size-5"/>{label}</Link>)}</nav></div></RequireAuth>}
+
+import { useEffect, useState, type CSSProperties } from "react";
+import { Menu } from "lucide-react";
+import { Sidebar } from "@/components/layout/dashboard-sidebar/Sidebar";
+import { Topbar } from "@/components/layout/dashboard-topbar/Topbar";
+import { IdleLogoutModal } from "@/features/auth/components/IdleLogoutModal";
+import { MustChangePasswordGate } from "@/features/auth/components/MustChangePasswordGate";
+import { RequireAuth } from "@/features/auth/components/RequireAuth";
+import { WorkspaceGuard } from "@/features/auth/components/WorkspaceGuard";
+import { useIdleLogout } from "@/features/auth/hooks/useIdleLogout";
+import { useAuth } from "@/stores/auth";
+import { WORKSPACE_STORAGE_KEY } from "@/features/auth/libs/workspaces";
+import { TeacherEstablishmentProvider } from "../hooks/useTeacherEstablishment";
+
+type Style = CSSProperties & { "--sidebar-w": string; "--topbar-h": string; "--content-pad": string };
+export function TeacherShell({ children }: { children: React.ReactNode }) {
+  const logout=useAuth((state)=>state.logout); const [collapsed,setCollapsed]=useState(false);
+  useEffect(()=>setCollapsed(localStorage.getItem("sidebar-collapsed")==="true"),[]);
+  useEffect(()=>localStorage.setItem("sidebar-collapsed",String(collapsed)),[collapsed]);
+  useEffect(()=>localStorage.setItem(WORKSPACE_STORAGE_KEY,"teacher"),[]);
+  const idle=useIdleLogout(logout); const style:Style={"--sidebar-w":collapsed?"84px":"274px","--topbar-h":"116px","--content-pad":"24px",gridTemplateColumns:"var(--sidebar-w) minmax(0, 1fr)",gridTemplateRows:"var(--topbar-h) minmax(0, 1fr)"};
+  return <RequireAuth><MustChangePasswordGate><WorkspaceGuard workspace="teacher"><TeacherEstablishmentProvider>
+    <button type="button" onClick={()=>setCollapsed(false)} className="fixed bottom-4 right-4 z-50 rounded-full bg-primary p-3 text-white shadow-lg lg:hidden" aria-label="Abrir menú"><Menu/></button>
+    <div className="grid h-[100dvh] min-h-0 overflow-hidden bg-[#FBFBFB] transition-all duration-300" style={style}><aside className="fixed inset-y-0 left-0 z-40 h-[100dvh] w-[var(--sidebar-w)] overflow-hidden"><Sidebar collapsed={collapsed} experience="teacher"/></aside><header className="col-[2/3] row-[1/2] sticky top-0 z-30"><Topbar collapsed={collapsed} setCollapsed={setCollapsed} experience="teacher"/></header><main className="col-[2/3] row-[2/3] min-h-0 min-w-0 overflow-y-auto overscroll-contain"><div className="p-[var(--content-pad)]">{children}</div></main></div>
+    <IdleLogoutModal open={idle.showModal} seconds={idle.seconds} onContinue={idle.continueSession} onLogout={idle.logoutNow}/>
+  </TeacherEstablishmentProvider></WorkspaceGuard></MustChangePasswordGate></RequireAuth>;
+}

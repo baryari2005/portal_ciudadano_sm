@@ -16,11 +16,12 @@ import { ExperienceBar } from "@/components/layout/ExperienceBar";
 import { useAuth } from "@/stores/auth";
 import { usePendingUsersAlert } from "./usePendingUsersAlert";
 import { useServerClock } from "./useServerClock";
+import { WorkspaceEstablishmentSelector } from "@/features/workspace-establishment/WorkspaceEstablishmentSelector";
 
 type TopbarProps = {
   collapsed: boolean;
   setCollapsed: Dispatch<SetStateAction<boolean>>;
-  experience?: "administration" | "reception";
+  experience?: "administration" | "reception" | "teacher";
 };
 
 export function Topbar({ collapsed, setCollapsed, experience = "administration" }: TopbarProps) {
@@ -30,7 +31,7 @@ export function Topbar({ collapsed, setCollapsed, experience = "administration" 
   const displayName =
     [user?.nombre, user?.apellido].filter(Boolean).join(" ") ||
     user?.userId ||
-    (experience === "reception" ? "Recepción" : "Administrador");
+    (experience === "reception" ? "Recepción" : experience === "teacher" ? "Profesor" : "Administrador");
 
   return (
     <header className="flex h-[var(--topbar-h)] w-full flex-col border-l border-white/15 bg-primary text-white">
@@ -52,7 +53,7 @@ export function Topbar({ collapsed, setCollapsed, experience = "administration" 
 
         <div className="min-w-0 py-1">
           <h1 className="truncate text-xl font-bold leading-6 text-white">
-            {experience === "reception" ? "Portal de Recepción" : "Portal ciudadano"}
+            {experience === "reception" ? "Portal de Recepción" : experience === "teacher" ? "Portal del Profesor" : "Portal ciudadano"}
           </h1>
           <div className="text-base  leading-5 text-[#ddef8f]">
             <p className="truncate">Sistema de Ayuda</p>
@@ -62,6 +63,7 @@ export function Topbar({ collapsed, setCollapsed, experience = "administration" 
       </div>
 
       <div className="flex items-center gap-3">
+        {experience === "teacher" || experience === "reception" ? <WorkspaceEstablishmentSelector /> : null}
         <div className="hidden min-w-0 text-right lg:block">
           <p className="truncate text-sm font-bold text-white">
             Hola, {displayName}
@@ -82,7 +84,7 @@ export function Topbar({ collapsed, setCollapsed, experience = "administration" 
                 className="relative h-11 w-11 rounded-lg bg-[#e9f3d8] text-primary hover:bg-[#ddef8f] hover:text-primary"
               >
                 <Link
-                  href={experience === "reception" ? "/reception/notifications" : "/notifications"}
+                  href={experience === "reception" ? "/reception/notifications" : experience === "teacher" ? "/teacher/notifications" : "/notifications"}
                   aria-label={
                     totalActions > 0
                       ? `${totalActions} notificaciones o acciones pendientes`

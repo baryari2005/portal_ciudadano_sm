@@ -1,0 +1,15 @@
+"use client";
+import { createContext,useContext,useEffect,useMemo,useState } from "react";
+import { usePathname,useRouter } from "next/navigation";
+import { getAccessOptions } from "@/features/access/services/access.service";
+import { getTeacherEstablishmentsClient } from "@/features/teacher/services/teacher.service";
+import { workspaceEstablishmentStorageKey } from "@/features/auth/libs/workspaces";
+import { useAuth } from "@/stores/auth";
+export type OperationalWorkspace="reception"|"teacher";
+export type WorkspaceEstablishment={id:string;nombre:string;direccion?:string;todayClassCount?:number};
+type Value={workspace:OperationalWorkspace;options:WorkspaceEstablishment[];establishmentId:string;loading:boolean;selected?:WorkspaceEstablishment;lastUsedId:string;setEstablishmentId:(id:string)=>void};
+const Context=createContext<Value|null>(null);
+const loadOptions=(workspace:OperationalWorkspace)=>workspace==="teacher"?getTeacherEstablishmentsClient():getAccessOptions();
+export function WorkspaceEstablishmentProvider({workspace,children}:{workspace:OperationalWorkspace;children:React.ReactNode}){const userId=useAuth(state=>state.user?.id),pathname=usePathname(),router=useRouter(),[options,setOptions]=useState<WorkspaceEstablishment[]>([]),[establishmentId,setValue]=useState(""),[lastUsedId,setLastUsedId]=useState(""),[loading,setLoading]=useState(true);useEffect(()=>{if(!userId)return;let active=true;const key=workspaceEstablishmentStorageKey(userId,workspace);void loadOptions(workspace).then(items=>{if(!active)return;setOptions(items);const saved=sessionStorage.getItem(key)??"",last=localStorage.getItem(`${key}:last`)??"";setValue(items.some(item=>item.id===saved)?saved:"");setLastUsedId(items.some(item=>item.id===last)?last:"")}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[userId,workspace]);useEffect(()=>{const base=workspace==="teacher"?"/teacher":"/reception";if(!loading&&pathname.startsWith(base)&&!establishmentId)router.replace(`/select-venue?workspace=${workspace}&next=${encodeURIComponent(pathname)}`)},[establishmentId,loading,pathname,router,workspace]);const value=useMemo<Value>(()=>({workspace,options,establishmentId,loading,lastUsedId,selected:options.find(item=>item.id===establishmentId),setEstablishmentId:id=>{if(!userId)return;const key=workspaceEstablishmentStorageKey(userId,workspace);sessionStorage.setItem(key,id);localStorage.setItem(`${key}:last`,id);setValue(id);setLastUsedId(id);window.location.reload()}}),[workspace,options,establishmentId,loading,lastUsedId,userId]);return <Context.Provider value={value}>{loading||!establishmentId?null:children}</Context.Provider>}
+export function useWorkspaceEstablishment(){const value=useContext(Context);if(!value)throw new Error("WorkspaceEstablishmentProvider ausente");return value}
+export async function loadWorkspaceEstablishments(workspace:OperationalWorkspace){return loadOptions(workspace)}

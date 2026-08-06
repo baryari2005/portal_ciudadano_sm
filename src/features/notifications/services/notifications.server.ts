@@ -102,6 +102,7 @@ function mapSent(row: any) {
     entityId: row.entidadId,
     createdAt: row.createdAt,
     recipientCount: row._count?.entregas ?? 0,
+    recipients: row.entregas?.map((delivery: { usuario: { id: string; nombre: string | null; apellido: string | null } }) => ({ id: delivery.usuario.id, firstName: delivery.usuario.nombre, lastName: delivery.usuario.apellido })) ?? [],
     status: "ENVIADA",
   };
 }
@@ -286,18 +287,28 @@ export async function listUserNotifications(userId: string, filters: any = {}) {
   };
 }
 
-export async function listSentNotifications(senderId: string, filters: any = {}) {
-  const search = filters.search?.trim();
-  const rows = await prisma.notificacion.findMany({
-    where: {
+type SentNotificationFilters = { search?: unknown; type?: unknown; priority?: unknown; page?: unknown; pageSize?: unknown };
+export async function listSentNotifications(senderId: string, filters: SentNotificationFilters = {}) {
+  const search = typeof filters.search === "string" ? filters.search.trim() : "";
+  const type = typeof filters.type === "string" ? filters.type as NotificacionTipo : undefined;
+  const priority = typeof filters.priority === "string" ? filters.priority as NotificacionPrioridad : undefined;
+  const page = Math.max(1, Number(filters.page) || 1), pageSize = Math.min(100, Math.max(1, Number(filters.pageSize) || 20));
+  const where: Prisma.NotificacionWhereInput = {
       emisorId: senderId,
-      audiencia: filters.audience,
-      ...(search ? { OR: [{ titulo: { contains: search, mode: "insensitive" } }, { mensaje: { contains: search, mode: "insensitive" } }] } : {}),
+      tipo: type,
+      prioridad: priority,
+      ...(search ? { OR: [{ titulo: { contains: search, mode: "insensitive" } }, { mensaje: { contains: search, mode: "insensitive" } }, { entregas: { some: { usuario: { OR: [{ nombre: { contains: search, mode: "insensitive" } }, { apellido: { contains: search, mode: "insensitive" } }] } } } }] } : {}),
+  };
+  const [total, rows] = await prisma.$transaction([prisma.notificacion.count({ where }), prisma.notificacion.findMany({
+    where: {
+      ...where,
     },
-    include: { ...eventInclude, _count: { select: { entregas: true } } },
+    include: { ...eventInclude, entregas: { select: { usuario: { select: { id: true, nombre: true, apellido: true } } }, take: 20 }, _count: { select: { entregas: true } } },
     orderBy: { createdAt: "desc" },
-  });
-  return rows.map(mapSent);
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+  })]);
+  return { items: rows.map(mapSent), meta: { total, unreadCount: 0, page, pageSize, pageCount: Math.max(1, Math.ceil(total / pageSize)) } };
 }
 
 export async function getUserNotification(id: string, userId: string) {

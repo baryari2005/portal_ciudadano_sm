@@ -1,5 +1,2 @@
-import { TeacherSessionsPage } from "@/features/teacher/components/TeacherPages";
-
-export default function Page() {
-  return <TeacherSessionsPage attendanceMode />;
-}
+import { AttendancePage } from "@/features/attendance/components/AttendancePage";
+export default function Page(){return <AttendancePage workspace="teacher"/>}

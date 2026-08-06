@@ -27,6 +27,7 @@ export type Notification = {
   deliveryOrigin?: "INDIVIDUAL" | "MASIVA" | "ROL";
   managementStatus?: "INFORMATIVA" | "ABIERTA" | "EN_TRATAMIENTO" | "RESUELTA" | "CANCELADA";
   recipientCount?: number;
+  recipients?: Array<{ id: string; firstName: string | null; lastName: string | null }>;
   type: NotificationType;
   title: string;
   message: string;

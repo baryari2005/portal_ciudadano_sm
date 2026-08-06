@@ -13,7 +13,7 @@ import type {
   LoginResult,
   UserDTO,
 } from "@/features/auth/types/auth.types";
-import { RECEPTION_ESTABLISHMENT_STORAGE_KEY } from "@/features/auth/libs/workspaces";
+import { workspaceEstablishmentStorageKey } from "@/features/auth/libs/workspaces";
 
 type State = {
   user: UserDTO | null;
@@ -196,6 +196,7 @@ export const useAuth = create<State & Actions>()(
       },
 
       logout: (redirectTo = "/login") => {
+        const currentUserId = get().user?.id;
         clearStoredToken();
         set({
           user: null,
@@ -205,7 +206,10 @@ export const useAuth = create<State & Actions>()(
         });
 
         if (typeof window !== "undefined") {
-          sessionStorage.removeItem(RECEPTION_ESTABLISHMENT_STORAGE_KEY);
+          if (currentUserId) {
+            sessionStorage.removeItem(workspaceEstablishmentStorageKey(currentUserId, "teacher"));
+            sessionStorage.removeItem(workspaceEstablishmentStorageKey(currentUserId, "reception"));
+          }
           window.location.replace(redirectTo);
         }
       },

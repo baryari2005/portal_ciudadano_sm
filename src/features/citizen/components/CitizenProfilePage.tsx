@@ -63,7 +63,7 @@ const sectionMeta = [
 const fieldSection: Partial<Record<keyof ProfileForm, number>> = { firstName: 1, lastName: 1, birthDate: 1, nationality: 1, gender: 1, address: 3, locality: 3, province: 3, postalCode: 3, addressPlaceId: 3, addressLat: 3, addressLng: 3, phone: 4, emergencyContactName: 4, emergencyContactPhone: 4, medicalCoverageId: 5, affiliateNumber: 5 };
 const titleCase = (value: string) => value.toLowerCase().trim().replace(/\s+/g, " ").replace(/(^|[\s'-])([a-záéíóúüñ])/g, (_, prefix: string, letter: string) => prefix + letter.toUpperCase());
 
-export function CitizenProfilePage({ workspace = "citizen" }: { workspace?: "citizen" | "reception" } = {}) {
+export function CitizenProfilePage({ workspace = "citizen" }: { workspace?: "citizen" | "reception" | "teacher" } = {}) {
   const { data, setData, loading, error, retry } = useCitizenData<CitizenProfile>("/profile");
   const [form, setForm] = useState<ProfileForm>(emptyForm);
   const [section, setSection] = useState(1);
@@ -155,7 +155,7 @@ export function CitizenProfilePage({ workspace = "citizen" }: { workspace?: "cit
   if (error || !data) return <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] place-items-center bg-[#F7FBF5] p-6"><AdminFormCard title="No pudimos cargar tu perfil."><Button variant="outline" onClick={retry}>Reintentar</Button></AdminFormCard></div>;
 
   const meta = workflow ? sectionMeta[section - 1] : ["Datos del usuario", "Información disponible para mantener actualizado tu perfil."] as const;
-  const backHref = workspace === "reception" ? "/reception" : "/citizen";
+  const backHref = workspace === "reception" ? "/reception" : workspace === "teacher" ? "/teacher" : "/citizen";
   const actions = <div className="mt-8 flex flex-col-reverse gap-3 border-t border-[var(--brand-border)] pt-5 sm:flex-row sm:flex-wrap sm:justify-between">
     {workflow && section > 1 ? <Button type="button" variant="outline" className={`${adminSecondaryButtonClass} w-full justify-center gap-3 sm:w-auto`} onClick={() => setSection((current) => current - 1)}><ArrowLeft className="size-5" />Anterior</Button> : <Button asChild type="button" variant="outline" className={`${adminSecondaryButtonClass} w-full justify-center gap-3 sm:w-auto`}><Link href={backHref}><ArrowLeft className="size-5" />Volver</Link></Button>}
     <div className="flex flex-col gap-3 sm:flex-row">
@@ -166,7 +166,7 @@ export function CitizenProfilePage({ workspace = "citizen" }: { workspace?: "cit
   </div>;
 
   return <div className="min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full overflow-y-auto bg-[#F7FBF5] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:p-8"><div className="pr-2">
-    <AdminFormHeader icon={UserCog} title="Mi perfil" description={workspace === "reception" ? "Consultá y mantené actualizada la información de tu cuenta personal." : "Consultá y mantené actualizada tu información personal."} className="mb-5" />
+    <AdminFormHeader icon={UserCog} title="Mi perfil" description={workspace === "citizen" ? "Consultá y mantené actualizada tu información personal." : "Consultá y mantené actualizada la información de tu cuenta personal."} className="mb-5" />
     <AdminFormViewToggle value={viewMode} onChange={setViewMode} />
     <AdminWorkflowLayout sections={sections.map((item) => ({ ...item, status: stepStatus[item.id] }))} activeSection={section} onSectionChange={setSection} navigationLabel="Pasos de edición" fullWidth={!workflow}>
       <div className="rounded-3xl border border-[var(--brand-secondary)]/20 bg-white/80 p-5 text-[var(--brand-ink)] shadow-sm sm:p-6 lg:p-8">

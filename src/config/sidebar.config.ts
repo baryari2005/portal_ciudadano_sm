@@ -1,8 +1,5 @@
 import {
   Home,
-  FileSignature,
-  Sunrise,
-  ClipboardList,
   ShieldCheck,
   Users,
   LibraryBig,
@@ -182,13 +179,13 @@ export const SIDEBAR_CONFIG: SidebarItemConfig[] = [
     icon: ListChecks,
     permission: { modulo: "attendance", accion: "ver" },
   },
-  // {
-  //   section: "Personal",
-  //   title: "Profesores",
-  //   href: "/teachers",
-  //   icon: GraduationCap,
-  //   permission: { modulo: "profesores", accion: "ver" },
-  // },
+  {
+    section: "Personal",
+    title: "Profesores",
+    href: "/teachers",
+    icon: GraduationCap,
+    permission: { modulo: "profesores", accion: "ver" },
+  },
   
   // {
     //     section: "Gestion Recibos y Vacaciones",
@@ -254,5 +251,13 @@ export const RECEPTION_SIDEBAR_CONFIG: SidebarItemConfig[] = [
   { section: "Mi cuenta", title: "Mi perfil", href: "/reception/profile", icon: UserRound },
   { section: "Mi cuenta", title: "Mi QR", href: "/reception/qr", icon: QrCode },
   { section: "Comunicación", title: "Notificaciones", href: "/reception/notifications", icon: BellRing, badgeKey: "notifications" },
+];
+
+export const TEACHER_SIDEBAR_CONFIG: SidebarItemConfig[] = [
+  { section: "Inicio", title: "Dashboard", href: "/teacher", icon: Home, permission: { modulo: "activity_sessions", accion: "ver" } },
+  { section: "Docencia", title: "Clases", href: "/teacher/classes", icon: CalendarDays, permission: { modulo: "activity_sessions", accion: "ver" } },
+  { section: "Docencia", title: "Asistencias", href: "/teacher/attendance", icon: ListChecks, permission: { modulo: "attendance", accion: "ver" } },
+  { section: "Mi cuenta", title: "Mi perfil", href: "/teacher/profile", icon: UserRound },
+  { section: "Comunicación", title: "Notificaciones", href: "/teacher/notifications", icon: BellRing, badgeKey: "notifications" },
 ];
   

@@ -33,7 +33,7 @@ export function SupportAssistant() {
       getVisibleHelpGuides(permissions, category).map((guide) => guide.category),
     );
     return [
-      ...(category === "citizen" ? ["¿Cómo me inscribo a una actividad?", "¿Cómo cambio los horarios de una inscripción?", "¿Cómo consulto mis próximas clases?"] : []),
+      "¿Cómo me inscribo a una actividad?",
       ...(categories.has("teacher") ? ["¿Cómo tomo asistencia?"] : []),
       ...(categories.has("reception") ? ["¿Cómo valido un ingreso por QR?"] : []),
       ...(categories.has("administration")

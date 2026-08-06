@@ -8,7 +8,7 @@ export type ExperienceKind = "administration" | "reception" | "teacher" | "citiz
 const meta = {
   administration: { label: "Portal Ciudadano - Más San Miguel - Experiencia Administrativa", icon: BriefcaseBusiness },
   reception: { label: "Portal de Recepción - Más San Miguel - Experiencia Operativa", icon: ScanLine },
-  teacher: { label: "Portal Ciudadano - Más San Miguel - Experiencia docente", icon: GraduationCap },
+  teacher: { label: "PORTAL DEL PROFESOR - MÁS SAN MIGUEL - EXPERIENCIA DOCENTE", icon: GraduationCap },
   citizen: { label: "Portal Ciudadano - Más San Miguel - Experiencia ciudadana", icon: UserRound },
 } as const;
 

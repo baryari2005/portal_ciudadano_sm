@@ -1,1 +1,2 @@
-import { TeacherHomePage } from "@/features/teacher/components/TeacherPages"; export default function Page(){return <TeacherHomePage/>}
+import { TeacherDashboard } from "@/features/teacher/components/TeacherDashboard";
+export default function Page(){return <TeacherDashboard/>}

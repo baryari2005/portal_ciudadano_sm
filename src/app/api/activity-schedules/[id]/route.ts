@@ -4,6 +4,8 @@ import { changeActivityScheduleStatus, getActivitySchedule, updateActivitySchedu
 import { mapApiRouteError } from "@/lib/api/route-error";
 import { requireAuth, requirePermission } from "@/lib/server-auth";
 import { getAuditRequestContext } from "@/features/audit-log/helpers/audit-log.helpers";
+import { notifyTeacherAssignmentChanges } from "@/features/teacher/services/teacher-assignment-notifications.server";
+import { prisma } from "@/lib/db";
 
 type Params = { params: Promise<{ id: string }> };
 const OPERATIONAL_FIELDS = new Set(["estado", "espacio", "observaciones", "cupoMaximo", "permiteListaEspera", "permiteSobrecupo", "sobrecupoMaximo", "profesoresIds", "profesorPrincipalId", "recursos"]);
@@ -23,7 +25,21 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (keys.some((key) => ["profesoresIds", "profesorPrincipalId", "recursos"].includes(key))) requirePermission(user, "activity_schedules", "asignar");
     const parsed = updateActivityScheduleSchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ message: "Datos inválidos", details: parsed.error.flatten() }, { status: 400 });
-    return NextResponse.json({ data: await updateActivitySchedule((await params).id, parsed.data, { actorId: user.id, origin: "ADMINISTRACION", requestContext: getAuditRequestContext(req.headers) }) });
+    const id = (await params).id;
+    const before = await getActivitySchedule(id);
+    const data = await updateActivitySchedule(id, parsed.data, { actorId: user.id, origin: "ADMINISTRACION", requestContext: getAuditRequestContext(req.headers) });
+    if (before && (parsed.data.profesoresIds !== undefined || parsed.data.profesorPrincipalId !== undefined)) {
+      const users = await prisma.profesor.findMany({ where: { id: { in: data.professors.map((item: { id: string }) => item.id) } }, select: { id: true, usuarioId: true } });
+      const userByProfessor = new Map(users.map((item) => [item.id, item.usuarioId]));
+      await notifyTeacherAssignmentChanges(prisma, {
+        previous: before.professors.map((item: { id: string; isPrimary: boolean }) => ({ professorId: item.id, isPrimary: item.isPrimary, userId: userByProfessor.get(item.id) ?? "" })),
+        current: data.professors.map((item: { id: string; isPrimary: boolean }) => ({ professorId: item.id, isPrimary: item.isPrimary, userId: userByProfessor.get(item.id) ?? "" })),
+        context: { kind: "schedule", entityId: data.id, activityName: data.activity.name, establishmentId: data.establishmentId, establishmentName: data.establishment.name, space: data.space, day: data.day, startTime: data.startTime, endTime: data.endTime },
+        senderId: user.id,
+        operationKey: `update:${before.updatedAt.toISOString()}`,
+      });
+    }
+    return NextResponse.json({ data });
   } catch (error) { return mapApiRouteError(error, "No pudimos actualizar el horario."); }
 }
 

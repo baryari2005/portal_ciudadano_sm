@@ -27,8 +27,8 @@ export function useCitizenNotifications(
       try {
         if (mailbox === "sent") {
           const result = await listSentNotificationsClient(params);
-          setItems(result);
-          setMeta({ total: result.length, unreadCount: 0 });
+          setItems(result.items);
+          setMeta({ total: result.meta.total, unreadCount: 0 });
         } else if (scope === "admin") {
           const result = await listNotificationsClient(params);
           setItems(result);

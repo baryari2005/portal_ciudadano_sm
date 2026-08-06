@@ -6,6 +6,8 @@ import { getActivitySession, updateActivitySession } from "@/features/activity-s
 import { assertTeacherSession, isTeacherRole } from "@/features/teacher/services/teacher.server";
 import { mapApiRouteError } from "@/lib/api/route-error";
 import { requireAuth, requirePermission } from "@/lib/server-auth";
+import { notifyTeacherAssignmentChanges } from "@/features/teacher/services/teacher-assignment-notifications.server";
+import { prisma } from "@/lib/db";
 
 type Params = { params: Promise<{ id: string }> };
 export const runtime = "nodejs";
@@ -35,8 +37,20 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (!parsed.success) return NextResponse.json({ message: "Datos inválidos", details: parsed.error.flatten() }, { status: 400 });
     const before = await getActivitySession(id);
     const data = await updateActivitySession(id, parsed.data);
-    const action = parsed.data.status === "CANCELADA" ? "CANCELAR" : parsed.data.status === "SUSPENDIDA" ? "SUSPENDER" : parsed.data.status === "FINALIZADA" ? "FINALIZAR" : parsed.data.status === "PROGRAMADA" && before?.status !== "PROGRAMADA" ? "REACTIVAR" : "EDITAR";
-    await createAuditLog({ actorId: user.id, action, entityType: "CLASE_ACTIVIDAD", entityId: id, entityName: `Clase de ${data.activitySchedule.activity.name} · ${data.date}`, changes: buildAuditChanges((before ?? {}) as Record<string, unknown>, data as Record<string, unknown>, ["status", "cancellationReason"]), metadata: parsed.data.cancellationReason ? { reason: parsed.data.cancellationReason } : undefined, origin: "ADMINISTRACION", requestContext: getAuditRequestContext(req.headers) });
+    if (before && (parsed.data.professorIds !== undefined || parsed.data.primaryProfessorId !== undefined)) {
+      const users = await prisma.profesor.findMany({ where: { id: { in: data.professors.map((item: { id: string }) => item.id) } }, select: { id: true, usuarioId: true } });
+      const userByProfessor = new Map(users.map((item) => [item.id, item.usuarioId]));
+      await notifyTeacherAssignmentChanges(prisma, {
+        previous: before.professors.map((item: { id: string; isPrimary: boolean }) => ({ professorId: item.id, isPrimary: item.isPrimary, userId: userByProfessor.get(item.id) ?? "" })),
+        current: data.professors.map((item: { id: string; isPrimary: boolean }) => ({ professorId: item.id, isPrimary: item.isPrimary, userId: userByProfessor.get(item.id) ?? "" })),
+        context: { kind: "session", entityId: data.id, activityName: data.activitySchedule.activity.name, establishmentId: data.establishment.id, establishmentName: data.establishment.name, space: data.space, date: new Date(`${data.date}T00:00:00.000Z`), startTime: data.startTime, endTime: data.endTime },
+        senderId: user.id,
+        operationKey: `update:${before.updatedAt.toISOString()}`,
+      });
+    }
+    const assignmentChanged = parsed.data.professorIds !== undefined || parsed.data.primaryProfessorId !== undefined;
+    const action = assignmentChanged ? "ASIGNAR" : parsed.data.status === "CANCELADA" ? "CANCELAR" : parsed.data.status === "SUSPENDIDA" ? "SUSPENDER" : parsed.data.status === "FINALIZADA" ? "FINALIZAR" : parsed.data.status === "PROGRAMADA" && before?.status !== "PROGRAMADA" ? "REACTIVAR" : "EDITAR";
+    await createAuditLog({ actorId: user.id, action, entityType: "CLASE_ACTIVIDAD", entityId: id, entityName: `Clase de ${data.activitySchedule.activity.name} · ${data.date}`, changes: buildAuditChanges((before ?? {}) as Record<string, unknown>, data as Record<string, unknown>, ["status", "cancellationReason", "professors"]), metadata: { ...(parsed.data.cancellationReason ? { reason: parsed.data.cancellationReason } : {}), teacherAssignmentChanged: assignmentChanged }, origin: "ADMINISTRACION", requestContext: getAuditRequestContext(req.headers) });
     return NextResponse.json({ data });
   } catch (error) { return mapApiRouteError(error, "No pudimos actualizar la clase."); }
 }

@@ -1,1 +1,1 @@
-import { TeacherProfilePage } from "@/features/teacher/components/TeacherPages"; export default function Page(){return <TeacherProfilePage/>}
+import { CitizenProfilePage } from "@/features/citizen/components/CitizenProfilePage"; export default function Page(){return <CitizenProfilePage workspace="teacher"/>}

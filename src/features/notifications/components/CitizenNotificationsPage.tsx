@@ -49,15 +49,18 @@ import { useCitizenNotifications } from "../hooks/useNotifications";
 import {
   archiveAllAdminNotificationsClient,
   archiveAllCitizenNotificationsClient,
+  listCitizenNotificationsClient,
+  listSentNotificationsClient,
   markAllAdminNotificationsReadClient,
   markAllCitizenNotificationsReadClient,
   updateAdminNotificationClient,
   updateCitizenNotificationClient,
 } from "../services/notifications.service";
 import type { Notification, NotificationStatus } from "../types/notification.types";
+import { notificationPriorities, notificationTypes } from "../schemas/notification.schema";
 
 type Scope = "citizen" | "admin" | "teacher";
-type PersonalWorkspace = "citizen" | "reception";
+type PersonalWorkspace = "citizen" | "reception" | "teacher";
 type StatusFilter = "all" | "unread" | "read" | "archived";
 type NotificationAction = "markAsRead" | "markAsUnread" | "archive";
 
@@ -89,6 +92,7 @@ function accessRequestStatus(item: Notification) {
 
 function notificationAction(item: Notification, scope: Scope, workspace: PersonalWorkspace) {
   const requestStatus = accessRequestStatus(item);
+  if (workspace === "teacher" && item.entityType === "activity_session" && item.entityId) return { href: "/teacher/classes", label: item.actionLabel || "Ver clase" };
   if (requestStatus === "APROBADA" || requestStatus === "PENDIENTE") return null;
   if (requestStatus === "RECHAZADA") {
     return { href: "/request-access", label: "Corregir y reenviar" };
@@ -102,7 +106,13 @@ function notificationAction(item: Notification, scope: Scope, workspace: Persona
     const href = receptionRoutes[item.actionUrl];
     return href ? { href, label: item.actionLabel || "Ver detalle" } : null;
   }
+  if (workspace === "teacher" && item.actionUrl?.startsWith("/citizen")) {
+    const teacherRoutes: Record<string, string> = { "/citizen/profile": "/teacher/profile", "/citizen/qr": "/teacher/qr", "/citizen/notifications": "/teacher/notifications" };
+    const href = teacherRoutes[item.actionUrl];
+    return href ? { href, label: item.actionLabel || "Ver detalle" } : null;
+  }
   if (workspace === "reception" && item.actionUrl && !item.actionUrl.startsWith("/reception") && item.actionUrl !== "/request-access") return null;
+  if (workspace === "teacher" && item.actionUrl && !item.actionUrl.startsWith("/teacher")) return null;
   if (scope !== "citizen" && item.actionUrl?.startsWith("/citizen")) return null;
   return item.actionUrl
     ? { href: item.actionUrl, label: item.actionLabel || "Ver detalle" }
@@ -113,20 +123,28 @@ export function CitizenNotificationsPage({
   title = "Mis notificaciones",
   scope = "citizen",
   workspace = "citizen",
+  showSentMailbox = true,
 }: {
   title?: string;
   scope?: Scope;
   workspace?: PersonalWorkspace;
+  showSentMailbox?: boolean;
 } = {}) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Notification | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("unread");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
   const [mailbox, setMailbox] = useState<"received" | "sent">("received");
   const [page, setPage] = useState(1);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [teacherMailboxCounts, setTeacherMailboxCounts] = useState({ received: 0, sent: 0 });
   const requestFilters = useMemo(
     () => ({
       pageSize: NOTIFICATION_FETCH_LIMIT,
+      ...(query.trim() ? { search: query.trim() } : {}),
+      ...(typeFilter !== "all" ? { type: typeFilter } : {}),
+      ...(priorityFilter !== "all" ? { priority: priorityFilter } : {}),
       ...(statusFilter === "archived"
         ? { status: "ARCHIVADA" }
         : statusFilter === "unread"
@@ -135,7 +153,7 @@ export function CitizenNotificationsPage({
             ? { status: "LEIDA" }
             : { includeArchived: true }),
     }),
-    [statusFilter],
+    [priorityFilter, query, statusFilter, typeFilter],
   );
   const { items, meta, loading, hasLoaded, error, refresh } = useCitizenNotifications(
     requestFilters,
@@ -157,8 +175,23 @@ export function CitizenNotificationsPage({
     (page - 1) * CATALOG_PAGE_SIZE,
     page * CATALOG_PAGE_SIZE,
   );
+  const notificationFilterSections = [
+    ...(mailbox === "received" ? [{ id: "notification-status", title: "Estado", value: statusFilter, options: [{ value: "all", label: "Todas" }, { value: "unread", label: "Sin leer" }, { value: "read", label: "Leídas" }, { value: "archived", label: "Archivadas" }], onChange: (value: string) => setStatusFilter(value as StatusFilter) }] : []),
+    ...(workspace === "teacher" ? [{ id: "notification-type", title: "Tipo", value: typeFilter, options: [{ value: "all", label: "Todos" }, ...notificationTypes.map((value) => ({ value, label: value.replaceAll("_", " ").toLowerCase() }))], onChange: setTypeFilter }, { id: "notification-priority", title: "Prioridad", value: priorityFilter, options: [{ value: "all", label: "Todas" }, ...notificationPriorities.map((value) => ({ value, label: priorities[value] }))], onChange: setPriorityFilter }] : []),
+  ];
 
   useEffect(() => { setPage(1); setSelected(null); }, [query, statusFilter, mailbox]);
+  useEffect(() => {
+    if (workspace !== "teacher" || !showSentMailbox) return;
+    let active = true;
+    void Promise.all([
+      listCitizenNotificationsClient({ page: 1, pageSize: 1, includeArchived: true }),
+      listSentNotificationsClient({ page: 1, pageSize: 1 }),
+    ]).then(([received, sent]) => {
+      if (active) setTeacherMailboxCounts({ received: received.meta.total, sent: sent.meta.total });
+    });
+    return () => { active = false; };
+  }, [workspace, showSentMailbox]);
 
   if (loading && !hasLoaded) return <CatalogLoadingState label="notificaciones" fullPage />;
 
@@ -243,40 +276,25 @@ export function CitizenNotificationsPage({
       <AdminSplitLayout
         list={
           <AdminListPane detailOpen={Boolean(selected)}>
-            <Tabs value={mailbox} onValueChange={(value) => setMailbox(value as "received" | "sent")}>
+            {showSentMailbox ? <Tabs value={mailbox} onValueChange={(value) => setMailbox(value as "received" | "sent")}>
               <TabsList className="grid h-12 w-full grid-cols-2 rounded-xl border border-[var(--brand-border)] bg-white p-1 shadow-sm">
                 <TabsTrigger value="received" className={cn("h-10 gap-2 rounded-lg bg-transparent font-bold text-[var(--brand-muted)] shadow-none hover:bg-[var(--brand-panel)]", mailbox === "received" && "!bg-[var(--brand-primary)] !text-white shadow-sm hover:!bg-[var(--brand-primary-hover)]")}>
                   <Inbox className="size-4" />
-                  Recibidas
+                  {workspace === "teacher" ? `Recibidas (${teacherMailboxCounts.received})` : "Recibidas"}
                 </TabsTrigger>
                 <TabsTrigger value="sent" className={cn("h-10 gap-2 rounded-lg bg-transparent font-bold text-[var(--brand-muted)] shadow-none hover:bg-[var(--brand-panel)]", mailbox === "sent" && "!bg-[var(--brand-primary)] !text-white shadow-sm hover:!bg-[var(--brand-primary-hover)]")}>
                   <Send className="size-4" />
-                  Enviadas
+                  {workspace === "teacher" ? `Enviadas (${teacherMailboxCounts.sent})` : "Enviadas"}
                 </TabsTrigger>
               </TabsList>
-            </Tabs>
+            </Tabs> : null}
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
               <CatalogSearchInput
                 value={query}
                 onChange={setQuery}
                 placeholder="Buscar por título o mensaje..."
               />
-              {mailbox === "received" ? <CatalogFilterPopover
-                sections={[
-                  {
-                    id: "notification-status",
-                    title: "Estado",
-                    value: statusFilter,
-                    options: [
-                      { value: "all", label: "Todas" },
-                      { value: "unread", label: "Sin leer" },
-                      { value: "read", label: "Leídas" },
-                      { value: "archived", label: "Archivadas" },
-                    ],
-                    onChange: (value) => setStatusFilter(value as StatusFilter),
-                  },
-                ]}
-              /> : null}
+              {notificationFilterSections.length ? <CatalogFilterPopover sections={notificationFilterSections} /> : null}
             </div>
 
             {loading ? (
@@ -285,7 +303,7 @@ export function CitizenNotificationsPage({
               <CatalogErrorState message={error} onRetry={() => void refresh()} />
             ) : !filtered.length ? (
               <CatalogEmptyState
-                title={query.trim() || statusFilter !== "all" ? "No hay resultados que coincidan con la búsqueda o los filtros seleccionados." : "No hay notificaciones para mostrar."}
+                title={query.trim() || statusFilter !== "all" ? "No encontramos notificaciones con los filtros seleccionados." : mailbox === "sent" && workspace === "teacher" ? "Todavía no tenés notificaciones enviadas." : mailbox === "received" && workspace === "teacher" ? "No tenés notificaciones recibidas para mostrar." : "No hay notificaciones para mostrar."}
                 description={query.trim() || statusFilter !== "all" ? "Probá modificar el texto de búsqueda o seleccionar otro estado." : "Las nuevas comunicaciones aparecerán en este listado."}
                 filtered={false}
               />
@@ -337,6 +355,7 @@ function NotificationListItem({
   active: boolean;
   onSelect: () => void;
 }) {
+  const requestStatus = accessRequestStatus(item);
   return (
     <AdminListCard
       selected={active}
@@ -347,8 +366,19 @@ function NotificationListItem({
         </span>
       }
       title={item.title}
-      badges={<Badge className={statusBadgeClass(item.status)}>{statuses[item.status]}</Badge>}
-      description={item.message}
+      badges={
+        <>
+          {requestStatus ? <RequestBadge status={requestStatus} /> : null}
+          {item.deliveryOrigin === "ROL" ? <Badge className="rounded-full border border-[#819B56]/40 bg-[#819B56]/15 text-[#1D4F36]">Por rol</Badge> : null}
+          {item.priority === "ALTA" ? <Badge variant="destructive" className="rounded-full">Importante</Badge> : null}
+        </>
+      }
+      description={
+        <span className="flex items-start gap-2">
+          <span className="line-clamp-2 min-w-0 flex-1">{item.message}</span>
+          <Badge className={statusBadgeClass(item.status)}>{statuses[item.status]}</Badge>
+        </span>
+      }
       meta={formatCatalogDate(item.createdAt)}
       trailing={<ChevronRight />}
     />
@@ -399,6 +429,7 @@ function NotificationDetail({
       />
       <dl className="mt-6 grid gap-3">
         {recipient && scope === "admin" ? <CatalogDetailField icon={UserRound} label="Destinatario">{recipient}</CatalogDetailField> : null}
+        {readOnly && item.recipientCount !== undefined ? <CatalogDetailField icon={UserRound} label="Destinatarios">{item.recipients?.length ? `${item.recipients.map((entry) => [entry.firstName, entry.lastName].filter(Boolean).join(" ")).join(", ")}${item.recipientCount > item.recipients.length ? ` y ${item.recipientCount - item.recipients.length} más` : ""}` : `${item.recipientCount} destinatarios`}</CatalogDetailField> : null}
         {item.deliveryOrigin === "ROL" ? <CatalogDetailField icon={UserRound} label="Audiencia">Rol {item.role?.nombre ?? "administrador"}</CatalogDetailField> : null}
         {item.managementStatus && item.managementStatus !== "INFORMATIVA" ? <CatalogDetailField icon={CircleDot} label="Gestión compartida">{item.managementStatus.replaceAll("_", " ").toLowerCase()}</CatalogDetailField> : null}
         {requestStatus ? <CatalogDetailField icon={CircleDot} label="Estado de la solicitud"><RequestBadge status={requestStatus} /></CatalogDetailField> : null}
