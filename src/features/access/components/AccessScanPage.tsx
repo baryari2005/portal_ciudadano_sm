@@ -13,6 +13,6 @@ function Scan({ establishmentId }: { establishmentId: string }) {
   const detected = useCallback(async (token: string) => { if (!establishmentId) return; setStatus("searching"); setError(""); try { const response = await validateAccessQr(establishmentId, token); setResult(response); setStatus(response.result === "PERMITIDO" ? "found" : "invalid"); } catch { setError("No pudimos validar el ingreso. Verificá la conexión e intentá nuevamente."); setStatus("scanner-error"); } }, [establishmentId]);
   const scanner = useQrScanner({ videoRef, onDetected: detected });
   function restart() { setResult(null); setError(""); setStatus("scanning"); void scanner.start(); }
-  if (!establishmentId) return <div className="grid min-h-64 place-items-center rounded-3xl border border-dashed border-[#819B56]/40 bg-white text-[#315644]">Seleccioná un establecimiento antes de escanear.</div>;
+  if (!establishmentId) return <div className="grid min-h-64 place-items-center rounded-3xl border border-dashed border-[var(--brand-secondary)]/40 bg-white text-[var(--brand-text)]">Seleccioná un establecimiento antes de escanear.</div>;
   return <div className="grid gap-6">{result ? <><AccessResultCard result={result}/><div><Button onClick={restart}>Escanear siguiente</Button></div></> : <QrScannerCard videoRef={videoRef} status={scanner.error ?? status} scanning={scanner.scanning} onStart={restart} onStop={() => { scanner.stop(); setStatus("idle"); }}/>} {error ? <p className="rounded-xl bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</p> : null}</div>;
 }

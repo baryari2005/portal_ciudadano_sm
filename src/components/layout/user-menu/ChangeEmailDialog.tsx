@@ -80,14 +80,14 @@ export function ChangeEmailDialog({ open, onOpenChange, currentEmail }: Props) {
 
         <ProfileDialogBody>
           <div className="flex items-start gap-3 rounded-xl border border-[#DDE5D8] bg-[#F7FAF3] p-3">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-[#1D4F36] ring-1 ring-[#819B56]/25">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-[var(--brand-primary)] ring-1 ring-[var(--brand-secondary)]/25">
               <Mail className="h-4 w-4" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wide text-[#819B56]">
+              <p className="text-xs font-medium uppercase tracking-wide text-[var(--brand-secondary)]">
                 Email actual
               </p>
-              <p className="truncate text-sm font-semibold text-[#1D4F36]">
+              <p className="truncate text-sm font-semibold text-[var(--brand-primary)]">
                 {currentEmail}
               </p>
             </div>

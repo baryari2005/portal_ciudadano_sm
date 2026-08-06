@@ -56,17 +56,17 @@
 .google-address-autocomplete::part(input) {
   min-height: 2.75rem;
   width: 100%;
-  border: 1px solid #c9d9c3;
+  border: 1px solid var(--brand-border);
   border-radius: 0.75rem;
-  background: #f7fbf5;
+  background: var(--brand-page);
   padding-left: 2.25rem;
-  color: #173c2a;
+  color: var(--brand-ink);
   font-family: inherit;
   font-weight: 500;
 }
 
 .google-address-autocomplete::part(input):focus {
-  outline: 2px solid #819b56;
+  outline: 2px solid var(--brand-secondary);
   outline-offset: 1px;
 }
 
@@ -96,7 +96,10 @@ main > header > div.flex.items-start.gap-3 > div > p.mt-2:not(.flex)::before {
 :root {
   --brand-primary: #1d4f36;
   --brand-primary-hover: #143a27;
+  --brand-primary-strong: #00522c;
   --brand-secondary: #819b56;
+  --brand-accent: #ddef8f;
+  --brand-highlight: #ddeed2;
   --brand-neutral: #b2b2b2;
   --brand-page: #f7fbf5;
   --brand-panel: #eef6e9;
@@ -116,31 +119,31 @@ main > header > div.flex.items-start.gap-3 > div > p.mt-2:not(.flex)::before {
   --card-foreground: #000000;
   --popover: oklch(1 0 0);
   --popover-foreground: #000000;
-  --primary: #1d4f36;
+  --primary: var(--brand-primary);
   --primary-foreground: #ffffff;
-  --secondary: #819b56;
+  --secondary: var(--brand-secondary);
   --secondary-foreground: #ffffff;
   --muted: #f4f6f3;
   --muted-foreground: #5f665f;
   --accent: #e7ede1;
-  --accent-foreground: #1d4f36;
+  --accent-foreground: var(--brand-primary);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: #b2b2b2;
-  --input: #b2b2b2;
-  --ring: #819b56;
+  --border: var(--brand-neutral);
+  --input: var(--brand-neutral);
+  --ring: var(--brand-secondary);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: #1d4f36;
+  --sidebar: var(--brand-primary);
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #819b56;
+  --sidebar-primary: var(--brand-secondary);
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: rgb(129 155 86 / 18%);
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgb(255 255 255 / 14%);
-  --sidebar-ring: #819b56;
+  --sidebar-ring: var(--brand-secondary);
 }
 
 .dark {
@@ -320,7 +323,7 @@ main > header > div.flex.items-start.gap-3 > div > p.mt-2:not(.flex)::before {
 }
 
 .sidebar-brand-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #ddef8f;
+  background: var(--brand-accent);
 }
 
 /* Conserva la altura natural de todas las tarjetas selectoras aunque el listado

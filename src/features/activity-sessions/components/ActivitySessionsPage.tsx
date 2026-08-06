@@ -106,9 +106,9 @@ function SessionDetail({ item, canState, onBack, onChange }: { item: ActivitySes
 
 function SessionState({ value }: { value: ActivitySessionStatus }) {
   const styles: Record<ActivitySessionStatus, string> = {
-    PROGRAMADA: "border-[#819B56]/40 bg-[#819B56]/15 text-[#1D4F36]",
+    PROGRAMADA: "border-[var(--brand-secondary)]/40 bg-[var(--brand-secondary)]/15 text-[var(--brand-primary)]",
     EN_CURSO: "border-sky-300 bg-sky-50 text-sky-800",
-    FINALIZADA: "border-[#B2B2B2] bg-[#B2B2B2]/15 text-[#555]",
+    FINALIZADA: "border-[var(--brand-neutral)] bg-[var(--brand-neutral)]/15 text-[#555]",
     SUSPENDIDA: "border-amber-300 bg-amber-50 text-amber-800",
     CANCELADA: "border-red-300 bg-red-50 text-red-800",
   };

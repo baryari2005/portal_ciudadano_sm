@@ -63,16 +63,16 @@ export function WeeklySchedules({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-[#DDE8D7] bg-[#F7FBF5] p-5">
+      <section className="rounded-2xl border border-[var(--brand-border-soft)] bg-[var(--brand-page)] p-5">
         <div className="flex items-start gap-3">
-          <span className="grid size-10 place-items-center rounded-xl bg-[#DDE8D7] text-[#1D4F36]">
+          <span className="grid size-10 place-items-center rounded-xl bg-[var(--brand-border-soft)] text-[var(--brand-primary)]">
             <CalendarDays className="size-5" />
           </span>
           <div>
-            <h3 className="font-extrabold text-[#1D4F36]">
+            <h3 className="font-extrabold text-[var(--brand-primary)]">
               Días de la actividad
             </h3>
-            <p className="text-sm text-[#5F6F68]">
+            <p className="text-sm text-[var(--brand-muted)]">
               Marcá todos los días que comparten la misma franja horaria.
             </p>
           </div>
@@ -81,7 +81,7 @@ export function WeeklySchedules({
           {days.map(([value, shortLabel, fullLabel]) => (
             <label
               key={value}
-              className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border p-3 font-bold transition ${selected.has(value) ? "border-[#1D4F36] bg-[#DDEF8F] text-[#1D4F36]" : "border-[#C9D9C3] bg-white text-[#315644]"}`}
+              className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border p-3 font-bold transition ${selected.has(value) ? "border-[var(--brand-primary)] bg-[var(--brand-accent)] text-[var(--brand-primary)]" : "border-[var(--brand-border)] bg-white text-[var(--brand-text)]"}`}
             >
               <Checkbox
                 className="sr-only"
@@ -115,7 +115,7 @@ export function WeeklySchedules({
       </div>
       {selected.size ? (
         <p
-          className={`flex items-start gap-3 rounded-xl border p-4 text-sm font-medium ${end > start ? "border-[#C9D9C3] bg-[#EEF6E9] text-[#315644]" : "border-red-200 bg-red-50 text-red-800"}`}
+          className={`flex items-start gap-3 rounded-xl border p-4 text-sm font-medium ${end > start ? "border-[var(--brand-border)] bg-[var(--brand-panel)] text-[var(--brand-text)]" : "border-red-200 bg-red-50 text-red-800"}`}
         >
           <Info className="mt-0.5 size-5 shrink-0" />
           <span>
@@ -153,12 +153,12 @@ function Field({
 }) {
   return (
     <div className="space-y-2">
-      <Label className="font-bold text-[#173C2A]">{label}</Label>
+      <Label className="font-bold text-[var(--brand-ink)]">{label}</Label>
       <div className="relative">
-        <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-[#1D4F36] [&_svg]:size-5">
+        <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-[var(--brand-primary)] [&_svg]:size-5">
           {icon}
         </span>
-        <div className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:border-[#C9D9C3] [&_input]:bg-[#F7FBF5] [&_input]:pl-10">
+        <div className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:border-[var(--brand-border)] [&_input]:bg-[var(--brand-page)] [&_input]:pl-10">
           {children}
         </div>
       </div>

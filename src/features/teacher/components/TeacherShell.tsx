@@ -10,15 +10,15 @@ import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { WorkspaceGuard } from "@/features/auth/components/WorkspaceGuard";
 import { useIdleLogout } from "@/features/auth/hooks/useIdleLogout";
 import { useAuth } from "@/stores/auth";
-import { WORKSPACE_STORAGE_KEY } from "@/features/auth/libs/workspaces";
+import { workspacePreferenceStorageKey } from "@/features/auth/libs/workspaces";
 import { TeacherEstablishmentProvider } from "../hooks/useTeacherEstablishment";
 
 type Style = CSSProperties & { "--sidebar-w": string; "--topbar-h": string; "--content-pad": string };
 export function TeacherShell({ children }: { children: React.ReactNode }) {
-  const logout=useAuth((state)=>state.logout); const [collapsed,setCollapsed]=useState(false);
+  const logout=useAuth((state)=>state.logout); const userId=useAuth((state)=>state.user?.id); const [collapsed,setCollapsed]=useState(false);
   useEffect(()=>setCollapsed(localStorage.getItem("sidebar-collapsed")==="true"),[]);
   useEffect(()=>localStorage.setItem("sidebar-collapsed",String(collapsed)),[collapsed]);
-  useEffect(()=>localStorage.setItem(WORKSPACE_STORAGE_KEY,"teacher"),[]);
+  useEffect(()=>{if(userId)localStorage.setItem(workspacePreferenceStorageKey(userId),"teacher")},[userId]);
   const idle=useIdleLogout(logout); const style:Style={"--sidebar-w":collapsed?"84px":"274px","--topbar-h":"116px","--content-pad":"24px",gridTemplateColumns:"var(--sidebar-w) minmax(0, 1fr)",gridTemplateRows:"var(--topbar-h) minmax(0, 1fr)"};
   return <RequireAuth><MustChangePasswordGate><WorkspaceGuard workspace="teacher"><TeacherEstablishmentProvider>
     <button type="button" onClick={()=>setCollapsed(false)} className="fixed bottom-4 right-4 z-50 rounded-full bg-primary p-3 text-white shadow-lg lg:hidden" aria-label="Abrir menú"><Menu/></button>

@@ -6,7 +6,7 @@ import { RequestAccessForm } from "./RequestAccessForm";
 
 export function RequestAccessPageShell() {
   return (
-    <main className="min-h-screen bg-[#F7FBF5]">
+    <main className="min-h-screen bg-[var(--brand-page)]">
       <header className="relative overflow-hidden border-b border-white/15 bg-primary">
         <div className="relative z-10 mx-auto flex h-[88px] w-full items-center justify-between gap-6 px-5 sm:px-8 lg:px-10">
           <div className="flex min-w-0 items-center gap-5 text-white">
@@ -31,7 +31,7 @@ export function RequestAccessPageShell() {
           </div>
 
           <Link href="/login" className="hidden items-center gap-4 text-white sm:flex">
-            <div className="flex size-11 items-center justify-center rounded-lg bg-[#e9f3d8] text-[#003A22] shadow-sm">
+            <div className="flex size-11 items-center justify-center rounded-lg bg-[#e9f3d8] text-[var(--brand-heading)] shadow-sm">
               <User
                 className="size-7 fill-current stroke-[2.4]"
                 aria-hidden="true"

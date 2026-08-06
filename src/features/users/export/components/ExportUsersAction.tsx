@@ -11,7 +11,7 @@ export function ExportUsersAction({ loading, onExport }: Props) {
     <Button
       onClick={onExport}
       disabled={loading}
-      className="h-12 rounded-xl bg-[#00522C] px-8 text-base font-bold text-white shadow-sm hover:bg-[#003A22]"
+      className="h-12 rounded-xl bg-[var(--brand-primary-strong)] px-8 text-base font-bold text-white shadow-sm hover:bg-[var(--brand-heading)]"
     >
       {loading ? (
         <>

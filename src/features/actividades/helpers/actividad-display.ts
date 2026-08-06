@@ -4,7 +4,7 @@ import type {
   ActividadNivel,
 } from "../types/actividad.types";
 
-const DEFAULT_ACTIVITY_COLOR = "#1D4F36";
+const DEFAULT_ACTIVITY_COLOR = "var(--brand-primary)";
 
 const levelLabels: Record<ActividadNivel, string> = {
   INICIAL: "Inicial",

@@ -56,7 +56,7 @@ export function EmailInput({
   return (
     <IconInput
       id={id}
-      leftIcon={<Mail className="h-4 w-4 text-[#1D4F36]" />}
+      leftIcon={<Mail className="h-4 w-4 text-[var(--brand-primary)]" />}
       input={input}
     />
   );

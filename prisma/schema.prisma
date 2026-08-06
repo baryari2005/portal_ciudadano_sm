@@ -220,6 +220,7 @@ model ParametrosGenerales {
   imagenLoginCollage2   String?
   imagenLoginCollage3   String?
   imagenLoginCollage4   String?
+  paletasExperiencia    Json?
   updatedById           String?  @db.Uuid
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt

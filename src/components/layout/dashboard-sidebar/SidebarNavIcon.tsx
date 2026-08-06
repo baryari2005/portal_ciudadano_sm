@@ -80,11 +80,11 @@ export function SidebarNavIcon({
             ? "mx-3 flex h-12 w-12 items-center justify-center rounded-lg px-0"
             : "mx-5 flex h-14 w-[calc(100%-2.5rem)] items-center justify-start rounded-lg px-4"
         }
-        ${active ? "bg-[#ddef8f] text-primary shadow-sm hover:bg-[#ddef8f] hover:text-primary" : ""}
+        ${active ? "bg-[var(--brand-accent)] text-primary shadow-sm hover:bg-[var(--brand-accent)] hover:text-primary" : ""}
         ${
           highlight
             ? "bg-red-500/20 hover:bg-red-500/30"
-            : "hover:bg-[#ddef8f] hover:text-primary"
+            : "hover:bg-[var(--brand-accent)] hover:text-primary"
         }
       `}
     >

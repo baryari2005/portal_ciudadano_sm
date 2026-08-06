@@ -246,6 +246,7 @@ exports.Prisma.ParametrosGeneralesScalarFieldEnum = {
   imagenLoginCollage2: 'imagenLoginCollage2',
   imagenLoginCollage3: 'imagenLoginCollage3',
   imagenLoginCollage4: 'imagenLoginCollage4',
+  paletasExperiencia: 'paletasExperiencia',
   updatedById: 'updatedById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

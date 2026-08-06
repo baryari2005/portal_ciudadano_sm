@@ -79,7 +79,7 @@ export function CatalogPageHeader({
           </h1>
           <Badge
             variant="secondary"
-            className="rounded-full bg-[#819B56]/15 px-3 py-1 font-bold text-[#1D4F36]"
+            className="rounded-full bg-[var(--brand-secondary)]/15 px-3 py-1 font-bold text-[var(--brand-primary)]"
           >
             {total} {total === 1 ? "registro" : "registros"}
           </Badge>
@@ -144,22 +144,22 @@ export function CatalogFilterPopover({ sections }: { sections: CatalogFilterSect
       <PopoverTrigger asChild>
         <Button type="button" variant="outline" className="h-12 gap-2 rounded-xl border-0 bg-[var(--brand-search)] px-5 font-bold text-[var(--brand-primary)] shadow-sm hover:brightness-95">
           <SlidersHorizontal className="size-5" /> Filtros
-          {activeCount ? <Badge className="rounded-full bg-[#1D4F36] px-2 text-white">{activeCount}</Badge> : null}
+          {activeCount ? <Badge className="rounded-full bg-[var(--brand-primary)] px-2 text-white">{activeCount}</Badge> : null}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[min(360px,calc(100vw-2rem))] rounded-2xl border-[#DDE8D7] p-0 shadow-xl">
-        <div className="flex items-center justify-between border-b border-[#DDE8D7] px-5 py-4">
-          <div><p className="font-extrabold text-[#1D4F36]">Filtros</p><p className="text-xs text-[#5F6F68]">Refiná los resultados</p></div>
-          {activeCount ? <Button type="button" variant="ghost" size="sm" onClick={() => sections.forEach((section) => section.onClear ? section.onClear() : section.onChange("all"))} className="text-[#1D4F36]">Limpiar</Button> : null}
+      <PopoverContent align="end" className="w-[min(360px,calc(100vw-2rem))] rounded-2xl border-[var(--brand-border-soft)] p-0 shadow-xl">
+        <div className="flex items-center justify-between border-b border-[var(--brand-border-soft)] px-5 py-4">
+          <div><p className="font-extrabold text-[var(--brand-primary)]">Filtros</p><p className="text-xs text-[var(--brand-muted)]">Refiná los resultados</p></div>
+          {activeCount ? <Button type="button" variant="ghost" size="sm" onClick={() => sections.forEach((section) => section.onClear ? section.onClear() : section.onChange("all"))} className="text-[var(--brand-primary)]">Limpiar</Button> : null}
         </div>
         <div className="max-h-[65dvh] overflow-y-auto px-5 pb-3">
           {sections.map((section, index) => (
-            <details key={section.id} open={index === 0} className="group border-b border-[#DDE8D7] py-1">
-              <summary className="flex cursor-pointer list-none items-center justify-between py-4 font-bold text-[#173C2A]">{section.title}<ChevronDown aria-hidden="true" className="size-4 transition-transform duration-200 group-open:rotate-180" /></summary>
+            <details key={section.id} open={index === 0} className="group border-b border-[var(--brand-border-soft)] py-1">
+              <summary className="flex cursor-pointer list-none items-center justify-between py-4 font-bold text-[var(--brand-ink)]">{section.title}<ChevronDown aria-hidden="true" className="size-4 transition-transform duration-200 group-open:rotate-180" /></summary>
               <div className="grid gap-2 pb-4">
                 {section.content ?? section.options?.map((option) => (
-                  <label key={option.value} className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-sm text-[#315644] hover:bg-[#819B56]/10">
-                    <input type="radio" name={`catalog-filter-${section.id}`} checked={section.value === option.value} onChange={() => section.onChange(option.value)} className="size-4 accent-[#1D4F36]" />
+                  <label key={option.value} className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-sm text-[var(--brand-text)] hover:bg-[var(--brand-secondary)]/10">
+                    <input type="radio" name={`catalog-filter-${section.id}`} checked={section.value === option.value} onChange={() => section.onChange(option.value)} className="size-4 accent-[var(--brand-primary)]" />
                     {option.label}
                   </label>
                 ))}
@@ -213,15 +213,15 @@ export function CatalogStatusBadge({
       className={cn(
         "rounded-full px-2.5 py-1 font-bold",
         active
-          ? "border-[#819B56]/40 bg-[#819B56]/15 text-[#1D4F36]"
-          : "border-[#B2B2B2] bg-[#B2B2B2]/15 text-[#555]",
+          ? "border-[var(--brand-secondary)]/40 bg-[var(--brand-secondary)]/15 text-[var(--brand-primary)]"
+          : "border-[var(--brand-neutral)] bg-[var(--brand-neutral)]/15 text-[#555]",
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
           "size-1.5 rounded-full",
-          active ? "bg-[#1D4F36]" : "bg-[#777]",
+          active ? "bg-[var(--brand-primary)]" : "bg-[#777]",
         )}
       />
       {active ? activeLabel : inactiveLabel}
@@ -243,17 +243,17 @@ export function CatalogLoadingState({
       aria-busy="true"
       aria-live="polite"
       className={cn(
-        "grid w-full place-items-center bg-[#F7FBF5]",
+        "grid w-full place-items-center bg-[var(--brand-page)]",
         viewport
           ? "min-h-dvh p-6 sm:p-10"
           : fullPage
           ? "min-h-[calc(100dvh-var(--topbar-h,0px)-48px)] p-8"
-          : "min-h-72 rounded-3xl border border-[#819B56]/20 p-6",
+          : "min-h-72 rounded-3xl border border-[var(--brand-secondary)]/20 p-6",
       )}
     >
       <div className={cn(
         "relative aspect-[1464/1024] w-full",
-        viewport ? "w-[min(100%,calc(88dvh*1.4296875))]" : fullPage ? "max-w-3xl" : "max-w-md",
+        viewport ? "w-[min(100%,calc(72dvh*1.4296875))]" : fullPage ? "max-w-2xl" : "max-w-md",
       )}>
           <Image
             src="/Cargando.png"
@@ -274,7 +274,7 @@ export function CatalogLoadingState({
               cy="50"
               r="43"
               fill="none"
-              stroke="#819B56"
+              stroke="var(--brand-secondary)"
               strokeWidth="7"
               strokeLinecap="round"
               strokeDasharray="88 183"
@@ -307,7 +307,7 @@ export function CatalogPagination({
 
   return (
     <div className="flex shrink-0 items-center justify-between gap-4 pt-2">
-      <p className="text-sm text-[#5F6F68]">
+      <p className="text-sm text-[var(--brand-muted)]">
         Mostrando {from} a {to} de {total}
       </p>
       <div className="flex items-center gap-2">
@@ -315,21 +315,21 @@ export function CatalogPagination({
           type="button"
           variant="outline"
           size="icon"
-          className="h-10 w-10 rounded-xl border-[#DDE8D7]"
+          className="h-10 w-10 rounded-xl border-[var(--brand-border-soft)]"
           disabled={currentPage <= 1}
           onClick={() => onPageChange(currentPage - 1)}
           aria-label="Página anterior"
         >
           <ChevronLeft className="size-4" />
         </Button>
-        <span className="grid h-10 min-w-10 place-items-center rounded-xl bg-[#1D4F36] px-3 text-sm font-bold text-white">
+        <span className="grid h-10 min-w-10 place-items-center rounded-xl bg-[var(--brand-primary)] px-3 text-sm font-bold text-white">
           {currentPage}
         </span>
         <Button
           type="button"
           variant="outline"
           size="icon"
-          className="h-10 w-10 rounded-xl border-[#DDE8D7]"
+          className="h-10 w-10 rounded-xl border-[var(--brand-border-soft)]"
           disabled={currentPage >= pageCount}
           onClick={() => onPageChange(currentPage + 1)}
           aria-label="Página siguiente"
@@ -390,12 +390,12 @@ export function CatalogDetailField({
 }) {
   return (
     <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-3 rounded-xl bg-white/65 p-3">
-      <Icon className="mt-0.5 size-5 text-[#819B56]" aria-hidden="true" />
+      <Icon className="mt-0.5 size-5 text-[var(--brand-secondary)]" aria-hidden="true" />
       <div className="min-w-0">
-        <dt className="text-xs font-bold uppercase tracking-wide text-[#315644]/65">
+        <dt className="text-xs font-bold uppercase tracking-wide text-[var(--brand-text)]/65">
           {label}
         </dt>
-        <dd className="mt-1 break-words text-sm font-medium text-[#173C2A]">
+        <dd className="mt-1 break-words text-sm font-medium text-[var(--brand-ink)]">
           {children}
         </dd>
       </div>

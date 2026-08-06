@@ -31,16 +31,16 @@ export function ActivitySessionSummary({ activityScheduleId, activityId, embedde
   useEffect(() => onLoadingChange?.(canView && loading), [canView, loading, onLoadingChange]);
   if (!canView) return null;
   if (loading) return <div className={embedded ? "" : "mt-5"}><CatalogLoadingState label="próximas clases" /></div>;
-  return <section className={embedded ? "" : "mt-5 border-t border-[#C9D9C3] pt-5"}>
+  return <section className={embedded ? "" : "mt-5 border-t border-[var(--brand-border)] pt-5"}>
     <div className={`flex flex-wrap items-center gap-2 ${embedded ? "justify-end" : "justify-between"}`}>
-      {!embedded ? <h3 className="flex items-center gap-2 font-extrabold text-[#1D4F36]"><CalendarDays className="size-5" />Próximas clases</h3> : null}
+      {!embedded ? <h3 className="flex items-center gap-2 font-extrabold text-[var(--brand-primary)]"><CalendarDays className="size-5" />Próximas clases</h3> : null}
       <div className="flex flex-wrap gap-2">
         <Button asChild variant="outline" size="sm"><Link href={`/activity-sessions?${query}`}>{activityId ? "Ver calendario de clases" : "Ver todas las clases"}</Link></Button>
-        {canCreate && activityScheduleId ? <Button asChild size="sm" className="bg-[#1D4F36]"><Link href={`/activity-sessions/new?activityScheduleId=${activityScheduleId}`}><Plus />Generar clases</Link></Button> : null}
+        {canCreate && activityScheduleId ? <Button asChild size="sm" className="bg-[var(--brand-primary)]"><Link href={`/activity-sessions/new?activityScheduleId=${activityScheduleId}`}><Plus />Generar clases</Link></Button> : null}
       </div>
     </div>
     {error ? <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm">No pudimos cargar las clases. <Button variant="ghost" size="sm" onClick={() => void load()}>Reintentar</Button></div>
-      : rows.length === 0 ? <p className="mt-3 text-sm text-[#5F6F68]">Todavía no hay próximas clases programadas.</p>
-      : <div className="mt-3 grid gap-2">{rows.map((item) => <div key={item.id} className="rounded-xl border border-[#DDE8D7] bg-white/70 p-3 text-sm"><p className="font-bold text-[#173C2A]">{formatSessionDate(item.date)} · {item.startTime}</p><p className="text-[#5F6F68]">{item.activitySchedule.activity.name} · {item.establishment.name}</p></div>)}</div>}
+      : rows.length === 0 ? <p className="mt-3 text-sm text-[var(--brand-muted)]">Todavía no hay próximas clases programadas.</p>
+      : <div className="mt-3 grid gap-2">{rows.map((item) => <div key={item.id} className="rounded-xl border border-[var(--brand-border-soft)] bg-white/70 p-3 text-sm"><p className="font-bold text-[var(--brand-ink)]">{formatSessionDate(item.date)} · {item.startTime}</p><p className="text-[var(--brand-muted)]">{item.activitySchedule.activity.name} · {item.establishment.name}</p></div>)}</div>}
   </section>;
 }

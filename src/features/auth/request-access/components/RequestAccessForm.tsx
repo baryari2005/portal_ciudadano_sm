@@ -129,7 +129,7 @@ function RequestAccessSteps({
   onSelect: (step: number) => void;
 }) {
   return (
-    <aside className="h-fit self-start rounded-3xl bg-[#1D4F36] p-3 text-white shadow-sm lg:sticky lg:top-0 lg:p-4">
+    <aside className="h-fit self-start rounded-3xl bg-[var(--brand-primary)] p-3 text-white shadow-sm lg:sticky lg:top-0 lg:p-4">
       <p className="px-3 pb-3 pt-1 text-xs font-bold uppercase tracking-wide text-[#BFD0C5]">
         Pasos de la solicitud
       </p>
@@ -143,7 +143,7 @@ function RequestAccessSteps({
               key={item.title}
               type="button"
               onClick={() => onSelect(number)}
-              className={`flex min-h-12 items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-bold transition-colors ${active ? "bg-[#DDF28A] text-[#173C2A]" : "text-white hover:bg-white/10"}`}
+              className={`flex min-h-12 items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-bold transition-colors ${active ? "bg-[#DDF28A] text-[var(--brand-ink)]" : "text-white hover:bg-white/10"}`}
               aria-current={active ? "step" : undefined}
             >
               <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${active ? "bg-white/55" : "bg-white/10"}`}>
@@ -162,8 +162,8 @@ function RequestAccessSteps({
 function ReviewItem({ label, value }: { label: string; value?: string }) {
   return (
     <div className="rounded-xl border border-[#D7E3D1] bg-[#F8FBF6] px-4 py-3">
-      <p className="text-xs font-bold uppercase text-[#819B56]">{label}</p>
-      <p className="mt-1 font-semibold text-[#173C2A]">{value || "No informado"}</p>
+      <p className="text-xs font-bold uppercase text-[var(--brand-secondary)]">{label}</p>
+      <p className="mt-1 font-semibold text-[var(--brand-ink)]">{value || "No informado"}</p>
     </div>
   );
 }
@@ -181,8 +181,8 @@ function RequestAccessReview({ values }: { values: RequestAccessFormValues }) {
         <ReviewItem label="Usuario" value={values.userId} />
         <ReviewItem label="Imágenes" value={`${values.avatarTmpPath ? "Avatar cargado" : "Sin avatar"} · ${values.profilePhotoTmpPath ? "Foto de identidad cargada" : "Sin foto de identidad"}`} />
       </div>
-      <div className="flex gap-3 rounded-xl border border-[#C9D9C3] bg-white/60 p-4 text-sm text-[#4D6257]">
-        <ClipboardCheck className="mt-0.5 size-5 shrink-0 text-[#1D4F36]" />
+      <div className="flex gap-3 rounded-xl border border-[var(--brand-border)] bg-white/60 p-4 text-sm text-[#4D6257]">
+        <ClipboardCheck className="mt-0.5 size-5 shrink-0 text-[var(--brand-primary)]" />
         <p>Al enviar la solicitud, un administrador revisará los datos antes de habilitar el acceso.</p>
       </div>
     </div>
@@ -251,11 +251,11 @@ export function RequestAccessForm() {
 
   if (successMessage) {
     return (
-      <div className="rounded-[24px] border border-[#DDE8D7] bg-[#EEF6E9] p-6 text-[#173C2A] shadow-sm lg:p-8">
-        <div className="rounded-xl border border-[#C7D8BE] bg-[#F3F7EF] px-4 py-4 text-[#003A22]">
+      <div className="rounded-[24px] border border-[var(--brand-border-soft)] bg-[var(--brand-panel)] p-6 text-[var(--brand-ink)] shadow-sm lg:p-8">
+        <div className="rounded-xl border border-[#C7D8BE] bg-[#F3F7EF] px-4 py-4 text-[var(--brand-heading)]">
           <div className="flex gap-3">
             <CheckCircle2
-              className="mt-0.5 size-5 shrink-0 text-[#1D4F36]"
+              className="mt-0.5 size-5 shrink-0 text-[var(--brand-primary)]"
               aria-hidden="true"
             />
             <p className="text-sm font-medium leading-6">{successMessage}</p>
@@ -264,7 +264,7 @@ export function RequestAccessForm() {
 
         <Button
           asChild
-          className="mt-6 h-12 w-full rounded-xl bg-[#003A22] text-base font-bold text-white hover:bg-[#1D4F36] sm:w-auto"
+          className="mt-6 h-12 w-full rounded-xl bg-[var(--brand-heading)] text-base font-bold text-white hover:bg-[var(--brand-primary)] sm:w-auto"
         >
           <Link href="/login">
             <LogIn className="size-5" aria-hidden="true" />
@@ -296,12 +296,12 @@ export function RequestAccessForm() {
             onSelect={setStep}
           />
           <div className="rounded-3xl border border-[var(--brand-secondary)]/20 bg-white/80 p-5 text-[var(--brand-ink)] shadow-sm sm:p-6 lg:p-8">
-          <div className="mb-6 flex items-center justify-between border-b border-[#C9D9C3] pb-5">
+          <div className="mb-6 flex items-center justify-between border-b border-[var(--brand-border)] pb-5">
             <div>
-              <h2 className="text-lg font-extrabold text-[#003A22]">
+              <h2 className="text-lg font-extrabold text-[var(--brand-heading)]">
                 {REQUEST_STEPS[step - 1].title}
               </h2>
-              <p className="mt-1 text-sm font-medium text-[#5F6F68]">
+              <p className="mt-1 text-sm font-medium text-[var(--brand-muted)]">
                 {REQUEST_STEPS[step - 1].description}
               </p>
             </div>
@@ -311,12 +311,12 @@ export function RequestAccessForm() {
             {[1, 3, 4, 5].includes(step) ? <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
               {step === 1 ? <>
               <div className="space-y-1">
-                <Label className="font-extrabold text-[#173C2A]">
+                <Label className="font-extrabold text-[var(--brand-ink)]">
                   Nombre *
                 </Label>
                 <IconInput
                   id="nombre"
-                  leftIcon={<User className="h-4 w-4 text-[#1D4F36]" />}
+                  leftIcon={<User className="h-4 w-4 text-[var(--brand-primary)]" />}
                   input={
                     <Input
                       id="nombre"
@@ -336,12 +336,12 @@ export function RequestAccessForm() {
               </div>
 
               <div className="space-y-1">
-                <Label className="font-extrabold text-[#173C2A]">
+                <Label className="font-extrabold text-[var(--brand-ink)]">
                   Apellido *
                 </Label>
                 <IconInput
                   id="apellido"
-                  leftIcon={<UserRound className="h-4 w-4 text-[#1D4F36]" />}
+                  leftIcon={<UserRound className="h-4 w-4 text-[var(--brand-primary)]" />}
                   input={
                     <Input
                       id="apellido"
@@ -365,7 +365,7 @@ export function RequestAccessForm() {
               </div>
 
               <div className="space-y-1">
-                <Label className="font-extrabold text-[#173C2A]">DNI *</Label>
+                <Label className="font-extrabold text-[var(--brand-ink)]">DNI *</Label>
                 <Controller
                   control={control}
                   name="dni"
@@ -384,7 +384,7 @@ export function RequestAccessForm() {
               </div>
 
               <div className="space-y-1">
-                <Label className="font-extrabold text-[#173C2A]">
+                <Label className="font-extrabold text-[var(--brand-ink)]">
                   Fecha de nacimiento *
                 </Label>
                 <Controller
@@ -400,9 +400,9 @@ export function RequestAccessForm() {
                           <Button
                             variant="outline"
                             type="button"
-                            className="h-11 w-full justify-start rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A]"
+                            className="h-11 w-full justify-start rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-medium text-[var(--brand-ink)]"
                           >
-                            <CalendarIcon className="mr-2 h-4 w-4 text-[#1D4F36]" />
+                            <CalendarIcon className="mr-2 h-4 w-4 text-[var(--brand-primary)]" />
                             {dateValue ? (
                               format(dateValue, "dd/MM/yyyy", { locale: es })
                             ) : (
@@ -432,17 +432,17 @@ export function RequestAccessForm() {
               </div>
 
               <div className="space-y-1">
-                <Label className="font-extrabold text-[#173C2A]">Edad</Label>
-                <IconInput id="edad" leftIcon={<CakeSlice className="size-4 text-[#1D4F36]" />} input={<Input value={age === null ? "Se calcula con la fecha de nacimiento" : `${age} años`} readOnly className={`${adminControlClass} w-full pl-9`} />} />
+                <Label className="font-extrabold text-[var(--brand-ink)]">Edad</Label>
+                <IconInput id="edad" leftIcon={<CakeSlice className="size-4 text-[var(--brand-primary)]" />} input={<Input value={age === null ? "Se calcula con la fecha de nacimiento" : `${age} años`} readOnly className={`${adminControlClass} w-full pl-9`} />} />
               </div>
               <div className="space-y-1">
-                <Label className="font-extrabold text-[#173C2A]">Nacionalidad *</Label>
-                <Controller control={control} name="nacionalidad" render={({ field }) => <IconInput id="nacionalidad" leftIcon={<Map className="size-4 text-[#1D4F36]" />} input={<Select value={field.value} onValueChange={field.onChange}><SelectTrigger className={`${adminControlClass} w-full pl-9`}><SelectValue /></SelectTrigger><SelectContent>{NACIONALIDAD_VALUES.map((item) => <SelectItem key={item} value={item}>{item.replaceAll("_", " ")}</SelectItem>)}</SelectContent></Select>} />} />
+                <Label className="font-extrabold text-[var(--brand-ink)]">Nacionalidad *</Label>
+                <Controller control={control} name="nacionalidad" render={({ field }) => <IconInput id="nacionalidad" leftIcon={<Map className="size-4 text-[var(--brand-primary)]" />} input={<Select value={field.value} onValueChange={field.onChange}><SelectTrigger className={`${adminControlClass} w-full pl-9`}><SelectValue /></SelectTrigger><SelectContent>{NACIONALIDAD_VALUES.map((item) => <SelectItem key={item} value={item}>{item.replaceAll("_", " ")}</SelectItem>)}</SelectContent></Select>} />} />
                 <FormError message={errors.nacionalidad?.message} />
               </div>
               <div className="space-y-1">
-                <Label className="font-extrabold text-[#173C2A]">Sexo / género *</Label>
-                <Controller control={control} name="genero" render={({ field }) => <IconInput id="genero" leftIcon={<UserRound className="size-4 text-[#1D4F36]" />} input={<Select value={field.value} onValueChange={field.onChange}><SelectTrigger className={`${adminControlClass} w-full pl-9`}><SelectValue /></SelectTrigger><SelectContent>{GENERO_OPCIONES.map((item) => <SelectItem key={item} value={item}>{item.replaceAll("_", " ")}</SelectItem>)}</SelectContent></Select>} />} />
+                <Label className="font-extrabold text-[var(--brand-ink)]">Sexo / género *</Label>
+                <Controller control={control} name="genero" render={({ field }) => <IconInput id="genero" leftIcon={<UserRound className="size-4 text-[var(--brand-primary)]" />} input={<Select value={field.value} onValueChange={field.onChange}><SelectTrigger className={`${adminControlClass} w-full pl-9`}><SelectValue /></SelectTrigger><SelectContent>{GENERO_OPCIONES.map((item) => <SelectItem key={item} value={item}>{item.replaceAll("_", " ")}</SelectItem>)}</SelectContent></Select>} />} />
                 <FormError message={errors.genero?.message} />
               </div>
               </> : null}
@@ -450,22 +450,22 @@ export function RequestAccessForm() {
               {step === 3 ? <>
 
               <div className="space-y-1 sm:col-span-2">
-                <Label className="font-extrabold text-[#173C2A]">
+                <Label className="font-extrabold text-[var(--brand-ink)]">
                   Dirección *
                 </Label>
                 <Controller control={control} name="direccion" render={({field})=><GoogleAddressInput id="direccion" value={field.value??""} placeId={form.watch("direccionPlaceId")} onChange={(location)=>{field.onChange(location.address);setValue("direccionPlaceId",location.placeId??"");setValue("direccionLat",location.lat);setValue("direccionLng",location.lng)}} className={inputClass} placeholder="Ej: Av. Presidente Perón 1234"/>}/>
                 <FormError message={errors.direccion?.message} />
               </div>
 
-              <div className="space-y-1"><Label className="font-extrabold text-[#173C2A]">Localidad *</Label><IconInput id="localidad" leftIcon={<MapPinned className="size-4 text-[#1D4F36]" />} input={<Input {...register("localidad")} className={`${adminControlClass} w-full pl-9`} />} /><FormError message={errors.localidad?.message} /></div>
-              <div className="space-y-1"><Label className="font-extrabold text-[#173C2A]">Provincia *</Label><Controller control={control} name="provincia" render={({field})=><IconInput id="provincia" leftIcon={<Map className="size-4 text-[#1D4F36]" />} input={<Select value={field.value} onValueChange={field.onChange}><SelectTrigger className={`${adminControlClass} w-full pl-9`}><SelectValue placeholder="Seleccionar provincia"/></SelectTrigger><SelectContent>{ARGENTINA_PROVINCES.map(item=><SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>} />}/><FormError message={errors.provincia?.message} /></div>
-              <div className="space-y-1"><Label className="font-extrabold text-[#173C2A]">Código postal *</Label><IconInput id="codigoPostal" leftIcon={<IdCard className="size-4 text-[#1D4F36]" />} input={<Input {...register("codigoPostal")} className={`${adminControlClass} w-full pl-9`} />} /><FormError message={errors.codigoPostal?.message} /></div>
+              <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Localidad *</Label><IconInput id="localidad" leftIcon={<MapPinned className="size-4 text-[var(--brand-primary)]" />} input={<Input {...register("localidad")} className={`${adminControlClass} w-full pl-9`} />} /><FormError message={errors.localidad?.message} /></div>
+              <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Provincia *</Label><Controller control={control} name="provincia" render={({field})=><IconInput id="provincia" leftIcon={<Map className="size-4 text-[var(--brand-primary)]" />} input={<Select value={field.value} onValueChange={field.onChange}><SelectTrigger className={`${adminControlClass} w-full pl-9`}><SelectValue placeholder="Seleccionar provincia"/></SelectTrigger><SelectContent>{ARGENTINA_PROVINCES.map(item=><SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>} />}/><FormError message={errors.provincia?.message} /></div>
+              <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Código postal *</Label><IconInput id="codigoPostal" leftIcon={<IdCard className="size-4 text-[var(--brand-primary)]" />} input={<Input {...register("codigoPostal")} className={`${adminControlClass} w-full pl-9`} />} /><FormError message={errors.codigoPostal?.message} /></div>
               </> : null}
 
               {step === 4 ? <>
 
               <div className="space-y-1">
-                <Label className="font-extrabold text-[#173C2A]">Email *</Label>
+                <Label className="font-extrabold text-[var(--brand-ink)]">Email *</Label>
                 <Controller
                   control={control}
                   name="email"
@@ -484,7 +484,7 @@ export function RequestAccessForm() {
               </div>
 
               <div className="space-y-1">
-                <Label className="font-extrabold text-[#173C2A]">
+                <Label className="font-extrabold text-[var(--brand-ink)]">
                   Teléfono *
                 </Label>
                 <Controller
@@ -503,12 +503,12 @@ export function RequestAccessForm() {
                 />
                 <FormError message={errors.telefono?.message} />
               </div>
-              <div className="space-y-1"><Label className="font-extrabold text-[#173C2A]">Persona de contacto de emergencia *</Label><IconInput id="contactoEmergenciaNombre" leftIcon={<Contact className="size-4 text-[#1D4F36]" />} input={<Input {...register("contactoEmergenciaNombre")} className={`${adminControlClass} w-full pl-9`} placeholder="Nombre y apellido"/>} /><FormError message={errors.contactoEmergenciaNombre?.message}/></div>
-              <div className="space-y-1"><Label className="font-extrabold text-[#173C2A]">Teléfono de emergencia *</Label><Controller control={control} name="contactoEmergenciaTelefono" render={({field})=><PhoneInput id="contactoEmergenciaTelefono" value={field.value??""} onChange={field.onChange} onBlur={field.onBlur} className={inputClass} required/>}/><FormError message={errors.contactoEmergenciaTelefono?.message}/></div>
+              <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Persona de contacto de emergencia *</Label><IconInput id="contactoEmergenciaNombre" leftIcon={<Contact className="size-4 text-[var(--brand-primary)]" />} input={<Input {...register("contactoEmergenciaNombre")} className={`${adminControlClass} w-full pl-9`} placeholder="Nombre y apellido"/>} /><FormError message={errors.contactoEmergenciaNombre?.message}/></div>
+              <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Teléfono de emergencia *</Label><Controller control={control} name="contactoEmergenciaTelefono" render={({field})=><PhoneInput id="contactoEmergenciaTelefono" value={field.value??""} onChange={field.onChange} onBlur={field.onBlur} className={inputClass} required/>}/><FormError message={errors.contactoEmergenciaTelefono?.message}/></div>
               </> : null}
               {step === 5 ? <>
-              <div className="space-y-1 sm:col-span-2"><Label className="font-extrabold text-[#173C2A]">Obra social o prepaga</Label><Controller control={control} name="coberturaMedicaId" render={({field})=><IconInput id="coberturaMedicaId" leftIcon={<HeartPulse className="size-4 text-[#1D4F36]" />} input={<MedicalCoverageSelect value={field.value} onChange={field.onChange} publicAccess triggerClassName="pl-9"/>} />} /></div>
-              <div className="space-y-1 sm:col-span-2"><Label className="font-extrabold text-[#173C2A]">Número de afiliado</Label><IconInput id="numeroAfiliado" leftIcon={<IdCard className="size-4 text-[#1D4F36]" />} input={<Input {...register("numeroAfiliado")} className={`${adminControlClass} w-full pl-9`} placeholder="Número de afiliación"/>} /></div>
+              <div className="space-y-1 sm:col-span-2"><Label className="font-extrabold text-[var(--brand-ink)]">Obra social o prepaga</Label><Controller control={control} name="coberturaMedicaId" render={({field})=><IconInput id="coberturaMedicaId" leftIcon={<HeartPulse className="size-4 text-[var(--brand-primary)]" />} input={<MedicalCoverageSelect value={field.value} onChange={field.onChange} publicAccess triggerClassName="pl-9"/>} />} /></div>
+              <div className="space-y-1 sm:col-span-2"><Label className="font-extrabold text-[var(--brand-ink)]">Número de afiliado</Label><IconInput id="numeroAfiliado" leftIcon={<IdCard className="size-4 text-[var(--brand-primary)]" />} input={<Input {...register("numeroAfiliado")} className={`${adminControlClass} w-full pl-9`} placeholder="Número de afiliación"/>} /></div>
               </> : null}
             </div> : null}
 
@@ -552,20 +552,20 @@ export function RequestAccessForm() {
             {step === 2 ? <div className="space-y-4">
               <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
                 <div className="space-y-1 sm:col-span-2">
-                  <Label className="font-extrabold text-[#173C2A]">
+                  <Label className="font-extrabold text-[var(--brand-ink)]">
                     User ID *
                   </Label>
-                  <IconInput id="userId" leftIcon={<User className="size-4 text-[#1D4F36]" />} input={<Input {...register("userId")} className={`${adminControlClass} w-full pl-9`} autoComplete="username" placeholder="Ej: jperez" />} />
+                  <IconInput id="userId" leftIcon={<User className="size-4 text-[var(--brand-primary)]" />} input={<Input {...register("userId")} className={`${adminControlClass} w-full pl-9`} autoComplete="username" placeholder="Ej: jperez" />} />
                   <FormError message={errors.userId?.message} />
                 </div>
 
                 <div className="space-y-1 sm:col-span-2">
-                  <Label className="font-extrabold text-[#173C2A]">
+                  <Label className="font-extrabold text-[var(--brand-ink)]">
                     Contraseña *
                   </Label>
                   <IconInput
                     id="password"
-                    leftIcon={<Lock className="h-4 w-4 text-[#1D4F36]" />}
+                    leftIcon={<Lock className="h-4 w-4 text-[var(--brand-primary)]" />}
                     rightAdornment={
                       <button
                         type="button"

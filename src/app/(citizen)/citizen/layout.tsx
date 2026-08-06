@@ -1,1 +1,1 @@
-import{CitizenShell}from"@/features/citizen/components/CitizenShell";export default function Layout({children}:{children:React.ReactNode}){return <CitizenShell>{children}</CitizenShell>}
+import{CitizenShell}from"@/features/citizen/components/CitizenShell";import{GeneralSettingsProvider}from"@/features/general-settings/components/GeneralSettingsProvider";export default function Layout({children}:{children:React.ReactNode}){return <GeneralSettingsProvider experience="citizen"><CitizenShell>{children}</CitizenShell></GeneralSettingsProvider>}

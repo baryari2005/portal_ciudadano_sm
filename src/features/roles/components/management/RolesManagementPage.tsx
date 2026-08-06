@@ -203,7 +203,7 @@ export function RolesManagementPage() {
   }
 
   return (
-    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_minmax(0,1fr)] gap-5 bg-[#F7FBF5] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
+    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_minmax(0,1fr)] gap-5 bg-[var(--brand-page)] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
       <CatalogPageHeader
         icon={ShieldCheck}
         title="Roles y permisos"
@@ -235,7 +235,7 @@ export function RolesManagementPage() {
                 Array.from({ length: 4 }).map((_, index) => (
                   <div
                     key={index}
-                    className="h-[94px] animate-pulse rounded-2xl border border-[#DDE8D7] bg-[#EEF6E9]"
+                    className="h-[94px] animate-pulse rounded-2xl border border-[var(--brand-border-soft)] bg-[var(--brand-panel)]"
                   />
                 ))
               ) : roles.length > 0 ? (

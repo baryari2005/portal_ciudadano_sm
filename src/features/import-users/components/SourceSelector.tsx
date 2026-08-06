@@ -17,9 +17,9 @@ export default function SourceSelector({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <Label className="text-sm font-extrabold text-[#173C2A]">Fuente:</Label>
+      <Label className="text-sm font-extrabold text-[var(--brand-ink)]">Fuente:</Label>
 
-      <div className="inline-flex h-11 overflow-hidden rounded-xl border border-[#C9D9C3] bg-white/60">
+      <div className="inline-flex h-11 overflow-hidden rounded-xl border border-[var(--brand-border)] bg-white/60">
         <Button
           type="button"
           variant="ghost"
@@ -29,10 +29,10 @@ export default function SourceSelector({
           }}
           aria-pressed={source === "pdf"}
           className={cn(
-            "h-full rounded-none px-5 font-bold focus-visible:ring-2 focus-visible:ring-[#1D4F36]",
+            "h-full rounded-none px-5 font-bold focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]",
             source === "pdf"
-              ? "bg-[#00522C] text-white hover:bg-[#003A22] hover:text-white"
-              : "text-[#00522C] hover:bg-[#EEF6E9] hover:text-[#003A22]",
+              ? "bg-[var(--brand-primary-strong)] text-white hover:bg-[var(--brand-heading)] hover:text-white"
+              : "text-[var(--brand-primary-strong)] hover:bg-[var(--brand-panel)] hover:text-[var(--brand-heading)]",
           )}
         >
           PDF
@@ -47,10 +47,10 @@ export default function SourceSelector({
           }}
           aria-pressed={source === "excel"}
           className={cn(
-            "h-full -ml-px rounded-none border-l border-[#C9D9C3] px-5 font-bold focus-visible:ring-2 focus-visible:ring-[#1D4F36]",
+            "h-full -ml-px rounded-none border-l border-[var(--brand-border)] px-5 font-bold focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]",
             source === "excel"
-              ? "bg-[#00522C] text-white hover:bg-[#003A22] hover:text-white"
-              : "text-[#00522C] hover:bg-[#EEF6E9] hover:text-[#003A22]",
+              ? "bg-[var(--brand-primary-strong)] text-white hover:bg-[var(--brand-heading)] hover:text-white"
+              : "text-[var(--brand-primary-strong)] hover:bg-[var(--brand-panel)] hover:text-[var(--brand-heading)]",
           )}
         >
           Excel / CSV

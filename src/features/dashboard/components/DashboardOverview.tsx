@@ -4,7 +4,9 @@ import Link from "next/link";
 import { Activity, BarChart3, CalendarCheck2, CalendarDays, ChevronRight, ClipboardCheck, FileCheck2, Gauge, ListChecks, UsersRound } from "lucide-react";
 import { AdminPageShell, AdminSectionHeader } from "@/components/shared/admin-patterns";
 import { Button } from "@/components/ui/button";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { CatalogEmptyState, CatalogErrorState, CatalogLoadingState, CatalogPageHeader } from "@/features/activity-catalogs/components/CatalogPrimitives";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { useAdministrativeDashboard } from "../hooks/useAdministrativeDashboard";
 import { DashboardFilters, useDashboardFilters } from "./DashboardFilters";
 
@@ -14,7 +16,17 @@ export function DashboardOverview() {
   if (loading) return <CatalogLoadingState label="dashboard" fullPage />;
   if (error || !data) return <CatalogErrorState message={error} onRetry={retry} />;
 
-  const max = Math.max(1, ...data.enrollmentTrend.map((item) => item.total));
+  const enrollmentChartConfig = { total: { label: "Inscripciones", color: "var(--brand-secondary)" } } satisfies ChartConfig;
+  const capacityChartConfig = {
+    confirmed: { label: "Ocupados", color: "var(--brand-primary)" },
+    available: { label: "Disponibles", color: "var(--brand-accent)" },
+  } satisfies ChartConfig;
+  const dayLabels: Record<string, string> = { LUNES: "Lun", MARTES: "Mar", MIERCOLES: "Mié", JUEVES: "Jue", VIERNES: "Vie", SABADO: "Sáb", DOMINGO: "Dom" };
+  const capacityChartData = data.capacityByClass.map((item) => {
+    const schedule = `${dayLabels[item.day] ?? item.day} ${item.startTime}`;
+    const label = `${item.name} · ${schedule}`;
+    return { ...item, chartLabel: `${item.name} · ${schedule} a ${item.endTime}`, displayName: label.length > 24 ? `${label.slice(0, 23)}…` : label };
+  });
   const metrics = [
     ["Actividades activas", data.current.activeActivities, Activity, "Estado actual"],
     ["Horarios activos", data.current.activeSchedules, CalendarCheck2, "Estado actual"],
@@ -27,13 +39,6 @@ export function DashboardOverview() {
     ["Documentos pendientes", data.current.pendingDocuments, FileCheck2, "Estado actual"],
     ["Documentos rechazados", data.current.rejectedDocuments, FileCheck2, "Estado actual"],
   ] as const;
-  const capacity = [
-    ["Cupo total", data.capacity.total, UsersRound],
-    ["Lugares disponibles", data.capacity.available, Gauge],
-    ["Horarios completos", data.capacity.fullSchedules, CalendarCheck2],
-    ["Baja ocupación", data.capacity.lowOccupancySchedules, BarChart3],
-  ] as const;
-
   return <AdminPageShell>
     <CatalogPageHeader icon={BarChart3} title="Dashboard general" description="Visualizá los indicadores principales para la gestión de actividades municipales." total={data.current.activeActivities} actions={<Button asChild className="h-11 rounded-xl bg-[var(--brand-primary)] px-5 font-bold text-white hover:bg-[var(--brand-primary-hover)]"><Link href="/reports"><BarChart3 />Ver reportes</Link></Button>} />
     <div className="mt-6"><DashboardFilters /></div>
@@ -46,12 +51,43 @@ export function DashboardOverview() {
     <section className="mt-6 grid gap-6 xl:grid-cols-2">
       <div className="rounded-3xl border border-[var(--brand-border-soft)] bg-[var(--brand-panel)] p-5 shadow-sm sm:p-7">
         <AdminSectionHeader icon={ClipboardCheck} title="Tendencia de inscripciones" description="Cantidad de inscripciones registradas por día durante el período." />
-        {data.enrollmentTrend.length ? <div className="mt-6 flex h-56 items-end gap-2 rounded-2xl border border-[var(--brand-border-soft)] bg-white p-4">{data.enrollmentTrend.map((item) => <div key={item.date} className="group flex min-w-3 flex-1 flex-col items-center gap-1"><span className="text-[10px] font-bold text-[var(--brand-primary)]">{item.total}</span><div className="w-full rounded-t bg-[var(--brand-secondary)] transition-colors group-hover:bg-[var(--brand-primary)]" style={{ height: `${Math.max(4, (item.total / max) * 160)}px` }} title={`${item.date}: ${item.total}`} /><span className="hidden text-[9px] font-medium text-[var(--brand-muted)] sm:block">{item.date.slice(5)}</span></div>)}</div> : <div className="mt-6"><CatalogEmptyState title="No hay inscripciones en el período." description="La evolución aparecerá cuando se registren inscripciones." filtered={false} /></div>}
+        {data.enrollmentTrend.length ? <div className="mt-6 rounded-2xl border border-[var(--brand-border-soft)] bg-white p-3 sm:p-4">
+          <ChartContainer config={enrollmentChartConfig} className="h-56 w-full">
+            <AreaChart accessibilityLayer data={data.enrollmentTrend} margin={{ left: 0, right: 12, top: 12, bottom: 0 }}>
+              <defs><linearGradient id="enrollment-area" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--brand-secondary)" stopOpacity={0.5} /><stop offset="95%" stopColor="var(--brand-secondary)" stopOpacity={0.04} /></linearGradient></defs>
+              <CartesianGrid vertical={false} stroke="var(--brand-border-soft)" />
+              <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={10} minTickGap={24} tickFormatter={(value: string) => value.slice(5).split("-").reverse().join("/")} />
+              <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={28} />
+              <ChartTooltip cursor={{ stroke: "var(--brand-border)", strokeDasharray: "4 4" }} content={<ChartTooltipContent labelFormatter={(value) => new Date(`${String(value)}T12:00:00`).toLocaleDateString("es-AR", { day: "2-digit", month: "long" })} />} />
+              <Area dataKey="total" type="monotone" fill="url(#enrollment-area)" stroke="var(--brand-primary)" strokeWidth={3} activeDot={{ r: 5, fill: "var(--brand-primary)", stroke: "white", strokeWidth: 2 }} />
+            </AreaChart>
+          </ChartContainer>
+        </div> : <div className="mt-6"><CatalogEmptyState title="No hay inscripciones en el período." description="La evolución aparecerá cuando se registren inscripciones." filtered={false} /></div>}
       </div>
 
       <div className="rounded-3xl border border-[var(--brand-border-soft)] bg-[var(--brand-panel)] p-5 shadow-sm sm:p-7">
-        <AdminSectionHeader icon={Gauge} title="Capacidad y ocupación" description="Estado consolidado de cupos y horarios disponibles." />
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">{capacity.map(([label, value, Icon]) => <article key={label} className="rounded-2xl border border-[var(--brand-border-soft)] bg-white p-5 shadow-sm"><div className="flex items-center justify-between gap-4"><span className="grid size-10 place-items-center rounded-xl bg-[var(--brand-border-soft)] text-[var(--brand-primary)]"><Icon className="size-5" /></span><strong className="text-3xl font-extrabold text-[var(--brand-primary)]">{value}</strong></div><p className="mt-4 font-bold text-[var(--brand-text)]">{label}</p></article>)}</div>
+        <AdminSectionHeader icon={Gauge} title="Capacidad y ocupación por clase" description="Comparación de lugares ocupados y disponibles en cada actividad." />
+        {capacityChartData.length ? <div className="mt-6 rounded-2xl border border-[var(--brand-border-soft)] bg-white p-3 sm:p-4">
+          <div className="mb-4 flex flex-wrap items-center gap-4 text-xs font-bold text-[var(--brand-text)]">
+            <span className="flex items-center gap-2"><span className="size-3 rounded-sm bg-[var(--brand-primary)]" />Ocupados</span>
+            <span className="flex items-center gap-2"><span className="size-3 rounded-sm bg-[var(--brand-accent)]" />Disponibles</span>
+          </div>
+          <ChartContainer config={capacityChartConfig} className="h-72 w-full sm:h-80">
+            <AreaChart accessibilityLayer data={capacityChartData} margin={{ left: 0, right: 12, top: 12, bottom: 8 }}>
+              <defs>
+                <linearGradient id="capacity-confirmed-area" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--brand-primary)" stopOpacity={0.5} /><stop offset="95%" stopColor="var(--brand-primary)" stopOpacity={0.04} /></linearGradient>
+                <linearGradient id="capacity-available-area" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--brand-accent)" stopOpacity={0.65} /><stop offset="95%" stopColor="var(--brand-accent)" stopOpacity={0.06} /></linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} stroke="var(--brand-border-soft)" />
+              <XAxis dataKey="displayName" tickLine={false} axisLine={false} tickMargin={12} minTickGap={18} tick={{ fill: "var(--brand-muted)", fontSize: 10, fontWeight: 600 }} />
+              <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={28} />
+              <ChartTooltip cursor={{ stroke: "var(--brand-border)", strokeDasharray: "4 4" }} content={<ChartTooltipContent labelFormatter={(_, payload) => String((payload[0] as { payload?: { chartLabel?: string } })?.payload?.chartLabel ?? "Clase")} />} />
+              <Area dataKey="available" type="monotone" fill="url(#capacity-available-area)" stroke="var(--brand-secondary)" strokeWidth={2.5} activeDot={{ r: 5, fill: "var(--brand-secondary)", stroke: "white", strokeWidth: 2 }} />
+              <Area dataKey="confirmed" type="monotone" fill="url(#capacity-confirmed-area)" stroke="var(--brand-primary)" strokeWidth={3} activeDot={{ r: 5, fill: "var(--brand-primary)", stroke: "white", strokeWidth: 2 }} />
+            </AreaChart>
+          </ChartContainer>
+          <p className="mt-3 text-xs font-medium text-[var(--brand-muted)]">Se muestran hasta 10 clases/horarios, ordenados por cantidad de inscripciones confirmadas.</p>
+        </div> : <div className="mt-6"><CatalogEmptyState title="No hay capacidad configurada." description="El gráfico aparecerá cuando existan actividades con horarios y cupos." filtered={false} /></div>}
       </div>
     </section>
 

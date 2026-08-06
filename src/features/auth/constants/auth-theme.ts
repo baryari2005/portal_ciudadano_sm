@@ -1,7 +1,7 @@
 export const AUTH_COLORS = {
   background: "#F5F5F5",
-  primary: "#003A22",
-  textPrimary: "#003A22",
+  primary: "var(--brand-heading)",
+  textPrimary: "var(--brand-heading)",
   muted: "#6B7280",
   border: "#D1D5DB",
   white: "#FFFFFF",

@@ -86,7 +86,7 @@ export function CompleteProfileForm() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1">
           <label
-            className="text-sm font-medium text-[#003A22]"
+            className="text-sm font-medium text-[var(--brand-heading)]"
             htmlFor="nombre"
           >
             Nombre
@@ -97,7 +97,7 @@ export function CompleteProfileForm() {
 
         <div className="space-y-1">
           <label
-            className="text-sm font-medium text-[#003A22]"
+            className="text-sm font-medium text-[var(--brand-heading)]"
             htmlFor="apellido"
           >
             Apellido
@@ -108,7 +108,7 @@ export function CompleteProfileForm() {
       </div>
 
       <div className="space-y-1">
-        <label className="text-sm font-medium text-[#003A22]" htmlFor="email">
+        <label className="text-sm font-medium text-[var(--brand-heading)]" htmlFor="email">
           Email
         </label>
         <Input id="email" value={user?.email ?? ""} disabled readOnly />
@@ -117,7 +117,7 @@ export function CompleteProfileForm() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1">
           <label
-            className="text-sm font-medium text-[#003A22]"
+            className="text-sm font-medium text-[var(--brand-heading)]"
             htmlFor="documento"
           >
             DNI
@@ -128,7 +128,7 @@ export function CompleteProfileForm() {
 
         <div className="space-y-1">
           <label
-            className="text-sm font-medium text-[#003A22]"
+            className="text-sm font-medium text-[var(--brand-heading)]"
             htmlFor="fechaNacimiento"
           >
             Fecha de nacimiento
@@ -144,7 +144,7 @@ export function CompleteProfileForm() {
 
       <div className="space-y-1">
         <label
-          className="text-sm font-medium text-[#003A22]"
+          className="text-sm font-medium text-[var(--brand-heading)]"
           htmlFor="domicilio"
         >
           Dirección
@@ -154,7 +154,7 @@ export function CompleteProfileForm() {
       </div>
 
       <div className="space-y-1">
-        <label className="text-sm font-medium text-[#003A22]" htmlFor="celular">
+        <label className="text-sm font-medium text-[var(--brand-heading)]" htmlFor="celular">
           Teléfono
         </label>
         <Input id="celular" {...register("celular")} />
@@ -163,7 +163,7 @@ export function CompleteProfileForm() {
 
       <Button
         type="submit"
-        className="h-11 w-full rounded-md bg-[#003A22] hover:bg-[#003A22]/90"
+        className="h-11 w-full rounded-md bg-[var(--brand-heading)] hover:bg-[var(--brand-heading)]/90"
         disabled={isSubmitting}
       >
         {isSubmitting ? (

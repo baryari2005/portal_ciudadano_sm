@@ -214,7 +214,7 @@ export function Sidebar({ collapsed, experience = "administration" }: Props) {
             name={fullName}
             className="h-11 w-11 rounded-lg"
             imageClassName="size-full scale-125 object-cover object-center"
-            fallbackBgClass="rounded-lg bg-[#ddef8f]"
+            fallbackBgClass="rounded-lg bg-[var(--brand-accent)]"
             textClass="font-bold text-primary"
           />
 

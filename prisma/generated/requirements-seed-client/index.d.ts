@@ -14636,6 +14636,7 @@ export namespace Prisma {
     imagenLoginCollage2: number
     imagenLoginCollage3: number
     imagenLoginCollage4: number
+    paletasExperiencia: number
     updatedById: number
     createdAt: number
     updatedAt: number
@@ -14684,6 +14685,7 @@ export namespace Prisma {
     imagenLoginCollage2?: true
     imagenLoginCollage3?: true
     imagenLoginCollage4?: true
+    paletasExperiencia?: true
     updatedById?: true
     createdAt?: true
     updatedAt?: true
@@ -14783,6 +14785,7 @@ export namespace Prisma {
     imagenLoginCollage2: string | null
     imagenLoginCollage3: string | null
     imagenLoginCollage4: string | null
+    paletasExperiencia: JsonValue | null
     updatedById: string | null
     createdAt: Date
     updatedAt: Date
@@ -14814,6 +14817,7 @@ export namespace Prisma {
     imagenLoginCollage2?: boolean
     imagenLoginCollage3?: boolean
     imagenLoginCollage4?: boolean
+    paletasExperiencia?: boolean
     updatedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -14826,6 +14830,7 @@ export namespace Prisma {
     imagenLoginCollage2?: boolean
     imagenLoginCollage3?: boolean
     imagenLoginCollage4?: boolean
+    paletasExperiencia?: boolean
     updatedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -14838,6 +14843,7 @@ export namespace Prisma {
     imagenLoginCollage2?: boolean
     imagenLoginCollage3?: boolean
     imagenLoginCollage4?: boolean
+    paletasExperiencia?: boolean
     updatedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -14850,12 +14856,13 @@ export namespace Prisma {
     imagenLoginCollage2?: boolean
     imagenLoginCollage3?: boolean
     imagenLoginCollage4?: boolean
+    paletasExperiencia?: boolean
     updatedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ParametrosGeneralesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "registrosPorPagina" | "imagenLoginCollage1" | "imagenLoginCollage2" | "imagenLoginCollage3" | "imagenLoginCollage4" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["parametrosGenerales"]>
+  export type ParametrosGeneralesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "registrosPorPagina" | "imagenLoginCollage1" | "imagenLoginCollage2" | "imagenLoginCollage3" | "imagenLoginCollage4" | "paletasExperiencia" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["parametrosGenerales"]>
 
   export type $ParametrosGeneralesPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ParametrosGenerales"
@@ -14867,6 +14874,7 @@ export namespace Prisma {
       imagenLoginCollage2: string | null
       imagenLoginCollage3: string | null
       imagenLoginCollage4: string | null
+      paletasExperiencia: Prisma.JsonValue | null
       updatedById: string | null
       createdAt: Date
       updatedAt: Date
@@ -15299,6 +15307,7 @@ export namespace Prisma {
     readonly imagenLoginCollage2: FieldRef<"ParametrosGenerales", 'String'>
     readonly imagenLoginCollage3: FieldRef<"ParametrosGenerales", 'String'>
     readonly imagenLoginCollage4: FieldRef<"ParametrosGenerales", 'String'>
+    readonly paletasExperiencia: FieldRef<"ParametrosGenerales", 'Json'>
     readonly updatedById: FieldRef<"ParametrosGenerales", 'String'>
     readonly createdAt: FieldRef<"ParametrosGenerales", 'DateTime'>
     readonly updatedAt: FieldRef<"ParametrosGenerales", 'DateTime'>
@@ -58317,6 +58326,7 @@ export namespace Prisma {
     imagenLoginCollage2: 'imagenLoginCollage2',
     imagenLoginCollage3: 'imagenLoginCollage3',
     imagenLoginCollage4: 'imagenLoginCollage4',
+    paletasExperiencia: 'paletasExperiencia',
     updatedById: 'updatedById',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -60557,6 +60567,7 @@ export namespace Prisma {
     imagenLoginCollage2?: StringNullableFilter<"ParametrosGenerales"> | string | null
     imagenLoginCollage3?: StringNullableFilter<"ParametrosGenerales"> | string | null
     imagenLoginCollage4?: StringNullableFilter<"ParametrosGenerales"> | string | null
+    paletasExperiencia?: JsonNullableFilter<"ParametrosGenerales">
     updatedById?: UuidNullableFilter<"ParametrosGenerales"> | string | null
     createdAt?: DateTimeFilter<"ParametrosGenerales"> | Date | string
     updatedAt?: DateTimeFilter<"ParametrosGenerales"> | Date | string
@@ -60569,6 +60580,7 @@ export namespace Prisma {
     imagenLoginCollage2?: SortOrderInput | SortOrder
     imagenLoginCollage3?: SortOrderInput | SortOrder
     imagenLoginCollage4?: SortOrderInput | SortOrder
+    paletasExperiencia?: SortOrderInput | SortOrder
     updatedById?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -60584,6 +60596,7 @@ export namespace Prisma {
     imagenLoginCollage2?: StringNullableFilter<"ParametrosGenerales"> | string | null
     imagenLoginCollage3?: StringNullableFilter<"ParametrosGenerales"> | string | null
     imagenLoginCollage4?: StringNullableFilter<"ParametrosGenerales"> | string | null
+    paletasExperiencia?: JsonNullableFilter<"ParametrosGenerales">
     updatedById?: UuidNullableFilter<"ParametrosGenerales"> | string | null
     createdAt?: DateTimeFilter<"ParametrosGenerales"> | Date | string
     updatedAt?: DateTimeFilter<"ParametrosGenerales"> | Date | string
@@ -60596,6 +60609,7 @@ export namespace Prisma {
     imagenLoginCollage2?: SortOrderInput | SortOrder
     imagenLoginCollage3?: SortOrderInput | SortOrder
     imagenLoginCollage4?: SortOrderInput | SortOrder
+    paletasExperiencia?: SortOrderInput | SortOrder
     updatedById?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -60616,6 +60630,7 @@ export namespace Prisma {
     imagenLoginCollage2?: StringNullableWithAggregatesFilter<"ParametrosGenerales"> | string | null
     imagenLoginCollage3?: StringNullableWithAggregatesFilter<"ParametrosGenerales"> | string | null
     imagenLoginCollage4?: StringNullableWithAggregatesFilter<"ParametrosGenerales"> | string | null
+    paletasExperiencia?: JsonNullableWithAggregatesFilter<"ParametrosGenerales">
     updatedById?: UuidNullableWithAggregatesFilter<"ParametrosGenerales"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"ParametrosGenerales"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ParametrosGenerales"> | Date | string
@@ -64932,6 +64947,7 @@ export namespace Prisma {
     imagenLoginCollage2?: string | null
     imagenLoginCollage3?: string | null
     imagenLoginCollage4?: string | null
+    paletasExperiencia?: NullableJsonNullValueInput | InputJsonValue
     updatedById?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -64944,6 +64960,7 @@ export namespace Prisma {
     imagenLoginCollage2?: string | null
     imagenLoginCollage3?: string | null
     imagenLoginCollage4?: string | null
+    paletasExperiencia?: NullableJsonNullValueInput | InputJsonValue
     updatedById?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -64956,6 +64973,7 @@ export namespace Prisma {
     imagenLoginCollage2?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage3?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage4?: NullableStringFieldUpdateOperationsInput | string | null
+    paletasExperiencia?: NullableJsonNullValueInput | InputJsonValue
     updatedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -64968,6 +64986,7 @@ export namespace Prisma {
     imagenLoginCollage2?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage3?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage4?: NullableStringFieldUpdateOperationsInput | string | null
+    paletasExperiencia?: NullableJsonNullValueInput | InputJsonValue
     updatedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -64980,6 +64999,7 @@ export namespace Prisma {
     imagenLoginCollage2?: string | null
     imagenLoginCollage3?: string | null
     imagenLoginCollage4?: string | null
+    paletasExperiencia?: NullableJsonNullValueInput | InputJsonValue
     updatedById?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -64992,6 +65012,7 @@ export namespace Prisma {
     imagenLoginCollage2?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage3?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage4?: NullableStringFieldUpdateOperationsInput | string | null
+    paletasExperiencia?: NullableJsonNullValueInput | InputJsonValue
     updatedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -65004,6 +65025,7 @@ export namespace Prisma {
     imagenLoginCollage2?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage3?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage4?: NullableStringFieldUpdateOperationsInput | string | null
+    paletasExperiencia?: NullableJsonNullValueInput | InputJsonValue
     updatedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -69944,6 +69966,7 @@ export namespace Prisma {
     imagenLoginCollage2?: SortOrder
     imagenLoginCollage3?: SortOrder
     imagenLoginCollage4?: SortOrder
+    paletasExperiencia?: SortOrder
     updatedById?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder

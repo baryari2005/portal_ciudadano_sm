@@ -95,7 +95,7 @@ const emptyPayload: EstablecimientoPayload = {
 const inputClass = adminControlClass;
 
 const selectClass =
-  "h-11 rounded-xl border border-[#C9D9C3] bg-[#F7FBF5] px-3 text-sm font-medium text-[#173C2A] shadow-sm";
+  "h-11 rounded-xl border border-[var(--brand-border)] bg-[var(--brand-page)] px-3 text-sm font-medium text-[var(--brand-ink)] shadow-sm";
 
 function timeToMinutes(value: string) {
   const [hours, minutes] = value.split(":").map(Number);
@@ -351,10 +351,10 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
           <div className="space-y-4 border-t border-[#D7E0D8] pt-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-bold uppercase tracking-normal text-[#1D4F36]">
+                <p className="text-sm font-bold uppercase tracking-normal text-[var(--brand-primary)]">
                   Horarios de apertura
                 </p>
-                <p className="mt-1 text-sm text-[#5F6F68]">
+                <p className="mt-1 text-sm text-[var(--brand-muted)]">
                   Carga una o mas franjas por dia, por ejemplo 08:00 a 12:00 y
                   14:00 a 18:00.
                 </p>
@@ -380,7 +380,7 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
 
             <div className="grid gap-3">
               {form.horarios.length === 0 ? (
-                <div className="rounded-[18px] border border-dashed border-[#C9D9C3] bg-[#F7FBF5] px-4 py-8 text-center text-sm font-medium text-[#5F6F68]">
+                <div className="rounded-[18px] border border-dashed border-[var(--brand-border)] bg-[var(--brand-page)] px-4 py-8 text-center text-sm font-medium text-[var(--brand-muted)]">
                   Sin horarios cargados.
                 </div>
               ) : null}
@@ -388,7 +388,7 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
               {form.horarios.map((horario, index) => (
                 <div
                   key={`${horario.id ?? "nuevo"}-${index}`}
-                  className="grid gap-3 rounded-[18px] border border-[#D7E0D8] bg-[#F7FBF5] p-4 lg:grid-cols-[auto_1.2fr_1fr_1fr_auto_auto] lg:items-center"
+                  className="grid gap-3 rounded-[18px] border border-[#D7E0D8] bg-[var(--brand-page)] p-4 lg:grid-cols-[auto_1.2fr_1fr_1fr_auto_auto] lg:items-center"
                 >
                   <span className="w-fit rounded-full bg-[var(--brand-secondary)]/15 px-2.5 py-1 text-xs font-bold text-[var(--brand-primary)]">{form.horarios.filter((item) => item.diaSemana === horario.diaSemana && !item.cerrado).length > 1 ? "Partida" : "Completa"}</span>
                   <Select
@@ -400,12 +400,12 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
                     <SelectTrigger className={`${selectClass} w-full`}>
                       <SelectValue placeholder="Seleccionar dia" />
                     </SelectTrigger>
-                    <SelectContent className="border-[#C9D9C3] bg-[#F7FBF5] text-[#173C2A]">
+                    <SelectContent className="border-[var(--brand-border)] bg-[var(--brand-page)] text-[var(--brand-ink)]">
                       {dias.map((dia) => (
                         <SelectItem
                           key={dia}
                           value={dia}
-                          className="focus:bg-[#DDEED2] focus:text-[#003A22] data-[highlighted]:bg-[#DDEED2] data-[highlighted]:text-[#003A22]"
+                          className="focus:bg-[var(--brand-highlight)] focus:text-[var(--brand-heading)] data-[highlighted]:bg-[var(--brand-highlight)] data-[highlighted]:text-[var(--brand-heading)]"
                         >
                           {dia}
                         </SelectItem>
@@ -436,7 +436,7 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-11 rounded-xl border-[#C9D9C3] bg-white/50 font-bold text-[#173C2A] hover:bg-white"
+                    className="h-11 rounded-xl border-[var(--brand-border)] bg-white/50 font-bold text-[var(--brand-ink)] hover:bg-white"
                     onClick={() =>
                       updateHorario(index, "cerrado", !horario.cerrado)
                     }
@@ -448,7 +448,7 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-11 rounded-xl border-[#C9D9C3] bg-white/50 font-bold text-red-700 hover:bg-red-50"
+                    className="h-11 rounded-xl border-[var(--brand-border)] bg-white/50 font-bold text-red-700 hover:bg-red-50"
                     onClick={() => removeHorario(index)}
                   >
                     <Trash2 className="h-4 w-4" />

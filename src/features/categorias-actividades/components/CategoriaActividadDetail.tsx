@@ -48,7 +48,7 @@ export function CategoriaActividadDetail({
   }
 
   const Icon = getCategoryIcon(item.icono);
-  const color = item.color || "#1D4F36";
+  const color = item.color || "var(--brand-primary)";
 
   return (
     <AdminDetailPanel onBack={onBack}>

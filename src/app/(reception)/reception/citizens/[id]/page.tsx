@@ -53,7 +53,7 @@ export default function ReceptionCitizenEditPage() {
 
   if (!initial) return <div className="min-h-[60vh] animate-pulse rounded-3xl bg-white/70" />;
 
-  return <div className="min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full overflow-y-auto bg-[#F7FBF5] p-4 sm:p-6 lg:p-8">
+  return <div className="min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full overflow-y-auto bg-[var(--brand-page)] p-4 sm:p-6 lg:p-8">
     <UserForm
       mode="edit"
       defaultValues={initial}

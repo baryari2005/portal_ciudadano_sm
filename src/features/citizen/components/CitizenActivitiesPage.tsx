@@ -89,7 +89,7 @@ export function CitizenActivitiesPage() {
   if (loading) return <CatalogLoadingState label="actividades" fullPage />;
 
   return (
-    <main className="min-h-[calc(100dvh-var(--topbar-h)-48px)] bg-[#F7FBF5] p-4 sm:p-6 lg:p-8">
+    <main className="min-h-[calc(100dvh-var(--topbar-h)-48px)] bg-[var(--brand-page)] p-4 sm:p-6 lg:p-8">
       <CatalogPageHeader
         title="Actividades disponibles"
         description="Encontrá propuestas municipales, consultá sus requisitos y elegí un horario para participar."
@@ -118,18 +118,18 @@ export function CitizenActivitiesPage() {
                       type="button"
                       onClick={() => setSelectedId(item.id)}
                       className={cn(
-                        "grid w-full self-start grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#819B56]",
-                        selectedId === item.id ? "border-[#1D4F36] bg-[#EEF6E9] shadow-sm" : "border-[#DDE8D7] bg-white hover:border-[#819B56] hover:shadow-sm",
+                        "grid w-full self-start grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-secondary)]",
+                        selectedId === item.id ? "border-[var(--brand-primary)] bg-[var(--brand-panel)] shadow-sm" : "border-[var(--brand-border-soft)] bg-white hover:border-[var(--brand-secondary)] hover:shadow-sm",
                       )}
                       data-admin-list-card=""
                     >
                       <ActivityImagePreview source={item.imageUrl} alt={`Imagen de ${item.name}`} className="size-12 shrink-0 rounded-xl" />
                       <span className="min-w-0">
-                        <span className="flex flex-wrap items-center gap-2"><span className="truncate font-extrabold text-[#173C2A]">{item.name}</span><Badge className="rounded-full border border-[#819B56]/40 bg-[#819B56]/15 text-[#1D4F36] hover:bg-[#819B56]/15">{item.free ? "Gratuita" : "Arancelada"}</Badge><EnrollmentModeBadge mode={item.enrollmentMode} /></span>
-                        <span className="mt-1 line-clamp-1 block text-sm text-[#315644]/75">{item.shortDescription || "Conocé esta actividad municipal."}</span>
-                        <span className="mt-2 block text-xs font-semibold text-[#315644]/65">{item.schedules.length} {item.schedules.length === 1 ? "horario disponible" : "horarios disponibles"}</span>
+                        <span className="flex flex-wrap items-center gap-2"><span className="truncate font-extrabold text-[var(--brand-ink)]">{item.name}</span><Badge className="rounded-full border border-[var(--brand-secondary)]/40 bg-[var(--brand-secondary)]/15 text-[var(--brand-primary)] hover:bg-[var(--brand-secondary)]/15">{item.free ? "Gratuita" : "Arancelada"}</Badge><EnrollmentModeBadge mode={item.enrollmentMode} /></span>
+                        <span className="mt-1 line-clamp-1 block text-sm text-[var(--brand-text)]/75">{item.shortDescription || "Conocé esta actividad municipal."}</span>
+                        <span className="mt-2 block text-xs font-semibold text-[var(--brand-text)]/65">{item.schedules.length} {item.schedules.length === 1 ? "horario disponible" : "horarios disponibles"}</span>
                       </span>
-                      <ChevronRight className="size-5 text-[#819B56]" />
+                      <ChevronRight className="size-5 text-[var(--brand-secondary)]" />
                     </button>
                   ))}
                 </div>
@@ -148,18 +148,18 @@ export function CitizenActivitiesPage() {
 }
 
 function ActivityDetail({ item, onBack }: { item: CitizenActivity | null; onBack: () => void }) {
-  if (!item) return <aside className="hidden h-full min-h-72 items-center justify-center rounded-3xl border border-[#DDE8D7] bg-[#EEF6E9] p-8 text-center text-sm font-semibold text-[#315644]/70 lg:flex">Seleccioná una actividad para consultar su detalle.</aside>;
+  if (!item) return <aside className="hidden h-full min-h-72 items-center justify-center rounded-3xl border border-[var(--brand-border-soft)] bg-[var(--brand-panel)] p-8 text-center text-sm font-semibold text-[var(--brand-text)]/70 lg:flex">Seleccioná una actividad para consultar su detalle.</aside>;
   const establishments = [...new Set(item.schedules.map((schedule) => schedule.establishment?.name).filter(Boolean))];
   const available = item.schedules.reduce((total, schedule) => total + schedule.availableCount, 0);
 
   return (
-    <aside className="h-fit overflow-y-auto rounded-3xl border border-[#DDE8D7] bg-[#EEF6E9] p-5 text-[#173C2A] shadow-sm sm:p-7 lg:sticky lg:top-0 lg:max-h-[calc(100dvh-var(--topbar-h)-96px)]">
-      <Button variant="ghost" onClick={onBack} className="mb-4 -ml-2 text-[#1D4F36] lg:hidden"><ArrowLeft />Volver al listado</Button>
+    <aside className="h-fit overflow-y-auto rounded-3xl border border-[var(--brand-border-soft)] bg-[var(--brand-panel)] p-5 text-[var(--brand-ink)] shadow-sm sm:p-7 lg:sticky lg:top-0 lg:max-h-[calc(100dvh-var(--topbar-h)-96px)]">
+      <Button variant="ghost" onClick={onBack} className="mb-4 -ml-2 text-[var(--brand-primary)] lg:hidden"><ArrowLeft />Volver al listado</Button>
       <div className="flex items-start gap-4">
         <ActivityImagePreview source={item.imageUrl} alt={`Imagen de ${item.name}`} className="size-16 shrink-0 rounded-2xl" />
-        <div className="min-w-0 flex-1"><h2 className="break-words text-2xl font-extrabold text-[#1D4F36]">{item.name}</h2><div className="mt-2 flex flex-wrap gap-2"><Badge className="rounded-full bg-white text-[#315644] hover:bg-white">{item.category || "Sin categoría"}</Badge><Badge className="rounded-full bg-[#DDEF8F] text-[#1D4F36] hover:bg-[#DDEF8F]">{item.free ? "Gratuita" : `$${item.price}`}</Badge></div></div>
+        <div className="min-w-0 flex-1"><h2 className="break-words text-2xl font-extrabold text-[var(--brand-primary)]">{item.name}</h2><div className="mt-2 flex flex-wrap gap-2"><Badge className="rounded-full bg-white text-[var(--brand-text)] hover:bg-white">{item.category || "Sin categoría"}</Badge><Badge className="rounded-full bg-[var(--brand-accent)] text-[var(--brand-primary)] hover:bg-[var(--brand-accent)]">{item.free ? "Gratuita" : `$${item.price}`}</Badge></div></div>
       </div>
-      <p className="mt-5 text-sm leading-6 text-[#315644]">{item.shortDescription || "Conocé esta actividad municipal y sus horarios disponibles."}</p>
+      <p className="mt-5 text-sm leading-6 text-[var(--brand-text)]">{item.shortDescription || "Conocé esta actividad municipal y sus horarios disponibles."}</p>
       <dl className="mt-6 grid gap-3">
         <CatalogDetailField icon={CalendarClock} label="Horarios disponibles">{item.schedules.length}</CatalogDetailField>
         <CatalogDetailField icon={CalendarClock} label="Modalidad">{item.enrollmentMode === "PERMANENTE" ? "Inscripción permanente" : item.enrollmentMode === "POR_PERIODO" ? `Inscripción por ${item.periodMonths ?? 1} ${item.periodMonths === 1 ? "mes" : "meses"}` : "Reserva por cada clase o turno"}</CatalogDetailField>
@@ -169,13 +169,13 @@ function ActivityDetail({ item, onBack }: { item: CitizenActivity | null; onBack
         <CatalogDetailField icon={ClipboardCheck} label="Cupos disponibles">{available}</CatalogDetailField>
         <CatalogDetailField icon={FileCheck2} label="Requisitos">{item.requiresDocumentation ? "Requiere documentación" : item.hasRequirements ? `${item.requirements.length} requisitos de inscripción` : "Sin requisitos adicionales"}</CatalogDetailField>
       </dl>
-      <div className="mt-6 border-t border-[#C9D9C3] pt-5">
-        <Button asChild className="h-11 w-full rounded-xl bg-[#1D4F36] font-bold hover:bg-[#143A27]"><Link href={`/citizen/activities/${item.id}`}><CalendarClock />Ver horarios e inscribirme</Link></Button>
+      <div className="mt-6 border-t border-[var(--brand-border)] pt-5">
+        <Button asChild className="h-11 w-full rounded-xl bg-[var(--brand-primary)] font-bold hover:bg-[var(--brand-primary-hover)]"><Link href={`/citizen/activities/${item.id}`}><CalendarClock />Ver horarios e inscribirme</Link></Button>
       </div>
     </aside>
   );
 }
 
 function EnrollmentModeBadge({ mode }: { mode: CitizenActivity["enrollmentMode"] }) {
-  return <Badge variant="outline" className="rounded-full border-[#C9D9C3] bg-white text-[#315644]">{mode === "PERMANENTE" ? "Permanente" : mode === "POR_PERIODO" ? "Por período" : "Por clase"}</Badge>;
+  return <Badge variant="outline" className="rounded-full border-[var(--brand-border)] bg-white text-[var(--brand-text)]">{mode === "PERMANENTE" ? "Permanente" : mode === "POR_PERIODO" ? "Por período" : "Por clase"}</Badge>;
 }

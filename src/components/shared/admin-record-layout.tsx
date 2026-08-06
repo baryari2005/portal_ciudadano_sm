@@ -79,7 +79,7 @@ export function AdminRecordLayout<T extends string>({
       onClick={() => onSectionChange(id)}
       className={cn(
         "flex h-12 w-full items-center gap-3 rounded-xl px-4 text-left text-sm font-bold transition disabled:cursor-wait",
-        activeSection === id ? "bg-[#DDEF8F] text-[var(--brand-primary)] shadow-sm" : "text-white hover:bg-white/10",
+        activeSection === id ? "bg-[var(--brand-accent)] text-[var(--brand-primary)] shadow-sm" : "text-white hover:bg-white/10",
       )}
     >
       <Icon className="size-5" />

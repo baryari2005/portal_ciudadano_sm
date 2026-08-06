@@ -15,7 +15,7 @@ const meta = {
 export function ExperienceBar({ experience, className }: { experience: ExperienceKind; className?: string }) {
   const { label, icon: Icon } = meta[experience];
   return (
-    <div className={cn("relative h-7 shrink-0 overflow-hidden border-t border-white/15 bg-[#163D2A] px-[var(--content-pad,24px)] text-[#DDEF8F]", className)}>
+    <div className={cn("relative h-7 shrink-0 overflow-hidden border-t border-white/15 bg-[#163D2A] px-[var(--content-pad,24px)] text-[var(--brand-accent)]", className)}>
       <span className="experience-bar-track absolute inset-y-0 left-[var(--content-pad,24px)] inline-flex w-max items-center gap-2 text-xs font-bold uppercase tracking-[0.08em]">
         <Icon className="size-3.5" />
         {label}

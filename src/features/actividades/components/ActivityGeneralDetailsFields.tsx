@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { ActividadPayload } from "../types/actividad.types";
 import { ActivityImageUploader } from "./ActivityImageUploader";
 
-const controlClass = "rounded-xl border-[#C9D9C3] bg-[#F7FBF5] text-[#173C2A]";
+const controlClass = "rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] text-[var(--brand-ink)]";
 
 export function ActivityGeneralDetailsFields({
   value,
@@ -25,16 +25,16 @@ export function ActivityGeneralDetailsFields({
 }) {
   const validColor = /^#[0-9A-Fa-f]{6}$/.test(value.color ?? "")
     ? value.color!
-    : "#1D4F36";
+    : "var(--brand-primary)";
 
   return (
     <>
       <section className="space-y-4 border-t border-[#D7E0D8] pt-6">
         <div>
-          <p className="text-sm font-bold uppercase text-[#1D4F36]">
+          <p className="text-sm font-bold uppercase text-[var(--brand-primary)]">
             Información general
           </p>
-          <p className="mt-1 text-sm text-[#5F6F68]">
+          <p className="mt-1 text-sm text-[var(--brand-muted)]">
             Contenido e identidad visual de la actividad.
           </p>
         </div>
@@ -52,7 +52,7 @@ export function ActivityGeneralDetailsFields({
                 onChange({ descripcionCorta: event.target.value })
               }
             />
-            <p className="text-right text-xs text-[#5F6F68]">
+            <p className="text-right text-xs text-[var(--brand-muted)]">
               {value.descripcionCorta?.length ?? 0}/180
             </p>
           </div>
@@ -77,7 +77,7 @@ export function ActivityGeneralDetailsFields({
               <Input
                 id="activity-color"
                 className={controlClass}
-                placeholder="#1D4F36"
+                placeholder="var(--brand-primary)"
                 value={value.color ?? ""}
                 onChange={(event) =>
                   onChange({ color: event.target.value.toUpperCase() })
@@ -93,7 +93,7 @@ export function ActivityGeneralDetailsFields({
                 }
               />
             </div>
-            <div className="flex items-center gap-2 text-xs text-[#5F6F68]">
+            <div className="flex items-center gap-2 text-xs text-[var(--brand-muted)]">
               <span
                 className="size-5 rounded-full border"
                 style={{ backgroundColor: validColor }}
@@ -106,7 +106,7 @@ export function ActivityGeneralDetailsFields({
 
       <section className="space-y-4 border-t border-[#D7E0D8] pt-6">
         <div>
-          <p className="text-sm font-bold uppercase text-[#1D4F36]">
+          <p className="text-sm font-bold uppercase text-[var(--brand-primary)]">
             Modalidad económica
           </p>
         </div>
@@ -134,7 +134,7 @@ export function ActivityGeneralDetailsFields({
           {!value.esGratuita ? (
             <Field label="Precio *">
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-[#1D4F36]">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-[var(--brand-primary)]">
                   $
                 </span>
                 <Input
@@ -145,12 +145,12 @@ export function ActivityGeneralDetailsFields({
                   onChange={(event) => onChange({ precio: event.target.value })}
                 />
               </div>
-              <p className="text-xs text-[#5F6F68]">
+              <p className="text-xs text-[var(--brand-muted)]">
                 Importe en pesos argentinos (ARS).
               </p>
             </Field>
           ) : (
-            <p className="self-end rounded-xl bg-[#E7F0E2] p-3 text-sm text-[#315644]">
+            <p className="self-end rounded-xl bg-[#E7F0E2] p-3 text-sm text-[var(--brand-text)]">
               Las actividades gratuitas no guardan precio.
             </p>
           )}
