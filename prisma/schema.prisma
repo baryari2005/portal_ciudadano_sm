@@ -1440,6 +1440,7 @@ enum AsistenciaEstado {
 enum AsistenciaOrigen {
   MANUAL
   QR
+  ACCESO
 }
 
 enum UsuarioQrEstado {

@@ -76,9 +76,37 @@ export async function evaluateAccess(user: { id: string; estado: string; deleted
 }
 function evaluation(reason: AccessReason): AccessEvaluation { return { allowed: false, result: "RECHAZADO", reason, message: reasonMessages[reason] }; }
 
+async function markTodayAttendancesFromAccess(tx: Tx, input: { userId: string; establishmentId: string; actorId: string; occurredAt: Date }) {
+  const date = localParts(input.occurredAt);
+  const sessions = await tx.claseActividad.findMany({
+    where: {
+      establecimientoId: input.establishmentId,
+      fecha: { gte: localDateTime(date, "00:00"), lte: localDateTime(date, "23:59") },
+      estado: { in: ["PROGRAMADA", "EN_CURSO"] },
+      asistenciaCerradaAt: null,
+      horarioActividad: { inscripciones: { some: { usuarioId: input.userId } } },
+    },
+    include: {
+      reservas: { where: { usuarioId: input.userId }, select: { estado: true }, take: 1 },
+      horarioActividad: { include: { inscripciones: { where: { usuarioId: input.userId }, take: 1 } } },
+    },
+  });
+  const attendances = sessions.flatMap((session) => {
+    const enrollment = session.horarioActividad.inscripciones[0];
+    const reservation = session.reservas[0];
+    if (!enrollment) return [];
+    const validPeriod = (!enrollment.fechaInicio || enrollment.fechaInicio <= session.fecha) && (!enrollment.fechaFin || enrollment.fechaFin >= session.fecha);
+    const eligible = reservation?.estado === "RESERVADA" || (enrollment.estado === "CONFIRMADA" && enrollment.modalidad !== "POR_CLASE" && validPeriod && reservation?.estado !== "AUSENCIA_INFORMADA");
+    return eligible ? [{ claseActividadId: session.id, inscripcionId: enrollment.id, estado: "PRESENTE" as const, origen: "ACCESO" as const, horaRegistro: input.occurredAt, registradoPorId: input.actorId }] : [];
+  });
+  if (attendances.length) await tx.asistencia.createMany({ data: attendances, skipDuplicates: true });
+  return attendances.length;
+}
+
 async function saveAccess(tx: Tx, input: { user?: AccessPerson; establishmentId: string; evaluation: AccessEvaluation; origin: AccesoOrigen; actorId: string; observation?: string; requestContext?: RequestContext }) {
   const record = await tx.registroAcceso.create({ data: { usuarioId: input.user?.id, establecimientoId: input.establishmentId, claseActividadId: input.evaluation.matchedSession?.id, inscripcionId: input.evaluation.matchedEnrollmentId, resultado: input.evaluation.result as AccesoResultado, motivo: input.evaluation.reason as AccesoMotivo, origen: input.origin, registradoPorId: input.actorId, nombreSnapshot: input.user ? [input.user.nombre, input.user.apellido].filter(Boolean).join(" ") : null, documentoSnapshot: input.user?.dni || null, observaciones: input.observation } });
-  await createAuditLogTx(tx, { actorId: input.actorId, action: input.evaluation.result === "PERMITIDO" ? "CREAR" : "RECHAZAR", entityType: "REGISTRO_ACCESO", entityId: record.id, entityName: input.user ? `Ingreso · ${record.nombreSnapshot}` : "Intento de ingreso no identificado", metadata: { resultado: record.resultado, motivo: record.motivo, origen: record.origen, establecimientoId: record.establecimientoId }, origin: ["QR", "QR_DIGITAL", "CARNET_FISICO"].includes(input.origin) ? "QR" : "ADMINISTRACION", requestContext: input.requestContext });
+  const automaticAttendances = input.evaluation.result === "PERMITIDO" && input.user ? await markTodayAttendancesFromAccess(tx, { userId: input.user.id, establishmentId: input.establishmentId, actorId: input.actorId, occurredAt: record.fechaHora }) : 0;
+  await createAuditLogTx(tx, { actorId: input.actorId, action: input.evaluation.result === "PERMITIDO" ? "CREAR" : "RECHAZAR", entityType: "REGISTRO_ACCESO", entityId: record.id, entityName: input.user ? `Ingreso · ${record.nombreSnapshot}` : "Intento de ingreso no identificado", metadata: { resultado: record.resultado, motivo: record.motivo, origen: record.origen, establecimientoId: record.establecimientoId, asistenciasAutomaticas: automaticAttendances }, origin: ["QR", "QR_DIGITAL", "CARNET_FISICO"].includes(input.origin) ? "QR" : "ADMINISTRACION", requestContext: input.requestContext });
   return record;
 }
 

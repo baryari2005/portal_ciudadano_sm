@@ -1166,7 +1166,8 @@ exports.AsistenciaEstado = exports.$Enums.AsistenciaEstado = {
 
 exports.AsistenciaOrigen = exports.$Enums.AsistenciaOrigen = {
   MANUAL: 'MANUAL',
-  QR: 'QR'
+  QR: 'QR',
+  ACCESO: 'ACCESO'
 };
 
 exports.UsuarioQrEstado = exports.$Enums.UsuarioQrEstado = {

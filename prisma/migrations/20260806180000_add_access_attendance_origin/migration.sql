@@ -1,0 +1,1 @@
+ALTER TYPE "AsistenciaOrigen" ADD VALUE IF NOT EXISTS 'ACCESO';

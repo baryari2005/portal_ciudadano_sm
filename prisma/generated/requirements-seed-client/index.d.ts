@@ -768,7 +768,8 @@ export type AsistenciaEstado = (typeof AsistenciaEstado)[keyof typeof Asistencia
 
 export const AsistenciaOrigen: {
   MANUAL: 'MANUAL',
-  QR: 'QR'
+  QR: 'QR',
+  ACCESO: 'ACCESO'
 };
 
 export type AsistenciaOrigen = (typeof AsistenciaOrigen)[keyof typeof AsistenciaOrigen]
