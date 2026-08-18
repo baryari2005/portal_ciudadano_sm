@@ -8,6 +8,8 @@ export type AddressLocation = {
   locality?: string;
   province?: string;
   postalCode?: string;
+  street?: string;
+  streetNumber?: string;
   provider?: MapProvider;
 };
 

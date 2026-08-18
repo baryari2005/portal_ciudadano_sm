@@ -17,6 +17,8 @@ function mapPlace(place: NominatimPlace): GeocodingResult {
     locality: address.city ?? address.town ?? address.village ?? address.municipality ?? address.suburb,
     province: address.state,
     postalCode: address.postcode,
+    street: address.road ?? address.pedestrian ?? address.residential,
+    streetNumber: address.house_number,
     provider: "openstreetmap",
   };
 }

@@ -203,6 +203,11 @@ export function RequestAccessForm() {
     control,
     formState: { errors, isSubmitting },
   } = form;
+  const invalidateAddressLocation = () => {
+    setValue("direccionPlaceId", "");
+    setValue("direccionLat", null);
+    setValue("direccionLng", null);
+  };
 
   const onInvalid = (formErrors: FieldErrors<RequestAccessFormValues>) => {
     const first = getFirstError(formErrors);
@@ -237,7 +242,7 @@ export function RequestAccessForm() {
   const values = form.watch();
   const fieldsComplete = (fields: Array<keyof RequestAccessFormValues>) => fields.every((field) => Boolean(String(values[field] ?? "").trim()));
   const personalComplete = fieldsComplete(personalFields);
-  const addressComplete = fieldsComplete(addressFields);
+  const addressComplete = fieldsComplete(addressFields) && Boolean(values.direccionPlaceId && values.direccionLat != null && values.direccionLng != null);
   const contactComplete = fieldsComplete(contactFields);
   const photosComplete = Boolean(values.avatarTmpPath && values.profilePhotoTmpPath);
   const accessComplete = Boolean(values.userId?.trim() && values.password);
@@ -454,9 +459,9 @@ export function RequestAccessForm() {
                 <FormError message={errors.direccion?.message} />
               </div>
 
-              <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Localidad *</Label><IconInput id="localidad" leftIcon={<MapPinned className="size-4 text-[var(--brand-primary)]" />} input={<Input {...register("localidad")} className={`${adminControlClass} w-full pl-9`} />} /><FormError message={errors.localidad?.message} /></div>
-              <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Provincia *</Label><Controller control={control} name="provincia" render={({field})=><IconInput id="provincia" leftIcon={<Map className="size-4 text-[var(--brand-primary)]" />} input={<Select value={field.value} onValueChange={field.onChange}><SelectTrigger className={`${adminControlClass} w-full pl-9`}><SelectValue placeholder="Seleccionar provincia"/></SelectTrigger><SelectContent>{ARGENTINA_PROVINCES.map(item=><SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>} />}/><FormError message={errors.provincia?.message} /></div>
-              <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Código postal *</Label><IconInput id="codigoPostal" leftIcon={<IdCard className="size-4 text-[var(--brand-primary)]" />} input={<Input {...register("codigoPostal")} className={`${adminControlClass} w-full pl-9`} />} /><FormError message={errors.codigoPostal?.message} /></div>
+              <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Localidad *</Label><Controller control={control} name="localidad" render={({ field }) => <IconInput id="localidad" leftIcon={<MapPinned className="size-4 text-[var(--brand-primary)]" />} input={<Input {...field} onChange={(event) => { field.onChange(event); invalidateAddressLocation(); }} className={`${adminControlClass} w-full pl-9`} />} />} /><FormError message={errors.localidad?.message} /></div>
+              <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Provincia *</Label><Controller control={control} name="provincia" render={({field})=><IconInput id="provincia" leftIcon={<Map className="size-4 text-[var(--brand-primary)]" />} input={<Select value={field.value} onValueChange={(value) => { field.onChange(value); invalidateAddressLocation(); }}><SelectTrigger className={`${adminControlClass} w-full pl-9`}><SelectValue placeholder="Seleccionar provincia"/></SelectTrigger><SelectContent>{ARGENTINA_PROVINCES.map(item=><SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>} />}/><FormError message={errors.provincia?.message} /></div>
+              <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Código postal *</Label><Controller control={control} name="codigoPostal" render={({ field }) => <IconInput id="codigoPostal" leftIcon={<IdCard className="size-4 text-[var(--brand-primary)]" />} input={<Input {...field} onChange={(event) => { field.onChange(event); invalidateAddressLocation(); }} className={`${adminControlClass} w-full pl-9`} />} />} /><FormError message={errors.codigoPostal?.message} /></div>
               </div><div className="min-w-0"><Controller control={control} name="direccion" render={({field})=><GoogleAddressInput display="map" id="direccion-map" value={field.value??""} placeId={form.watch("direccionPlaceId")} lat={form.watch("direccionLat")} lng={form.watch("direccionLng")} locality={form.watch("localidad")} province={form.watch("provincia")} postalCode={form.watch("codigoPostal")} onChange={(location)=>{field.onChange(location.address);setValue("direccionPlaceId",location.placeId??"");setValue("direccionLat",location.lat);setValue("direccionLng",location.lng);if(location.locality)setValue("localidad",location.locality);if(location.province)setValue("provincia",location.province);if(location.postalCode)setValue("codigoPostal",location.postalCode)}} />}/></div></div> : null}
 
               {step === 4 ? <>

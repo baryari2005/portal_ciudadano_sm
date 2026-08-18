@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ChevronRight,
@@ -22,6 +22,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   CatalogDetailField,
   CatalogEmptyState,
+  CatalogErrorState,
   CatalogLoadingState,
   CatalogPagination,
   CatalogPageHeader,
@@ -50,7 +51,9 @@ function orderedOpeningHours(horarios: Establecimiento["horarios"]) {
 
 export function EstablecimientosPage() {
   const router = useRouter();
-  const { items, selected, selectedId, setSelectedId, loading, remove } =
+  const searchParams = useSearchParams();
+  const requestedSelection = searchParams.get("selected") ?? "";
+  const { items, selected, selectedId, setSelectedId, loading, error, refresh, remove } =
     useEstablecimientos();
   const canCreate = useCan("establecimientos", "crear");
   const canEdit = useCan("establecimientos", "editar");
@@ -58,6 +61,7 @@ export function EstablecimientosPage() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deactivating, setDeactivating] = useState(false);
   const [page, setPage] = useState(1);
 
   const filteredItems = useMemo(() => {
@@ -85,15 +89,39 @@ export function EstablecimientosPage() {
 
   useEffect(() => setPage(1), [query, status]);
 
+  useEffect(() => {
+    if (
+      requestedSelection &&
+      items.some((item) => item.id === requestedSelection)
+    ) {
+      setSelectedId(requestedSelection);
+    }
+  }, [items, requestedSelection, setSelectedId]);
+
   if (loading) {
     return <CatalogLoadingState label="establecimientos" fullPage />;
   }
 
+  if (error) {
+    return (
+      <div className="min-h-[calc(100dvh-var(--topbar-h))] bg-[var(--brand-page)] p-4 sm:p-6 lg:p-8">
+        <CatalogErrorState message={error} onRetry={() => void refresh()} />
+      </div>
+    );
+  }
+
   async function confirmDelete() {
     if (!selected) return;
-    await remove(selected.id);
-    setPage(1);
-    setDeleteOpen(false);
+    setDeactivating(true);
+    try {
+      const deactivated = await remove(selected.id);
+      if (deactivated) {
+        setPage(1);
+        setDeleteOpen(false);
+      }
+    } finally {
+      setDeactivating(false);
+    }
   }
 
   return (
@@ -167,11 +195,15 @@ export function EstablecimientosPage() {
 
       <ConfirmDialog
         open={deleteOpen}
-        title="Eliminar establecimiento"
-        description="El establecimiento se eliminará si no posee relaciones que impidan la operación."
-        confirmLabel="Eliminar"
+        title="Desactivar establecimiento"
+        description="El establecimiento dejará de estar disponible para nuevas actividades, pero conservará sus actividades, horarios e historial asociados."
+        confirmLabel="Desactivar"
+        loading={deactivating}
+        loadingLabel="Desactivando..."
         icon={<Trash2 />}
-        onClose={() => setDeleteOpen(false)}
+        onClose={() => {
+          if (!deactivating) setDeleteOpen(false);
+        }}
         onConfirm={confirmDelete}
       />
     </div>
@@ -230,7 +262,7 @@ function EstablecimientoDetail({
           ) : null}
           {canDelete ? (
             <Button variant="outline" onClick={onDelete} className="text-red-700 hover:bg-red-50">
-              <Trash2 /> Eliminar
+              <Trash2 /> Desactivar
             </Button>
           ) : null}
       </AdminDetailActions> : null}

@@ -96,12 +96,21 @@ export function CitizenProfilePage({ workspace = "citizen" }: { workspace?: "cit
   }, [data, setAvatarTmpPath, setIdentityTmpPath]);
 
   const markUnsaved = (number: number) => setStepStatus((current) => ({ ...current, [number]: "unsaved" }));
-  const setValue = (field: keyof ProfileForm, value: string) => { setForm((current) => ({ ...current, [field]: value })); markUnsaved(fieldSection[field] ?? section); };
+  const setValue = (field: keyof ProfileForm, value: string) => {
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+      ...(["locality", "province", "postalCode"].includes(field)
+        ? { addressPlaceId: null, addressLat: null, addressLng: null }
+        : {}),
+    }));
+    markUnsaved(fieldSection[field] ?? section);
+  };
   const age = form.birthDate ? Math.max(0, new Date(Date.now() - fromYmdLocal(form.birthDate).getTime()).getUTCFullYear() - 1970) : null;
 
   function isSectionValid(number: number) {
     if (number === 1) return Boolean(form.firstName.trim() && form.lastName.trim() && form.birthDate && form.nationality && form.gender);
-    if (number === 3) return Boolean(form.address.trim() && form.locality.trim() && form.province && form.postalCode.trim());
+    if (number === 3) return Boolean(form.address.trim() && form.locality.trim() && form.province && form.postalCode.trim() && form.addressPlaceId && form.addressLat != null && form.addressLng != null);
     if (number === 4) return Boolean(isValidPhone(form.phone) && form.emergencyContactName.trim() && isValidPhone(form.emergencyContactPhone));
     return true;
   }
@@ -136,6 +145,7 @@ export function CitizenProfilePage({ workspace = "citizen" }: { workspace?: "cit
     if (!data) return;
     if (!form.nationality || !form.gender || !form.firstName.trim() || !form.lastName.trim() || !form.birthDate) { setSection(1); toast.error("Completá todos los datos personales."); return; }
     if (!form.address.trim() || !form.locality.trim() || !form.province || !form.postalCode.trim()) { setSection(3); toast.error("Completá todos los datos del domicilio."); return; }
+    if (!form.addressPlaceId || form.addressLat == null || form.addressLng == null) { setSection(3); toast.error("Buscá la dirección y seleccioná una ubicación válida en el mapa."); return; }
     if (!isValidPhone(form.phone)) { setSection(4); toast.error(PHONE_VALIDATION_MESSAGE); return; }
     if (!form.emergencyContactName.trim() || !isValidPhone(form.emergencyContactPhone)) { setSection(4); toast.error("Completá correctamente el contacto de emergencia."); return; }
     setSaving(true);

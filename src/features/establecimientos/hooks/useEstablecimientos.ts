@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import {
   createEstablecimientoClient,
-  deleteEstablecimientoClient,
+  deactivateEstablecimientoClient,
   listEstablecimientosClient,
   updateEstablecimientoClient,
 } from "../services/establecimientos.service";
@@ -18,9 +18,11 @@ export function useEstablecimientos() {
   const [items, setItems] = useState<Establecimiento[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   async function refresh() {
     setLoading(true);
+    setError(null);
     try {
       const data = await listEstablecimientosClient();
       setItems(data);
@@ -28,6 +30,9 @@ export function useEstablecimientos() {
         current && data.some((item) => item.id === current) ? current : "",
       );
     } catch {
+      setError(
+        "No pudimos consultar los establecimientos. Revisá tu sesión, tus permisos o la conexión y volvé a intentar.",
+      );
       toast.error("No pudimos cargar establecimientos.");
     } finally {
       setLoading(false);
@@ -61,14 +66,26 @@ export function useEstablecimientos() {
 
   async function remove(id: string) {
     try {
-      await deleteEstablecimientoClient(id);
-      toast.success("Establecimiento eliminado.");
+      await deactivateEstablecimientoClient(id);
+      toast.success("Establecimiento desactivado.");
       setSelectedId("");
       await refresh();
+      return true;
     } catch {
-      toast.error("No pudimos eliminar el establecimiento.");
+      toast.error("No pudimos desactivar el establecimiento.");
+      return false;
     }
   }
 
-  return { items, selected, selectedId, setSelectedId, loading, save, remove };
+  return {
+    items,
+    selected,
+    selectedId,
+    setSelectedId,
+    loading,
+    error,
+    refresh,
+    save,
+    remove,
+  };
 }

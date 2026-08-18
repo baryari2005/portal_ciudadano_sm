@@ -140,6 +140,11 @@ export function UserFormFields({
   const show = (section: number) => step == null || step === section;
   const birthDate = watch("fechaNacimiento");
   const age = birthDate ? Math.max(0, new Date(Date.now() - fromYmdLocal(birthDate).getTime()).getUTCFullYear() - 1970) : null;
+  const invalidateAddressLocation = () => {
+    setValue("domicilioPlaceId", null);
+    setValue("domicilioLat", null);
+    setValue("domicilioLng", null);
+  };
   const sectionMeta = step ? [
     ["Datos personales", "Identidad, fecha de nacimiento y datos demográficos."],
     ["Credenciales", "Usuario, contraseña y rol de acceso."],
@@ -295,9 +300,9 @@ export function UserFormFields({
             <FormErrorMessage message={errors.domicilio?.message} />
           </div>
 
-          <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Localidad *</Label><IconInput id="localidad" leftIcon={<MapPinned className="size-4 text-[var(--brand-primary)]"/>} input={<Input {...register("localidad")} className="h-11 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9"/>}/></div>
-          <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Provincia *</Label><Controller control={control} name="provincia" render={({field}) => <IconInput id="provincia" leftIcon={<Map className="size-4 text-[var(--brand-primary)]"/>} input={<Select value={field.value} onValueChange={field.onChange}><SelectTrigger className="h-11 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9"><SelectValue placeholder="Seleccionar provincia"/></SelectTrigger><SelectContent>{ARGENTINA_PROVINCES.map(item=><SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>} />} /></div>
-          <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Código postal *</Label><IconInput id="codigoPostal" leftIcon={<IdCard className="size-4 text-[var(--brand-primary)]"/>} input={<Input {...register("codigoPostal")} className="h-11 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9"/>}/></div>
+          <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Localidad *</Label><Controller control={control} name="localidad" render={({ field }) => <IconInput id="localidad" leftIcon={<MapPinned className="size-4 text-[var(--brand-primary)]"/>} input={<Input {...field} onChange={(event) => { field.onChange(event); invalidateAddressLocation(); }} className="h-11 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9"/>} />} /></div>
+          <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Provincia *</Label><Controller control={control} name="provincia" render={({field}) => <IconInput id="provincia" leftIcon={<Map className="size-4 text-[var(--brand-primary)]"/>} input={<Select value={field.value} onValueChange={(value) => { field.onChange(value); invalidateAddressLocation(); }}><SelectTrigger className="h-11 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9"><SelectValue placeholder="Seleccionar provincia"/></SelectTrigger><SelectContent>{ARGENTINA_PROVINCES.map(item=><SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>} />} /></div>
+          <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Código postal *</Label><Controller control={control} name="codigoPostal" render={({ field }) => <IconInput id="codigoPostal" leftIcon={<IdCard className="size-4 text-[var(--brand-primary)]"/>} input={<Input {...field} onChange={(event) => { field.onChange(event); invalidateAddressLocation(); }} className="h-11 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9"/>} />} /></div>
           </div><div className="min-w-0"><Controller control={control} name="domicilio" render={({field})=><GoogleAddressInput display="map" id="domicilio-map" value={field.value??""} placeId={watch("domicilioPlaceId")} lat={watch("domicilioLat")} lng={watch("domicilioLng")} locality={watch("localidad")} province={watch("provincia")} postalCode={watch("codigoPostal")} onChange={(location)=>{field.onChange(location.address);setValue("domicilioPlaceId",location.placeId);setValue("domicilioLat",location.lat);setValue("domicilioLng",location.lng);if(location.locality)setValue("localidad",location.locality);if(location.province)setValue("provincia",location.province);if(location.postalCode)setValue("codigoPostal",location.postalCode)}} />}/></div></div> : null}
 
           {show(4) ? <>

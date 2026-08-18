@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ChevronRight, CircleAlert, Search } from "lucide-react";
+import { ChevronRight, CircleAlert, ListChecks, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +23,7 @@ function GuideCard({ guide }: { guide: HelpGuide }) {
         <p className="text-sm leading-6 text-[var(--brand-muted)]">{guide.description}</p>
       </CardHeader>
       <CardContent className="space-y-5">
+        {guide.prerequisites?.length ? <div className="rounded-2xl border border-[var(--brand-border-soft)] bg-[var(--brand-panel)] p-4"><div className="flex items-center gap-2 font-bold text-[var(--brand-primary)]"><ListChecks className="size-4"/>Antes de comenzar</div><ul className="mt-2 space-y-1 text-sm leading-6 text-[#496557]">{guide.prerequisites.map((item) => <li key={item}>• {item}</li>)}</ul></div> : null}
         <ol className="space-y-3">
           {guide.steps.map((step, index) => <li key={`${guide.id}-${index}`} className="flex gap-3 text-sm leading-6 text-[#294B3B]"><span className="grid size-7 shrink-0 place-items-center rounded-full bg-[var(--brand-highlight)] text-xs font-extrabold text-[var(--brand-primary)]">{index + 1}</span><span>{step}</span></li>)}
         </ol>
@@ -39,7 +40,7 @@ export function SupportPageClient() {
   const [query, setQuery] = useState("");
   const category: HelpCategory = pathname.startsWith("/citizen") ? "citizen" : pathname.startsWith("/teacher") ? "teacher" : pathname.startsWith("/reception") || pathname.startsWith("/access") ? "reception" : "administration";
   const visible = useMemo(() => getVisibleHelpGuides(permissions, category), [category, permissions]);
-  const guides = useMemo(() => { const normalized = query.trim().toLocaleLowerCase("es"); return visible.filter((guide) => !normalized || [guide.title, guide.description, ...guide.keywords, ...guide.steps].join(" ").toLocaleLowerCase("es").includes(normalized)); }, [query, visible]);
+  const guides = useMemo(() => { const normalized = query.trim().toLocaleLowerCase("es"); return visible.filter((guide) => !normalized || [guide.title, guide.description, ...guide.keywords, ...(guide.prerequisites ?? []), ...guide.steps, ...(guide.warnings ?? [])].join(" ").toLocaleLowerCase("es").includes(normalized)); }, [query, visible]);
   const categoryMeta = HELP_CATEGORY_META[category];
 
   return <main className="min-h-full bg-[var(--brand-page)] p-4 sm:p-6 lg:p-8">

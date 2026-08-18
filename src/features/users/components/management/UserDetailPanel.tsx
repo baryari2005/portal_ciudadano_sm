@@ -51,6 +51,7 @@ type UserDetailPanelProps = {
   compact?: boolean;
   showFullRecordAction?: boolean;
   context?: "admin" | "reception";
+  scope?: "citizen" | "personnel";
 };
 
 async function updateUserStatus(
@@ -76,6 +77,7 @@ export function UserDetailPanel({
   compact = false,
   showFullRecordAction = compact,
   context = "admin",
+  scope = "citizen",
 }: UserDetailPanelProps) {
   const [actionLoading, setActionLoading] = useState<ManagedUserStatus | null>(
     null,
@@ -184,7 +186,7 @@ export function UserDetailPanel({
         onBack={onBack}
         className={compact ? "lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-hidden" : undefined}
       >
-        <AdminDetailHeader title={user.fullName} leading={<UserAvatarMark user={user} size="lg" />} badge={<div className="flex flex-wrap gap-2"><StatusPill status={user.status} />{context === "admin" ? <RolePill role={user.role} /> : null}</div>} action={showFullRecordAction && context === "admin" ? <Button asChild variant="outline" className="w-full border-[var(--brand-secondary)] bg-white font-bold text-[var(--brand-primary)]"><Link href={`/users/${user.id}/record/overview`}><Eye />Ver ficha completa</Link></Button> : null} />
+        <AdminDetailHeader title={user.fullName} leading={<UserAvatarMark user={user} size="lg" />} badge={<div className="flex flex-wrap gap-2"><StatusPill status={user.status} />{context === "admin" ? <RolePill role={user.role} /> : null}</div>} action={showFullRecordAction && context === "admin" ? <Button asChild variant="outline" className="w-full border-[var(--brand-secondary)] bg-white font-bold text-[var(--brand-primary)]"><Link href={`/users/${user.id}/record/overview${scope === "personnel" ? "?source=personnel" : ""}`}><Eye />Ver ficha completa</Link></Button> : null} />
 
         <div className={compact ? "brand-scrollbar lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-2" : undefined}>
         <div className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
@@ -239,7 +241,7 @@ export function UserDetailPanel({
 
         <AdminDetailActions className={compact ? "lg:shrink-0" : undefined}>
           <Button asChild className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]">
-            <Link href={context === "reception" ? `/reception/citizens/${user.id}` : `/users/${user.id}`}>
+            <Link href={context === "reception" ? `/reception/citizens/${user.id}` : `/users/${user.id}${scope === "personnel" ? "?source=personnel" : ""}`}>
               <Edit3 /> {context === "reception" ? "Editar perfil" : "Editar"}
             </Link>
           </Button>

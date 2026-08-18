@@ -86,6 +86,7 @@ export function UsersManagementPage({ scope = "citizen", context = "admin" }: { 
             onUserChanged={refreshUsers}
             compact
             context={context}
+            scope={scope}
           />
         </div>
       </section>

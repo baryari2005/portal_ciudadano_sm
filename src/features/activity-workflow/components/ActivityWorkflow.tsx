@@ -53,7 +53,7 @@ import {
   adminSecondaryButtonClass,
 } from "@/components/shared/admin-patterns";
 import { AdminWorkflowLayout } from "@/components/shared/admin-workflow-layout";
-import { listEstablecimientosClient } from "@/features/establecimientos/services/establecimientos.service";
+import { listActiveEstablecimientosClient } from "@/features/establecimientos/services/establecimientos.service";
 import { listarProfesoresClient } from "@/features/profesores/services/profesores.service";
 import { listRequirementsClient } from "@/features/requirements/services/requirements.service";
 import { listResourcesClient } from "@/features/resources/services/resources.service";
@@ -184,7 +184,7 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
   useEffect(() => {
     void Promise.all([
       getDraftClient(draftId),
-      listEstablecimientosClient(),
+      listActiveEstablecimientosClient(),
       listarProfesoresClient({ page: 1, pageSize: 100, estado: "ACTIVO" }),
       listRequirementsClient({ active: true }),
       listResourcesClient(),

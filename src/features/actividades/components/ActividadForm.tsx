@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { listEstablecimientosClient } from "@/features/establecimientos/services/establecimientos.service";
+import { listActiveEstablecimientosClient } from "@/features/establecimientos/services/establecimientos.service";
 import type { Establecimiento } from "@/features/establecimientos/types/establecimiento.types";
 
 import { actividadSchema } from "../schemas/actividad.schema";
@@ -134,7 +134,7 @@ export function ActividadForm({ onLoadingChange, mode = "create", initialValues 
     async function loadControls() {
       setLoadingControls(true);
       try {
-        const data = await listEstablecimientosClient();
+        const data = await listActiveEstablecimientosClient();
         if (!active) return;
         setEstablishments(data);
         setForm((current) => ({

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Activity, AlertTriangle, CalendarDays, CircleCheck, CircleX, ClipboardCheck, Contact, FileCheck2, HeartPulse, IdCard, Info, Loader2, Mail, MapPin, MessageSquareText, Phone, Save, ShieldCheck, UserRound } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,6 +36,9 @@ const sections = [
 ] as const;
 
 export function UserRecordPage({ userId, section }: { userId: string; section: UserRecordSection }) {
+  const searchParams = useSearchParams();
+  const personnelSource = searchParams.get("source") === "personnel";
+  const sourceQuery = personnelSource ? "?source=personnel" : "";
   const normalizedSection = section === "access" || section === "overview" ? "personal-data" : section;
   const [activeSection, setActiveSection] = useState<UserRecordSection>(normalizedSection);
   const [sectionLoading, setSectionLoading] = useState(["documents", "enrollments", "attendance"].includes(normalizedSection));
@@ -53,8 +57,8 @@ export function UserRecordPage({ userId, section }: { userId: string; section: U
   useEffect(() => { void load(); }, [userId]);
   useEffect(() => {
     setActiveSection(normalizedSection);
-    if (section === "access" || section === "overview") window.history.replaceState(null, "", `/users/${userId}/record/personal-data`);
-  }, [normalizedSection, section, userId]);
+    if (section === "access" || section === "overview") window.history.replaceState(null, "", `/users/${userId}/record/personal-data${sourceQuery}`);
+  }, [normalizedSection, section, sourceQuery, userId]);
   useEffect(() => {
     const syncFromHistory = () => {
       const routeSection = window.location.pathname.split("/").at(-1) as UserRecordSection;
@@ -71,15 +75,15 @@ export function UserRecordPage({ userId, section }: { userId: string; section: U
   function selectSection(nextSection: UserRecordSection) {
     if (nextSection === activeSection) return;
     setSectionLoading(["documents", "enrollments", "attendance"].includes(nextSection));
-    window.history.pushState(null, "", `/users/${userId}/record/${nextSection}`);
+    window.history.pushState(null, "", `/users/${userId}/record/${nextSection}${sourceQuery}`);
     setActiveSection(nextSection);
   }
   return (
     <AdminRecordLayout
-      title="Ficha completa del ciudadano"
-      description={user ? `Ficha integral de ${user.fullName} · DNI ${user.dni} · Rol ${user.role}` : "Información integral del ciudadano"}
+      title={personnelSource ? "Ficha completa del personal" : "Ficha completa del ciudadano"}
+      description={user ? `Ficha integral de ${user.fullName} · DNI ${user.dni} · Rol ${user.role}` : personnelSource ? "Información integral del personal" : "Información integral del ciudadano"}
       icon={UserRound}
-      backHref="/users"
+      backHref={personnelSource ? "/personnel" : "/users"}
       sections={sections}
       activeSection={activeSection === "access" || activeSection === "overview" ? "personal-data" : activeSection}
       onSectionChange={selectSection}

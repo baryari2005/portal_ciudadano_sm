@@ -146,18 +146,13 @@ async function assertUniqueEstablecimiento(
   );
 }
 
-export async function deleteEstablecimiento(id: string) {
+export async function deactivateEstablecimiento(id: string) {
   const current = await prisma.establecimiento.findUnique({
     where: { id },
-    select: { id: true, _count: { select: { actividades: true } } },
+    select: { id: true },
   });
   if (!current)
     throw new EstablecimientoConflictError("El establecimiento no existe.");
-  if (current._count.actividades > 0) {
-    throw new EstablecimientoConflictError(
-      "No se puede dar de baja porque tiene actividades asociadas.",
-    );
-  }
   return prisma.establecimiento.update({
     where: { id },
     data: { activo: false, estado: "inactivo" },

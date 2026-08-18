@@ -19,6 +19,7 @@ type ConfirmDialogProps = {
   confirmLabel?: string;
   cancelLabel?: string;
   loading?: boolean;
+  loadingLabel?: string;
   icon?: React.ReactNode;
   children?: React.ReactNode;
   confirmDisabled?: boolean;
@@ -33,6 +34,7 @@ export function ConfirmDialog({
   confirmLabel = "Confirmar",
   cancelLabel = "Cancelar",
   loading,
+  loadingLabel = "Procesando...",
   icon,
   children,
   confirmDisabled,
@@ -79,7 +81,7 @@ export function ConfirmDialog({
             {loading ? (
               <span className="inline-flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Procesando...
+                {loadingLabel}
               </span>
             ) : (
               <span className="inline-flex items-center gap-2 [&_svg]:h-4 [&_svg]:w-4">

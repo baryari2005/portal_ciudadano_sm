@@ -74,6 +74,14 @@ export const requestAccessSchema = z.object({
     .min(6, "La contraseña debe tener al menos 6 caracteres"),
   profilePhotoTmpPath: z.string().trim().optional().default(""),
   avatarTmpPath: z.string().trim().optional().default(""),
+}).superRefine((value, ctx) => {
+  if (!value.direccionPlaceId || value.direccionLat == null || value.direccionLng == null) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["direccion"],
+      message: "Buscá la dirección y seleccioná una ubicación válida en el mapa",
+    });
+  }
 });
 
 export type RequestAccessFormValues = z.input<typeof requestAccessSchema>;
