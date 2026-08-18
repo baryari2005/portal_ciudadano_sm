@@ -5,20 +5,10 @@ import { Building2, CheckCircle2, Hash, Loader2, MapPin, Search } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { AddressLocation, GeocodingResult } from "@/features/geocoding/types/location.types";
+import { joinExactAddress, splitExactAddress } from "@/features/geocoding/helpers/exact-address";
 
 type Props = { id: string; value: string; placeId?: string | null; lat?: number | null; lng?: number | null; locality?: string | null; province?: string | null; postalCode?: string | null; display?: "full" | "input" | "map"; onChange: (value: AddressLocation) => void; className?: string; disabled?: boolean; placeholder?: string };
 const DEFAULT_CENTER: [number, number] = [-34.5431, -58.7119];
-
-function splitExactAddress(value: string) {
-  const normalized = value.trim();
-  const match = normalized.match(/^(.*?)(?:\s+(\d+[A-Za-z]?))(?:,\s*(.*))?$/);
-  return match ? { street: match[1] ?? "", number: match[2] ?? "", complement: match[3] ?? "" } : { street: normalized, number: "", complement: "" };
-}
-
-function joinExactAddress(street: string, number: string, complement: string) {
-  const main = [street.trim(), number.trim()].filter(Boolean).join(" ");
-  return [main, complement.trim()].filter(Boolean).join(", ");
-}
 
 export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, locality, province, postalCode, display = "full", onChange, className, disabled, placeholder }: Props) {
   const mapHost = useRef<HTMLDivElement>(null), mapRef = useRef<any>(null), markerRef = useRef<any>(null), callbackRef = useRef(onChange), exactAddressRef = useRef(value);

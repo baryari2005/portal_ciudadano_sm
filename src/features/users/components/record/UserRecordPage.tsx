@@ -17,6 +17,7 @@ import { EnrollmentsPage } from "@/features/enrollments/components/EnrollmentsPa
 import { UserDocumentsAdminPage } from "@/features/user-documents/components/UserDocumentsAdminPage";
 import { CatalogDetailField } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { axiosInstance } from "@/lib/axios";
+import { splitExactAddress } from "@/features/geocoding/helpers/exact-address";
 
 import { getManagedUserRecord } from "../../services/users-management.service";
 import type { ManagedUser } from "../../types/management.types";
@@ -100,6 +101,7 @@ export function UserRecordPage({ userId, section }: { userId: string; section: U
 function CitizenRecordDataSection({ user, section }: { user: ManagedUser; section: "personal-data" | "system-access" | "address" | "contact" }) {
   const shown = (value?: string | null) => value || "Sin registrar";
   const coordinates = user.addressLat != null && user.addressLng != null ? `${user.addressLat.toFixed(6)}, ${user.addressLng.toFixed(6)}` : "Sin registrar";
+  const exactAddress = splitExactAddress(user.address === "Sin registrar" ? "" : user.address);
   const personal = [
     { icon: UserRound, label: "Nombre completo", value: user.fullName },
     { icon: IdCard, label: "Tipo y número de documento", value: `${shown(user.documentType)} · ${user.dni}` },
@@ -118,11 +120,15 @@ function CitizenRecordDataSection({ user, section }: { user: ManagedUser; sectio
     { icon: CalendarDays, label: "Fecha de registro", value: user.registeredAt },
   ];
   const address = [
-    { icon: MapPin, label: "Dirección", value: user.address },
+    { icon: MapPin, label: "Calle", value: shown(exactAddress.street) },
+    { icon: IdCard, label: "Altura", value: shown(exactAddress.number) },
+    { icon: Contact, label: "Piso, departamento, casa o referencia", value: shown(exactAddress.complement) },
+    { icon: MapPin, label: "Dirección completa", value: user.address },
     { icon: MapPin, label: "Localidad", value: shown(user.locality) },
     { icon: MapPin, label: "Provincia", value: shown(user.province) },
     { icon: MapPin, label: "Código postal", value: shown(user.postalCode) },
     { icon: MapPin, label: "Coordenadas", value: coordinates },
+    { icon: CircleCheck, label: "Ubicación en mapa", value: user.addressPlaceId ? "Validada" : "Sin validar" },
   ];
   const contact = [
     { icon: Phone, label: "Teléfono", value: user.phone },

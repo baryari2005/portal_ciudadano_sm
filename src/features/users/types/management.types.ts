@@ -34,6 +34,7 @@ export type ManagedUser = {
   identityPhotoUrl?: string | null;
   addressLat?: number | null;
   addressLng?: number | null;
+  addressPlaceId?: string | null;
   professorSpecialty?: string;
   professorLicense?: string;
   professorDescription?: string;

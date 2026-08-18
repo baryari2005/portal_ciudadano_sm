@@ -37,6 +37,7 @@ export type ApiUser = {
   fotoPerfilUrl?: string | null;
   domicilioLat?: number | null;
   domicilioLng?: number | null;
+  domicilioPlaceId?: string | null;
   contactoEmergenciaNombre?: string | null;
   contactoEmergenciaTelefono?: string | null;
   coberturaMedica?: { id: string; nombre: string } | null;
@@ -119,6 +120,7 @@ export function toManagedUser(user: ApiUser): ManagedUser {
     identityPhotoUrl: user.fotoPerfilUrl ?? null,
     addressLat: user.domicilioLat ?? null,
     addressLng: user.domicilioLng ?? null,
+    addressPlaceId: user.domicilioPlaceId ?? null,
     professorSpecialty: user.profesor?.especialidad || "Sin registrar",
     professorLicense: user.profesor?.matricula || "Sin registrar",
     professorDescription: user.profesor?.descripcion || "Sin registrar",
