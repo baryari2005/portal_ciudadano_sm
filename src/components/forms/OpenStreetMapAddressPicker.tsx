@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Loader2, MapPin, Search } from "lucide-react";
+import { Building2, CheckCircle2, Hash, Loader2, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { AddressLocation, GeocodingResult } from "@/features/geocoding/types/location.types";
@@ -80,9 +80,9 @@ export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, local
   }
   const addressInput = <div className="relative min-w-0 flex-1"><MapPin className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--brand-primary)]"/><Input id={id} value={query} disabled={disabled} onChange={(event) => { setQuery(event.target.value); setResults([]); onChange({ address: event.target.value, placeId: null, lat: null, lng: null, provider: "manual" }); }} onKeyDown={(event) => { if (event.key === "Enter" && display !== "input") { event.preventDefault(); void search(); } }} className={className} placeholder={placeholder}/></div>;
   if (display === "input") return <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_160px]">
-    <div className="space-y-1"><label htmlFor={`${id}-street`} className="text-xs font-bold text-[var(--brand-muted)]">Calle *</label><Input id={`${id}-street`} value={street} disabled={disabled} onChange={(event) => changeExact(event.target.value, streetNumber, complement)} className={className} placeholder="Ej: San Pablo" /></div>
-    <div className="space-y-1"><label htmlFor={`${id}-number`} className="text-xs font-bold text-[var(--brand-muted)]">Altura *</label><Input id={`${id}-number`} value={streetNumber} disabled={disabled} inputMode="numeric" onChange={(event) => changeExact(street, event.target.value, complement)} className={className} placeholder="Ej: 1660" /></div>
-    <div className="space-y-1 sm:col-span-2"><label htmlFor={`${id}-complement`} className="text-xs font-bold text-[var(--brand-muted)]">Piso, departamento, casa o referencia</label><Input id={`${id}-complement`} value={complement} disabled={disabled} onChange={(event) => changeExact(street, streetNumber, event.target.value)} className={className} placeholder="Ej: Fondo, Casa A, Piso 2 Depto. B" /></div>
+    <div className="space-y-1"><label htmlFor={`${id}-street`} className="text-xs font-bold text-[var(--brand-muted)]">Calle *</label><div className="relative"><MapPin className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--brand-primary)]"/><Input id={`${id}-street`} value={street} disabled={disabled} onChange={(event) => changeExact(event.target.value, streetNumber, complement)} className={`${className ?? ""} pl-9`} placeholder="Ej: San Pablo" /></div></div>
+    <div className="space-y-1"><label htmlFor={`${id}-number`} className="text-xs font-bold text-[var(--brand-muted)]">Altura *</label><div className="relative"><Hash className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--brand-primary)]"/><Input id={`${id}-number`} value={streetNumber} disabled={disabled} inputMode="numeric" onChange={(event) => changeExact(street, event.target.value, complement)} className={`${className ?? ""} pl-9`} placeholder="Ej: 1660" /></div></div>
+    <div className="space-y-1 sm:col-span-2"><label htmlFor={`${id}-complement`} className="text-xs font-bold text-[var(--brand-muted)]">Piso, departamento, casa o referencia</label><div className="relative"><Building2 className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--brand-primary)]"/><Input id={`${id}-complement`} value={complement} disabled={disabled} onChange={(event) => changeExact(street, streetNumber, event.target.value)} className={`${className ?? ""} pl-9`} placeholder="Ej: Fondo, Casa A, Piso 2 Depto. B" /></div></div>
   </div>;
   return <div className="space-y-3">
     <p className="text-sm font-medium text-[var(--brand-muted)]">Completá dirección, localidad, provincia y código postal para encontrar una ubicación más precisa.</p>
