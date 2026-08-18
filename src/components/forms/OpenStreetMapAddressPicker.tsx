@@ -9,12 +9,30 @@ import type { AddressLocation, GeocodingResult } from "@/features/geocoding/type
 type Props = { id: string; value: string; placeId?: string | null; lat?: number | null; lng?: number | null; locality?: string | null; province?: string | null; postalCode?: string | null; display?: "full" | "input" | "map"; onChange: (value: AddressLocation) => void; className?: string; disabled?: boolean; placeholder?: string };
 const DEFAULT_CENTER: [number, number] = [-34.5431, -58.7119];
 
-export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, locality, province, postalCode, display = "full", onChange, className, disabled, placeholder }: Props) {
-  const mapHost = useRef<HTMLDivElement>(null), mapRef = useRef<any>(null), markerRef = useRef<any>(null), callbackRef = useRef(onChange);
-  const [query, setQuery] = useState(value), [results, setResults] = useState<GeocodingResult[]>([]), [loading, setLoading] = useState(false), [message, setMessage] = useState("");
-  callbackRef.current = onChange;
+function splitExactAddress(value: string) {
+  const normalized = value.trim();
+  const match = normalized.match(/^(.*?)(?:\s+(\d+[A-Za-z]?))(?:,\s*(.*))?$/);
+  return match ? { street: match[1] ?? "", number: match[2] ?? "", complement: match[3] ?? "" } : { street: normalized, number: "", complement: "" };
+}
 
-  useEffect(() => setQuery(value), [value]);
+function joinExactAddress(street: string, number: string, complement: string) {
+  const main = [street.trim(), number.trim()].filter(Boolean).join(" ");
+  return [main, complement.trim()].filter(Boolean).join(", ");
+}
+
+export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, locality, province, postalCode, display = "full", onChange, className, disabled, placeholder }: Props) {
+  const mapHost = useRef<HTMLDivElement>(null), mapRef = useRef<any>(null), markerRef = useRef<any>(null), callbackRef = useRef(onChange), exactAddressRef = useRef(value);
+  const [query, setQuery] = useState(value), [results, setResults] = useState<GeocodingResult[]>([]), [loading, setLoading] = useState(false), [message, setMessage] = useState("");
+  const initialExact = splitExactAddress(value);
+  const [street, setStreet] = useState(initialExact.street), [streetNumber, setStreetNumber] = useState(initialExact.number), [complement, setComplement] = useState(initialExact.complement);
+  callbackRef.current = onChange;
+  exactAddressRef.current = value;
+
+  useEffect(() => {
+    setQuery(value);
+    const parsed = splitExactAddress(value);
+    setStreet(parsed.street); setStreetNumber(parsed.number); setComplement(parsed.complement);
+  }, [value]);
   useEffect(() => {
     if (display === "input") return;
     if (!mapHost.current || mapRef.current) return;
@@ -29,8 +47,8 @@ export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, local
       const selectPoint = async (point: { lat: number; lng: number }) => {
         markerRef.current?.setLatLng(point);
         setLoading(true); setMessage("");
-        try { const response = await fetch(`/api/geocoding?lat=${point.lat}&lng=${point.lng}`); const body = await response.json(); if (!response.ok || !body.data) throw new Error(); callbackRef.current(body.data); }
-        catch { callbackRef.current({ address: query, placeId: null, lat: point.lat, lng: point.lng, provider: "openstreetmap" }); setMessage("Punto seleccionado; completá la dirección manualmente."); }
+        try { const response = await fetch(`/api/geocoding?lat=${point.lat}&lng=${point.lng}`); const body = await response.json(); if (!response.ok || !body.data) throw new Error(); callbackRef.current({ ...body.data, address: exactAddressRef.current.trim() || body.data.address }); }
+        catch { callbackRef.current({ address: exactAddressRef.current, placeId: null, lat: point.lat, lng: point.lng, provider: "openstreetmap" }); setMessage("Punto seleccionado; completá la dirección manualmente."); }
         finally { setLoading(false); }
       };
       const marker = L.marker(center, { draggable: true, icon, opacity: lat != null ? 1 : 0 }).addTo(map);
@@ -45,15 +63,27 @@ export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, local
   async function search() {
     if (query.trim().length < 3) { setMessage("Ingresá al menos 3 caracteres."); return; }
     setLoading(true); setMessage(""); setResults([]);
-    const contextualQuery = [query.trim(), locality?.trim(), province?.trim(), postalCode?.trim(), "Argentina"].filter(Boolean).join(", ");
+    const exact = splitExactAddress(query);
+    const searchableAddress = [exact.street, exact.number].filter(Boolean).join(" ");
+    const contextualQuery = [searchableAddress, locality?.trim(), province?.trim(), postalCode?.trim(), "Argentina"].filter(Boolean).join(", ");
     try { const response = await fetch(`/api/geocoding?q=${encodeURIComponent(contextualQuery)}`); const body = await response.json(); if (!response.ok) throw new Error(body.message); setResults(body.data); if (!body.data.length) setMessage("No encontramos resultados. Podés marcar el punto en el mapa."); }
     catch (error) { setMessage(error instanceof Error ? error.message : "No pudimos buscar la dirección."); }
     finally { setLoading(false); }
   }
-  function select(result: GeocodingResult) { setResults([]); setQuery(result.address); callbackRef.current(result); mapRef.current?.setView([result.lat, result.lng], 17); markerRef.current?.setLatLng([result.lat, result.lng]).setOpacity(1); }
+  function select(result: GeocodingResult) { const exactAddress = query.trim() || result.address; setResults([]); setQuery(exactAddress); callbackRef.current({ ...result, address: exactAddress }); mapRef.current?.setView([result.lat, result.lng], 17); markerRef.current?.setLatLng([result.lat, result.lng]).setOpacity(1); }
 
+  function changeExact(nextStreet: string, nextNumber: string, nextComplement: string) {
+    setStreet(nextStreet); setStreetNumber(nextNumber); setComplement(nextComplement);
+    const address = joinExactAddress(nextStreet, nextNumber, nextComplement);
+    setQuery(address); setResults([]); markerRef.current?.setOpacity(0);
+    onChange({ address, placeId: null, lat: null, lng: null, provider: "manual" });
+  }
   const addressInput = <div className="relative min-w-0 flex-1"><MapPin className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--brand-primary)]"/><Input id={id} value={query} disabled={disabled} onChange={(event) => { setQuery(event.target.value); setResults([]); onChange({ address: event.target.value, placeId: null, lat: null, lng: null, provider: "manual" }); }} onKeyDown={(event) => { if (event.key === "Enter" && display !== "input") { event.preventDefault(); void search(); } }} className={className} placeholder={placeholder}/></div>;
-  if (display === "input") return addressInput;
+  if (display === "input") return <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_160px]">
+    <div className="space-y-1"><label htmlFor={`${id}-street`} className="text-xs font-bold text-[var(--brand-muted)]">Calle *</label><Input id={`${id}-street`} value={street} disabled={disabled} onChange={(event) => changeExact(event.target.value, streetNumber, complement)} className={className} placeholder="Ej: San Pablo" /></div>
+    <div className="space-y-1"><label htmlFor={`${id}-number`} className="text-xs font-bold text-[var(--brand-muted)]">Altura *</label><Input id={`${id}-number`} value={streetNumber} disabled={disabled} inputMode="numeric" onChange={(event) => changeExact(street, event.target.value, complement)} className={className} placeholder="Ej: 1660" /></div>
+    <div className="space-y-1 sm:col-span-2"><label htmlFor={`${id}-complement`} className="text-xs font-bold text-[var(--brand-muted)]">Piso, departamento, casa o referencia</label><Input id={`${id}-complement`} value={complement} disabled={disabled} onChange={(event) => changeExact(street, streetNumber, event.target.value)} className={className} placeholder="Ej: Fondo, Casa A, Piso 2 Depto. B" /></div>
+  </div>;
   return <div className="space-y-3">
     <p className="text-sm font-medium text-[var(--brand-muted)]">Completá dirección, localidad, provincia y código postal para encontrar una ubicación más precisa.</p>
     <div className="flex gap-2">{display === "full" ? addressInput : null}<Button type="button" className="w-full sm:w-auto" disabled={disabled || loading || query.trim().length < 3} onClick={() => void search()} aria-label="Buscar ubicación en el mapa">{loading ? <Loader2 className="animate-spin"/> : <Search/>}<span>Buscar ubicación en el mapa</span></Button></div>
