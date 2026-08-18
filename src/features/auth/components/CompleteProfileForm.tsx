@@ -4,11 +4,12 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { GoogleAddressInput } from "@/components/forms/GoogleAddressInput";
 import { useAuth } from "@/stores/auth";
 
 import {
@@ -34,6 +35,7 @@ export function CompleteProfileForm() {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
@@ -149,7 +151,7 @@ export function CompleteProfileForm() {
         >
           Dirección
         </label>
-        <Input id="domicilio" {...register("domicilio")} />
+        <Controller control={control} name="domicilio" render={({ field }) => <GoogleAddressInput id="domicilio" value={field.value} onChange={(location) => field.onChange(location.address)} />} />
         <FieldError message={errors.domicilio?.message} />
       </div>
 

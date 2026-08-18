@@ -270,6 +270,10 @@ model Establecimiento {
   barrio      String?
   localidad   String?
   provincia   String?
+  direccionPlaceId String?
+  direccionLat Float?
+  direccionLng Float?
+  codigoPostal String?
   imagenUrl   String?
   tipo        EstablecimientoTipo @default(SEDE)
   activo      Boolean             @default(true)
@@ -291,6 +295,7 @@ model Establecimiento {
 
   @@index([activo])
   @@index([tipo])
+  @@index([direccionPlaceId])
 }
 
 model HorarioEstablecimiento {

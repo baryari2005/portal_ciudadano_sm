@@ -26,6 +26,22 @@ export type ApiUser = {
   documento?: string | null;
   celular?: string | null;
   domicilio?: string | null;
+  localidad?: string | null;
+  provincia?: string | null;
+  codigoPostal?: string | null;
+  tipoDocumento?: string | null;
+  cuil?: string | null;
+  genero?: string | null;
+  estadoCivil?: string | null;
+  nacionalidad?: string | null;
+  fotoPerfilUrl?: string | null;
+  domicilioLat?: number | null;
+  domicilioLng?: number | null;
+  contactoEmergenciaNombre?: string | null;
+  contactoEmergenciaTelefono?: string | null;
+  coberturaMedica?: { id: string; nombre: string } | null;
+  numeroAfiliado?: string | null;
+  profesor?: { especialidad?: string | null; matricula?: string | null; descripcion?: string | null } | null;
   fechaNacimiento?: string | Date | null;
   estadoParticipacion?: ManagedUser["participationStatus"];
   umbralAusenciasJustificadas?: number | null;
@@ -85,8 +101,27 @@ export function toManagedUser(user: ApiUser): ManagedUser {
     dni: user.documento || "Sin registrar",
     phone: user.celular || "Sin registrar",
     address: user.domicilio || "Sin registrar",
+    locality: user.localidad || "Sin registrar",
+    province: user.provincia || "Sin registrar",
+    postalCode: user.codigoPostal || "Sin registrar",
+    documentType: user.tipoDocumento || "Sin registrar",
+    cuil: user.cuil || "Sin registrar",
     birthDate:
       formatDateTime(user.fechaNacimiento).split(",")[0] || "Sin registrar",
+    gender: user.genero?.replaceAll("_", " ") || "Sin registrar",
+    maritalStatus: user.estadoCivil?.replaceAll("_", " ") || "Sin registrar",
+    nationality: user.nacionalidad?.replaceAll("_", " ") || "Sin registrar",
+    profileComplete: user.perfilCompleto !== false,
+    emergencyContactName: user.contactoEmergenciaNombre || "Sin registrar",
+    emergencyContactPhone: user.contactoEmergenciaTelefono || "Sin registrar",
+    medicalCoverage: user.coberturaMedica?.nombre || "Sin registrar",
+    affiliateNumber: user.numeroAfiliado || "Sin registrar",
+    identityPhotoUrl: user.fotoPerfilUrl ?? null,
+    addressLat: user.domicilioLat ?? null,
+    addressLng: user.domicilioLng ?? null,
+    professorSpecialty: user.profesor?.especialidad || "Sin registrar",
+    professorLicense: user.profesor?.matricula || "Sin registrar",
+    professorDescription: user.profesor?.descripcion || "Sin registrar",
     lastAccess: "No disponible",
     failedAttempts: 0,
     permissionsSummary:

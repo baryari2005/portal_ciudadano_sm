@@ -32,9 +32,10 @@ export function UsersManagementPage({ scope = "citizen", context = "admin" }: { 
     page,
     setPage,
     loading,
+    initialized,
     error,
   } = useUsersManagement(scope, context, searchParams.get("selected") ?? "");
-  const showInitialLoading = (loading || rolesLoading) && !error;
+  const showInitialLoading = (!initialized || rolesLoading) && !error;
 
   if (showInitialLoading) {
     return <UsersManagementLoadingState />;
@@ -67,7 +68,7 @@ export function UsersManagementPage({ scope = "citizen", context = "admin" }: { 
             meta={meta}
             page={page}
             onPageChange={setPage}
-            loading={loading}
+            loading={!initialized && loading}
             error={error}
             filtered={Boolean(query.trim()) || selectedRoleId !== null || selectedStatus !== "all"}
           />

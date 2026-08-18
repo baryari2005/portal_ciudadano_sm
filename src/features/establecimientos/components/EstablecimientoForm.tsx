@@ -28,6 +28,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AdminFormCard, AdminFormField as Field, AdminStatusSwitchField, adminControlClass, adminPrimaryButtonClass, adminSecondaryButtonClass } from "@/components/shared/admin-patterns";
 import { EmailInput } from "@/components/forms/EmailInput";
 import { PhoneInput } from "@/components/forms/PhoneInput";
+import { GoogleAddressInput } from "@/components/forms/GoogleAddressInput";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -82,6 +83,10 @@ const emptyPayload: EstablecimientoPayload = {
   direccion: "",
   localidad: "",
   provincia: "",
+  direccionPlaceId: null,
+  direccionLat: null,
+  direccionLng: null,
+  codigoPostal: "",
   imagenUrl: null,
   email: "",
   telefono: "",
@@ -155,6 +160,10 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
       direccion: defaultValues.direccion,
       localidad: defaultValues.localidad ?? "",
       provincia: defaultValues.provincia ?? "",
+      direccionPlaceId: defaultValues.direccionPlaceId ?? null,
+      direccionLat: defaultValues.direccionLat ?? null,
+      direccionLng: defaultValues.direccionLng ?? null,
+      codigoPostal: defaultValues.codigoPostal ?? "",
       imagenUrl: defaultValues.imagenUrl ?? null,
       email: defaultValues.email ?? "",
       telefono: defaultValues.telefono ?? "",
@@ -283,12 +292,7 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
             </div>
 
             <Field label="Direccion *" icon={MapPin} className="sm:col-span-2">
-              <Input
-                value={form.direccion}
-                onChange={(event) => setValue("direccion", event.target.value)}
-                className={inputClass}
-                placeholder="Ej: Av. Presidente Peron 1234"
-              />
+              <GoogleAddressInput display="input" id="facility-address" value={form.direccion} placeId={form.direccionPlaceId} lat={form.direccionLat} lng={form.direccionLng} locality={form.localidad} province={form.provincia} postalCode={form.codigoPostal} onChange={(location) => setForm((current) => ({ ...current, direccion: location.address, direccionPlaceId: location.placeId, direccionLat: location.lat, direccionLng: location.lng, localidad: location.locality ?? current.localidad, provincia: location.province ?? current.provincia, codigoPostal: location.postalCode ?? current.codigoPostal }))} className={inputClass} placeholder="Ej: Av. Presidente Peron 1234" />
             </Field>
 
             <Field label="Barrio" icon={MapPin}>
@@ -310,6 +314,12 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
                 <SelectContent>{ARGENTINA_PROVINCES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent>
               </Select>
             </Field>
+
+            <Field label="Código postal" icon={MapPin}>
+              <Input value={form.codigoPostal ?? ""} onChange={(event) => setValue("codigoPostal", event.target.value)} className={inputClass} placeholder="Ej: 1625" />
+            </Field>
+
+            <div className="sm:col-span-2"><GoogleAddressInput display="map" id="facility-address-map" value={form.direccion} placeId={form.direccionPlaceId} lat={form.direccionLat} lng={form.direccionLng} locality={form.localidad} province={form.provincia} postalCode={form.codigoPostal} onChange={(location) => setForm((current) => ({ ...current, direccion: location.address, direccionPlaceId: location.placeId, direccionLat: location.lat, direccionLng: location.lng, localidad: location.locality ?? current.localidad, provincia: location.province ?? current.provincia, codigoPostal: location.postalCode ?? current.codigoPostal }))} /></div>
 
             <Field label="Email" icon={Mail}>
               <EmailInput

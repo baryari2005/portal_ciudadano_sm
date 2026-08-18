@@ -264,20 +264,24 @@ model Profesor {
 }
 
 model Establecimiento {
-  id          String              @id
-  nombre      String
-  direccion   String
-  barrio      String?
-  localidad   String?
-  provincia   String?
-  imagenUrl   String?
-  tipo        EstablecimientoTipo @default(SEDE)
-  activo      Boolean             @default(true)
-  email       String?
-  telefono    String?
-  celular     String?
-  estado      String              @default("activo")
-  observacion String?
+  id               String              @id
+  nombre           String
+  direccion        String
+  barrio           String?
+  localidad        String?
+  provincia        String?
+  direccionPlaceId String?
+  direccionLat     Float?
+  direccionLng     Float?
+  codigoPostal     String?
+  imagenUrl        String?
+  tipo             EstablecimientoTipo @default(SEDE)
+  activo           Boolean             @default(true)
+  email            String?
+  telefono         String?
+  celular          String?
+  estado           String              @default("activo")
+  observacion      String?
 
   actividades       Actividad[]
   horarios          HorarioEstablecimiento[]
@@ -291,6 +295,7 @@ model Establecimiento {
 
   @@index([activo])
   @@index([tipo])
+  @@index([direccionPlaceId])
 }
 
 model HorarioEstablecimiento {

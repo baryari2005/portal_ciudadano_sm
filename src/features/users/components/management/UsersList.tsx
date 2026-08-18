@@ -67,7 +67,7 @@ export function UsersList({
           ) : null}
         </div>
 
-        {!loading ? <CatalogPagination page={page} total={meta.total} pageSize={meta.pageSize} onPageChange={onPageChange} /> : null}
+        <CatalogPagination page={page} total={meta.total} pageSize={meta.pageSize} onPageChange={onPageChange} />
       </div>
     </div>
   );

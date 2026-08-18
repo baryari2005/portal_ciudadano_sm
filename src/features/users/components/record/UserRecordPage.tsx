@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Activity, AlertTriangle, CircleCheck, CircleX, ClipboardCheck, FileCheck2, Info, Loader2, MessageSquareText, Save, UserRound } from "lucide-react";
+import { Activity, AlertTriangle, CalendarDays, CircleCheck, CircleX, ClipboardCheck, Contact, FileCheck2, HeartPulse, IdCard, Info, Loader2, Mail, MapPin, MessageSquareText, Phone, Save, ShieldCheck, UserRound } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -16,15 +15,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserAttendanceHistory } from "@/features/attendance/components/UserAttendanceHistory";
 import { EnrollmentsPage } from "@/features/enrollments/components/EnrollmentsPage";
 import { UserDocumentsAdminPage } from "@/features/user-documents/components/UserDocumentsAdminPage";
+import { CatalogDetailField } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { axiosInstance } from "@/lib/axios";
 
 import { getManagedUserRecord } from "../../services/users-management.service";
 import type { ManagedUser } from "../../types/management.types";
 import { USER_RECORD_SECTIONS, type UserRecordSection } from "../../constants/user-record-sections";
-import { UserDetailPanel } from "../management/UserDetailPanel";
 
 const sections = [
-  { id: "overview", label: "Resumen", icon: UserRound },
+  { id: "personal-data", label: "Datos personales", icon: UserRound },
+  { id: "system-access", label: "Acceso al sistema", icon: ShieldCheck },
+  { id: "address", label: "Domicilio", icon: MapPin },
+  { id: "contact", label: "Contacto y cobertura", icon: HeartPulse },
   { id: "documents", label: "Documentos", icon: FileCheck2 },
   { id: "enrollments", label: "Inscripciones", icon: ClipboardCheck },
   { id: "attendance", label: "Asistencias", icon: Activity },
@@ -32,8 +34,7 @@ const sections = [
 ] as const;
 
 export function UserRecordPage({ userId, section }: { userId: string; section: UserRecordSection }) {
-  const router = useRouter();
-  const normalizedSection = section === "access" ? "overview" : section;
+  const normalizedSection = section === "access" || section === "overview" ? "personal-data" : section;
   const [activeSection, setActiveSection] = useState<UserRecordSection>(normalizedSection);
   const [sectionLoading, setSectionLoading] = useState(["documents", "enrollments", "attendance"].includes(normalizedSection));
   const [user, setUser] = useState<ManagedUser | null>(null);
@@ -51,12 +52,12 @@ export function UserRecordPage({ userId, section }: { userId: string; section: U
   useEffect(() => { void load(); }, [userId]);
   useEffect(() => {
     setActiveSection(normalizedSection);
-    if (section === "access") window.history.replaceState(null, "", `/users/${userId}/record/overview`);
+    if (section === "access" || section === "overview") window.history.replaceState(null, "", `/users/${userId}/record/personal-data`);
   }, [normalizedSection, section, userId]);
   useEffect(() => {
     const syncFromHistory = () => {
       const routeSection = window.location.pathname.split("/").at(-1) as UserRecordSection;
-      const current = routeSection === "access" ? "overview" : routeSection;
+      const current = routeSection === "access" || routeSection === "overview" ? "personal-data" : routeSection;
       if (USER_RECORD_SECTIONS.includes(current)) {
         setSectionLoading(["documents", "enrollments", "attendance"].includes(current));
         setActiveSection(current);
@@ -79,21 +80,73 @@ export function UserRecordPage({ userId, section }: { userId: string; section: U
       icon={UserRound}
       backHref="/users"
       sections={sections}
-      activeSection={activeSection === "access" ? "overview" : activeSection}
+      activeSection={activeSection === "access" || activeSection === "overview" ? "personal-data" : activeSection}
       onSectionChange={selectSection}
       navigationDisabled={loading}
       loading={loading || sectionLoading}
       loadingLabel="información del ciudadano"
-      contentClassName={["overview", "participation"].includes(activeSection) ? "border-0 bg-transparent p-0 shadow-none sm:p-0" : undefined}
+      contentClassName={activeSection === "participation" ? "border-0 bg-transparent p-0 shadow-none sm:p-0" : undefined}
     >
       {error || (!loading && !user) ? <p>No pudimos cargar la ficha del usuario.</p> : null}
-      {user && activeSection === "overview" ? <UserDetailPanel user={user} onBack={() => router.push("/users")} onUserChanged={load} compact showFullRecordAction={false} /> : null}
+      {user && ["personal-data", "system-access", "address", "contact"].includes(activeSection) ? <CitizenRecordDataSection user={user} section={activeSection as "personal-data" | "system-access" | "address" | "contact"} /> : null}
       {user && activeSection === "documents" ? <RecordCard title="Documentos del ciudadano" description="Consultá, aprobá o rechazá la documentación presentada."><UserDocumentsAdminPage userId={user.id} embedded onLoadingChange={setSectionLoading} /></RecordCard> : null}
       {user && activeSection === "enrollments" ? <RecordCard title="Inscripciones del ciudadano" description="Consultá sus actividades y la documentación que todavía necesita presentar."><EnrollmentsPage userId={user.id} embedded onLoadingChange={setSectionLoading} /></RecordCard> : null}
       {user && activeSection === "attendance" ? <RecordCard title="Asistencias" description="Historial de presentes, ausentes y justificaciones."><UserAttendanceHistory userId={user.id} onLoadingChange={setSectionLoading} /></RecordCard> : null}
       {user && activeSection === "participation" ? <AdminDetailPanel><ParticipationSection user={user} onSaved={load} /></AdminDetailPanel> : null}
     </AdminRecordLayout>
   );
+}
+
+function CitizenRecordDataSection({ user, section }: { user: ManagedUser; section: "personal-data" | "system-access" | "address" | "contact" }) {
+  const shown = (value?: string | null) => value || "Sin registrar";
+  const coordinates = user.addressLat != null && user.addressLng != null ? `${user.addressLat.toFixed(6)}, ${user.addressLng.toFixed(6)}` : "Sin registrar";
+  const personal = [
+    { icon: UserRound, label: "Nombre completo", value: user.fullName },
+    { icon: IdCard, label: "Tipo y número de documento", value: `${shown(user.documentType)} · ${user.dni}` },
+    { icon: IdCard, label: "CUIL", value: shown(user.cuil) },
+    { icon: CalendarDays, label: "Fecha de nacimiento", value: user.birthDate },
+    { icon: UserRound, label: "Género", value: shown(user.gender) },
+    { icon: Contact, label: "Estado civil", value: shown(user.maritalStatus) },
+    { icon: ShieldCheck, label: "Nacionalidad", value: shown(user.nationality) },
+  ];
+  const access = [
+    { icon: UserRound, label: "Usuario", value: user.userId },
+    { icon: Mail, label: "Email", value: user.email },
+    { icon: ShieldCheck, label: "Rol", value: user.role },
+    { icon: CircleCheck, label: "Estado", value: user.status },
+    { icon: CircleCheck, label: "Perfil", value: user.profileComplete ? "Completo" : "Incompleto" },
+    { icon: CalendarDays, label: "Fecha de registro", value: user.registeredAt },
+  ];
+  const address = [
+    { icon: MapPin, label: "Dirección", value: user.address },
+    { icon: MapPin, label: "Localidad", value: shown(user.locality) },
+    { icon: MapPin, label: "Provincia", value: shown(user.province) },
+    { icon: MapPin, label: "Código postal", value: shown(user.postalCode) },
+    { icon: MapPin, label: "Coordenadas", value: coordinates },
+  ];
+  const contact = [
+    { icon: Phone, label: "Teléfono", value: user.phone },
+    { icon: Contact, label: "Contacto de emergencia", value: shown(user.emergencyContactName) },
+    { icon: Phone, label: "Teléfono de emergencia", value: shown(user.emergencyContactPhone) },
+    { icon: HeartPulse, label: "Cobertura médica", value: shown(user.medicalCoverage) },
+    { icon: IdCard, label: "Número de afiliado", value: shown(user.affiliateNumber) },
+  ];
+  const groups = {
+    "personal-data": { title: "Datos personales", description: "Identidad y datos personales registrados.", icon: UserRound, rows: personal },
+    "system-access": { title: "Acceso al sistema", description: "Cuenta, rol y estado administrativo.", icon: ShieldCheck, rows: access },
+    address: { title: "Domicilio", description: "Ubicación declarada y referencia geográfica.", icon: MapPin, rows: address },
+    contact: { title: "Contacto y cobertura", description: "Teléfonos, emergencia y cobertura médica.", icon: HeartPulse, rows: contact },
+  };
+  const group = groups[section];
+  return <>
+    <AdminRecordSectionContent title={group.title} description={group.description} icon={group.icon}><dl className="grid gap-3 md:grid-cols-2">{group.rows.map((row) => <CatalogDetailField key={row.label} icon={row.icon} label={row.label}>{row.value}</CatalogDetailField>)}</dl></AdminRecordSectionContent>
+    {section === "personal-data" ? <AdminRecordSectionContent className="mt-8 border-t border-[var(--brand-border)] pt-8" title="Imágenes personales" description="Fotografías asociadas al ciudadano." icon={FileCheck2}><div className="grid gap-5 sm:grid-cols-2"><RecordImage label="Avatar" src={user.avatarUrl} /><RecordImage label="Foto de identidad" src={user.identityPhotoUrl ?? null} /></div></AdminRecordSectionContent> : null}
+    {section === "personal-data" && user.role.toLowerCase().includes("profesor") ? <AdminRecordSectionContent className="mt-8 border-t border-[var(--brand-border)] pt-8" title="Perfil docente" description="Información profesional vinculada al rol." icon={Contact}><dl className="grid gap-3 md:grid-cols-2"><CatalogDetailField icon={Contact} label="Especialidad">{shown(user.professorSpecialty)}</CatalogDetailField><CatalogDetailField icon={IdCard} label="Matrícula">{shown(user.professorLicense)}</CatalogDetailField><CatalogDetailField icon={Info} label="Descripción">{shown(user.professorDescription)}</CatalogDetailField></dl></AdminRecordSectionContent> : null}
+  </>;
+}
+
+function RecordImage({ label, src }: { label: string; src: string | null }) {
+  return <div><p className="mb-2 text-sm font-extrabold text-[var(--brand-primary)]">{label}</p><div className="grid aspect-[4/3] max-w-sm place-items-center overflow-hidden rounded-2xl border border-[var(--brand-border)] bg-[var(--brand-panel)]">{src ? <img src={src} alt={label} className="size-full object-cover" /> : <span className="text-sm font-bold text-[var(--brand-muted)]">Sin imagen registrada</span>}</div></div>;
 }
 
 function RecordCard({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
