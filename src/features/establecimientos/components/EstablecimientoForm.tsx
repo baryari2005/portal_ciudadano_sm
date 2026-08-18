@@ -291,9 +291,9 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
               {isEdit ? <p className="mt-1.5 text-xs text-[var(--brand-muted)]">El estado se modifica desde las acciones del detalle.</p> : null}
             </div>
 
-            <Field label="Direccion *" icon={MapPin} className="sm:col-span-2">
+            <div className="grid gap-6 sm:col-span-2 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] lg:items-stretch"><div className="grid content-start gap-4 sm:grid-cols-2"><div className="sm:col-span-2">
               <GoogleAddressInput display="input" id="facility-address" value={form.direccion} placeId={form.direccionPlaceId} lat={form.direccionLat} lng={form.direccionLng} locality={form.localidad} province={form.provincia} postalCode={form.codigoPostal} onChange={(location) => setForm((current) => ({ ...current, direccion: location.address, direccionPlaceId: location.placeId, direccionLat: location.lat, direccionLng: location.lng, localidad: location.locality ?? current.localidad, provincia: location.province ?? current.provincia, codigoPostal: location.postalCode ?? current.codigoPostal }))} className={inputClass} placeholder="Ej: Av. Presidente Peron 1234" />
-            </Field>
+            </div>
 
             <Field label="Barrio" icon={MapPin}>
               <Input
@@ -319,7 +319,7 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
               <Input value={form.codigoPostal ?? ""} onChange={(event) => setValue("codigoPostal", event.target.value)} className={inputClass} placeholder="Ej: 1625" />
             </Field>
 
-            <div className="sm:col-span-2"><GoogleAddressInput display="map" id="facility-address-map" value={form.direccion} placeId={form.direccionPlaceId} lat={form.direccionLat} lng={form.direccionLng} locality={form.localidad} province={form.provincia} postalCode={form.codigoPostal} onChange={(location) => setForm((current) => ({ ...current, direccion: location.address, direccionPlaceId: location.placeId, direccionLat: location.lat, direccionLng: location.lng, localidad: location.locality ?? current.localidad, provincia: location.province ?? current.provincia, codigoPostal: location.postalCode ?? current.codigoPostal }))} /></div>
+            </div><div className="min-w-0"><GoogleAddressInput display="map" id="facility-address-map" value={form.direccion} placeId={form.direccionPlaceId} lat={form.direccionLat} lng={form.direccionLng} locality={form.localidad} province={form.provincia} postalCode={form.codigoPostal} onChange={(location) => setForm((current) => ({ ...current, direccion: location.address, direccionPlaceId: location.placeId, direccionLat: location.lat, direccionLng: location.lng, localidad: location.locality ?? current.localidad, provincia: location.province ?? current.provincia, codigoPostal: location.postalCode ?? current.codigoPostal }))} /></div></div>
 
             <Field label="Email" icon={Mail}>
               <EmailInput

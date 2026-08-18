@@ -447,12 +447,9 @@ export function RequestAccessForm() {
               </div>
               </> : null}
 
-              {step === 3 ? <>
+              {step === 3 ? <div className="grid gap-6 sm:col-span-2 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] lg:items-stretch"><div className="grid content-start gap-4 sm:grid-cols-2">
 
-              <div className="space-y-1 sm:col-span-2">
-                <Label className="font-extrabold text-[var(--brand-ink)]">
-                  Dirección *
-                </Label>
+              <div className="sm:col-span-2">
                 <Controller control={control} name="direccion" render={({field})=><GoogleAddressInput display="input" id="direccion" value={field.value??""} placeId={form.watch("direccionPlaceId")} lat={form.watch("direccionLat")} lng={form.watch("direccionLng")} locality={form.watch("localidad")} province={form.watch("provincia")} postalCode={form.watch("codigoPostal")} onChange={(location)=>{field.onChange(location.address);setValue("direccionPlaceId",location.placeId??"");setValue("direccionLat",location.lat);setValue("direccionLng",location.lng);if(location.locality)setValue("localidad",location.locality);if(location.province)setValue("provincia",location.province);if(location.postalCode)setValue("codigoPostal",location.postalCode)}} className={inputClass} placeholder="Ej: Av. Presidente Perón 1234"/>}/>
                 <FormError message={errors.direccion?.message} />
               </div>
@@ -460,8 +457,7 @@ export function RequestAccessForm() {
               <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Localidad *</Label><IconInput id="localidad" leftIcon={<MapPinned className="size-4 text-[var(--brand-primary)]" />} input={<Input {...register("localidad")} className={`${adminControlClass} w-full pl-9`} />} /><FormError message={errors.localidad?.message} /></div>
               <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Provincia *</Label><Controller control={control} name="provincia" render={({field})=><IconInput id="provincia" leftIcon={<Map className="size-4 text-[var(--brand-primary)]" />} input={<Select value={field.value} onValueChange={field.onChange}><SelectTrigger className={`${adminControlClass} w-full pl-9`}><SelectValue placeholder="Seleccionar provincia"/></SelectTrigger><SelectContent>{ARGENTINA_PROVINCES.map(item=><SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>} />}/><FormError message={errors.provincia?.message} /></div>
               <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Código postal *</Label><IconInput id="codigoPostal" leftIcon={<IdCard className="size-4 text-[var(--brand-primary)]" />} input={<Input {...register("codigoPostal")} className={`${adminControlClass} w-full pl-9`} />} /><FormError message={errors.codigoPostal?.message} /></div>
-              <div className="sm:col-span-2"><Controller control={control} name="direccion" render={({field})=><GoogleAddressInput display="map" id="direccion-map" value={field.value??""} placeId={form.watch("direccionPlaceId")} lat={form.watch("direccionLat")} lng={form.watch("direccionLng")} locality={form.watch("localidad")} province={form.watch("provincia")} postalCode={form.watch("codigoPostal")} onChange={(location)=>{field.onChange(location.address);setValue("direccionPlaceId",location.placeId??"");setValue("direccionLat",location.lat);setValue("direccionLng",location.lng);if(location.locality)setValue("localidad",location.locality);if(location.province)setValue("provincia",location.province);if(location.postalCode)setValue("codigoPostal",location.postalCode)}} />}/></div>
-              </> : null}
+              </div><div className="min-w-0"><Controller control={control} name="direccion" render={({field})=><GoogleAddressInput display="map" id="direccion-map" value={field.value??""} placeId={form.watch("direccionPlaceId")} lat={form.watch("direccionLat")} lng={form.watch("direccionLng")} locality={form.watch("localidad")} province={form.watch("provincia")} postalCode={form.watch("codigoPostal")} onChange={(location)=>{field.onChange(location.address);setValue("direccionPlaceId",location.placeId??"");setValue("direccionLat",location.lat);setValue("direccionLng",location.lng);if(location.locality)setValue("localidad",location.locality);if(location.province)setValue("provincia",location.province);if(location.postalCode)setValue("codigoPostal",location.postalCode)}} />}/></div></div> : null}
 
               {step === 4 ? <>
 
