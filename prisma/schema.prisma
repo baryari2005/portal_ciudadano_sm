@@ -387,6 +387,7 @@ model Requisito {
   nombre                 String
   slug                   String                  @unique
   descripcion            String?
+  imagenUrl              String?
   tipo                   RequisitoTipo
   requiereDocumento      Boolean                 @default(false)
   documentoPersonal      Boolean                 @default(false)

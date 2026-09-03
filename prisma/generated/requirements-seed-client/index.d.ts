@@ -23308,6 +23308,7 @@ export namespace Prisma {
     nombre: string | null
     slug: string | null
     descripcion: string | null
+    imagenUrl: string | null
     tipo: $Enums.RequisitoTipo | null
     requiereDocumento: boolean | null
     documentoPersonal: boolean | null
@@ -23331,6 +23332,7 @@ export namespace Prisma {
     nombre: string | null
     slug: string | null
     descripcion: string | null
+    imagenUrl: string | null
     tipo: $Enums.RequisitoTipo | null
     requiereDocumento: boolean | null
     documentoPersonal: boolean | null
@@ -23354,6 +23356,7 @@ export namespace Prisma {
     nombre: number
     slug: number
     descripcion: number
+    imagenUrl: number
     tipo: number
     requiereDocumento: number
     documentoPersonal: number
@@ -23391,6 +23394,7 @@ export namespace Prisma {
     nombre?: true
     slug?: true
     descripcion?: true
+    imagenUrl?: true
     tipo?: true
     requiereDocumento?: true
     documentoPersonal?: true
@@ -23414,6 +23418,7 @@ export namespace Prisma {
     nombre?: true
     slug?: true
     descripcion?: true
+    imagenUrl?: true
     tipo?: true
     requiereDocumento?: true
     documentoPersonal?: true
@@ -23437,6 +23442,7 @@ export namespace Prisma {
     nombre?: true
     slug?: true
     descripcion?: true
+    imagenUrl?: true
     tipo?: true
     requiereDocumento?: true
     documentoPersonal?: true
@@ -23547,6 +23553,7 @@ export namespace Prisma {
     nombre: string
     slug: string
     descripcion: string | null
+    imagenUrl: string | null
     tipo: $Enums.RequisitoTipo
     requiereDocumento: boolean
     documentoPersonal: boolean
@@ -23589,6 +23596,7 @@ export namespace Prisma {
     nombre?: boolean
     slug?: boolean
     descripcion?: boolean
+    imagenUrl?: boolean
     tipo?: boolean
     requiereDocumento?: boolean
     documentoPersonal?: boolean
@@ -23616,6 +23624,7 @@ export namespace Prisma {
     nombre?: boolean
     slug?: boolean
     descripcion?: boolean
+    imagenUrl?: boolean
     tipo?: boolean
     requiereDocumento?: boolean
     documentoPersonal?: boolean
@@ -23639,6 +23648,7 @@ export namespace Prisma {
     nombre?: boolean
     slug?: boolean
     descripcion?: boolean
+    imagenUrl?: boolean
     tipo?: boolean
     requiereDocumento?: boolean
     documentoPersonal?: boolean
@@ -23662,6 +23672,7 @@ export namespace Prisma {
     nombre?: boolean
     slug?: boolean
     descripcion?: boolean
+    imagenUrl?: boolean
     tipo?: boolean
     requiereDocumento?: boolean
     documentoPersonal?: boolean
@@ -23680,7 +23691,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type RequisitoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nombre" | "slug" | "descripcion" | "tipo" | "requiereDocumento" | "documentoPersonal" | "tieneVencimiento" | "vigenciaDias" | "diasAvisoVencimiento" | "obligatoriedad" | "provistoPorInstitucion" | "requiereConfirmacion" | "controlarAlIngreso" | "aplicaEnCadaClase" | "instrucciones" | "orden" | "activo" | "createdAt" | "updatedAt", ExtArgs["result"]["requisito"]>
+  export type RequisitoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nombre" | "slug" | "descripcion" | "imagenUrl" | "tipo" | "requiereDocumento" | "documentoPersonal" | "tieneVencimiento" | "vigenciaDias" | "diasAvisoVencimiento" | "obligatoriedad" | "provistoPorInstitucion" | "requiereConfirmacion" | "controlarAlIngreso" | "aplicaEnCadaClase" | "instrucciones" | "orden" | "activo" | "createdAt" | "updatedAt", ExtArgs["result"]["requisito"]>
   export type RequisitoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     actividades?: boolean | Requisito$actividadesArgs<ExtArgs>
     documentos?: boolean | Requisito$documentosArgs<ExtArgs>
@@ -23702,6 +23713,7 @@ export namespace Prisma {
       nombre: string
       slug: string
       descripcion: string | null
+      imagenUrl: string | null
       tipo: $Enums.RequisitoTipo
       requiereDocumento: boolean
       documentoPersonal: boolean
@@ -24148,6 +24160,7 @@ export namespace Prisma {
     readonly nombre: FieldRef<"Requisito", 'String'>
     readonly slug: FieldRef<"Requisito", 'String'>
     readonly descripcion: FieldRef<"Requisito", 'String'>
+    readonly imagenUrl: FieldRef<"Requisito", 'String'>
     readonly tipo: FieldRef<"Requisito", 'RequisitoTipo'>
     readonly requiereDocumento: FieldRef<"Requisito", 'Boolean'>
     readonly documentoPersonal: FieldRef<"Requisito", 'Boolean'>
@@ -58455,6 +58468,7 @@ export namespace Prisma {
     nombre: 'nombre',
     slug: 'slug',
     descripcion: 'descripcion',
+    imagenUrl: 'imagenUrl',
     tipo: 'tipo',
     requiereDocumento: 'requiereDocumento',
     documentoPersonal: 'documentoPersonal',
@@ -61302,6 +61316,7 @@ export namespace Prisma {
     nombre?: StringFilter<"Requisito"> | string
     slug?: StringFilter<"Requisito"> | string
     descripcion?: StringNullableFilter<"Requisito"> | string | null
+    imagenUrl?: StringNullableFilter<"Requisito"> | string | null
     tipo?: EnumRequisitoTipoFilter<"Requisito"> | $Enums.RequisitoTipo
     requiereDocumento?: BoolFilter<"Requisito"> | boolean
     documentoPersonal?: BoolFilter<"Requisito"> | boolean
@@ -61328,6 +61343,7 @@ export namespace Prisma {
     nombre?: SortOrder
     slug?: SortOrder
     descripcion?: SortOrderInput | SortOrder
+    imagenUrl?: SortOrderInput | SortOrder
     tipo?: SortOrder
     requiereDocumento?: SortOrder
     documentoPersonal?: SortOrder
@@ -61357,6 +61373,7 @@ export namespace Prisma {
     NOT?: RequisitoWhereInput | RequisitoWhereInput[]
     nombre?: StringFilter<"Requisito"> | string
     descripcion?: StringNullableFilter<"Requisito"> | string | null
+    imagenUrl?: StringNullableFilter<"Requisito"> | string | null
     tipo?: EnumRequisitoTipoFilter<"Requisito"> | $Enums.RequisitoTipo
     requiereDocumento?: BoolFilter<"Requisito"> | boolean
     documentoPersonal?: BoolFilter<"Requisito"> | boolean
@@ -61383,6 +61400,7 @@ export namespace Prisma {
     nombre?: SortOrder
     slug?: SortOrder
     descripcion?: SortOrderInput | SortOrder
+    imagenUrl?: SortOrderInput | SortOrder
     tipo?: SortOrder
     requiereDocumento?: SortOrder
     documentoPersonal?: SortOrder
@@ -61414,6 +61432,7 @@ export namespace Prisma {
     nombre?: StringWithAggregatesFilter<"Requisito"> | string
     slug?: StringWithAggregatesFilter<"Requisito"> | string
     descripcion?: StringNullableWithAggregatesFilter<"Requisito"> | string | null
+    imagenUrl?: StringNullableWithAggregatesFilter<"Requisito"> | string | null
     tipo?: EnumRequisitoTipoWithAggregatesFilter<"Requisito"> | $Enums.RequisitoTipo
     requiereDocumento?: BoolWithAggregatesFilter<"Requisito"> | boolean
     documentoPersonal?: BoolWithAggregatesFilter<"Requisito"> | boolean
@@ -65813,6 +65832,7 @@ export namespace Prisma {
     nombre: string
     slug: string
     descripcion?: string | null
+    imagenUrl?: string | null
     tipo: $Enums.RequisitoTipo
     requiereDocumento?: boolean
     documentoPersonal?: boolean
@@ -65839,6 +65859,7 @@ export namespace Prisma {
     nombre: string
     slug: string
     descripcion?: string | null
+    imagenUrl?: string | null
     tipo: $Enums.RequisitoTipo
     requiereDocumento?: boolean
     documentoPersonal?: boolean
@@ -65865,6 +65886,7 @@ export namespace Prisma {
     nombre?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumRequisitoTipoFieldUpdateOperationsInput | $Enums.RequisitoTipo
     requiereDocumento?: BoolFieldUpdateOperationsInput | boolean
     documentoPersonal?: BoolFieldUpdateOperationsInput | boolean
@@ -65891,6 +65913,7 @@ export namespace Prisma {
     nombre?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumRequisitoTipoFieldUpdateOperationsInput | $Enums.RequisitoTipo
     requiereDocumento?: BoolFieldUpdateOperationsInput | boolean
     documentoPersonal?: BoolFieldUpdateOperationsInput | boolean
@@ -65917,6 +65940,7 @@ export namespace Prisma {
     nombre: string
     slug: string
     descripcion?: string | null
+    imagenUrl?: string | null
     tipo: $Enums.RequisitoTipo
     requiereDocumento?: boolean
     documentoPersonal?: boolean
@@ -65940,6 +65964,7 @@ export namespace Prisma {
     nombre?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumRequisitoTipoFieldUpdateOperationsInput | $Enums.RequisitoTipo
     requiereDocumento?: BoolFieldUpdateOperationsInput | boolean
     documentoPersonal?: BoolFieldUpdateOperationsInput | boolean
@@ -65963,6 +65988,7 @@ export namespace Prisma {
     nombre?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumRequisitoTipoFieldUpdateOperationsInput | $Enums.RequisitoTipo
     requiereDocumento?: BoolFieldUpdateOperationsInput | boolean
     documentoPersonal?: BoolFieldUpdateOperationsInput | boolean
@@ -70700,6 +70726,7 @@ export namespace Prisma {
     nombre?: SortOrder
     slug?: SortOrder
     descripcion?: SortOrder
+    imagenUrl?: SortOrder
     tipo?: SortOrder
     requiereDocumento?: SortOrder
     documentoPersonal?: SortOrder
@@ -70729,6 +70756,7 @@ export namespace Prisma {
     nombre?: SortOrder
     slug?: SortOrder
     descripcion?: SortOrder
+    imagenUrl?: SortOrder
     tipo?: SortOrder
     requiereDocumento?: SortOrder
     documentoPersonal?: SortOrder
@@ -70752,6 +70780,7 @@ export namespace Prisma {
     nombre?: SortOrder
     slug?: SortOrder
     descripcion?: SortOrder
+    imagenUrl?: SortOrder
     tipo?: SortOrder
     requiereDocumento?: SortOrder
     documentoPersonal?: SortOrder
@@ -84747,6 +84776,7 @@ export namespace Prisma {
     nombre: string
     slug: string
     descripcion?: string | null
+    imagenUrl?: string | null
     tipo: $Enums.RequisitoTipo
     requiereDocumento?: boolean
     documentoPersonal?: boolean
@@ -84772,6 +84802,7 @@ export namespace Prisma {
     nombre: string
     slug: string
     descripcion?: string | null
+    imagenUrl?: string | null
     tipo: $Enums.RequisitoTipo
     requiereDocumento?: boolean
     documentoPersonal?: boolean
@@ -85248,6 +85279,7 @@ export namespace Prisma {
     nombre?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumRequisitoTipoFieldUpdateOperationsInput | $Enums.RequisitoTipo
     requiereDocumento?: BoolFieldUpdateOperationsInput | boolean
     documentoPersonal?: BoolFieldUpdateOperationsInput | boolean
@@ -85273,6 +85305,7 @@ export namespace Prisma {
     nombre?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumRequisitoTipoFieldUpdateOperationsInput | $Enums.RequisitoTipo
     requiereDocumento?: BoolFieldUpdateOperationsInput | boolean
     documentoPersonal?: BoolFieldUpdateOperationsInput | boolean
@@ -85685,6 +85718,7 @@ export namespace Prisma {
     nombre: string
     slug: string
     descripcion?: string | null
+    imagenUrl?: string | null
     tipo: $Enums.RequisitoTipo
     requiereDocumento?: boolean
     documentoPersonal?: boolean
@@ -85710,6 +85744,7 @@ export namespace Prisma {
     nombre: string
     slug: string
     descripcion?: string | null
+    imagenUrl?: string | null
     tipo: $Enums.RequisitoTipo
     requiereDocumento?: boolean
     documentoPersonal?: boolean
@@ -85846,6 +85881,7 @@ export namespace Prisma {
     nombre?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumRequisitoTipoFieldUpdateOperationsInput | $Enums.RequisitoTipo
     requiereDocumento?: BoolFieldUpdateOperationsInput | boolean
     documentoPersonal?: BoolFieldUpdateOperationsInput | boolean
@@ -85871,6 +85907,7 @@ export namespace Prisma {
     nombre?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumRequisitoTipoFieldUpdateOperationsInput | $Enums.RequisitoTipo
     requiereDocumento?: BoolFieldUpdateOperationsInput | boolean
     documentoPersonal?: BoolFieldUpdateOperationsInput | boolean
@@ -90614,6 +90651,7 @@ export namespace Prisma {
     nombre: string
     slug: string
     descripcion?: string | null
+    imagenUrl?: string | null
     tipo: $Enums.RequisitoTipo
     requiereDocumento?: boolean
     documentoPersonal?: boolean
@@ -90639,6 +90677,7 @@ export namespace Prisma {
     nombre: string
     slug: string
     descripcion?: string | null
+    imagenUrl?: string | null
     tipo: $Enums.RequisitoTipo
     requiereDocumento?: boolean
     documentoPersonal?: boolean
@@ -91027,6 +91066,7 @@ export namespace Prisma {
     nombre?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumRequisitoTipoFieldUpdateOperationsInput | $Enums.RequisitoTipo
     requiereDocumento?: BoolFieldUpdateOperationsInput | boolean
     documentoPersonal?: BoolFieldUpdateOperationsInput | boolean
@@ -91052,6 +91092,7 @@ export namespace Prisma {
     nombre?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     descripcion?: NullableStringFieldUpdateOperationsInput | string | null
+    imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumRequisitoTipoFieldUpdateOperationsInput | $Enums.RequisitoTipo
     requiereDocumento?: BoolFieldUpdateOperationsInput | boolean
     documentoPersonal?: BoolFieldUpdateOperationsInput | boolean

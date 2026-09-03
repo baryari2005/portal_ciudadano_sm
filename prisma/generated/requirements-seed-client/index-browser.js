@@ -363,6 +363,7 @@ exports.Prisma.RequisitoScalarFieldEnum = {
   nombre: 'nombre',
   slug: 'slug',
   descripcion: 'descripcion',
+  imagenUrl: 'imagenUrl',
   tipo: 'tipo',
   requiereDocumento: 'requiereDocumento',
   documentoPersonal: 'documentoPersonal',
