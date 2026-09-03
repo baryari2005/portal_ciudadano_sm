@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ChevronRight,
@@ -22,7 +22,6 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   CatalogDetailField,
   CatalogEmptyState,
-  CatalogErrorState,
   CatalogLoadingState,
   CatalogPagination,
   CatalogPageHeader,
@@ -51,9 +50,7 @@ function orderedOpeningHours(horarios: Establecimiento["horarios"]) {
 
 export function EstablecimientosPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const requestedSelection = searchParams.get("selected") ?? "";
-  const { items, selected, selectedId, setSelectedId, loading, error, refresh, remove } =
+  const { items, selected, selectedId, setSelectedId, loading, remove } =
     useEstablecimientos();
   const canCreate = useCan("establecimientos", "crear");
   const canEdit = useCan("establecimientos", "editar");
@@ -61,7 +58,6 @@ export function EstablecimientosPage() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deactivating, setDeactivating] = useState(false);
   const [page, setPage] = useState(1);
 
   const filteredItems = useMemo(() => {
@@ -89,43 +85,19 @@ export function EstablecimientosPage() {
 
   useEffect(() => setPage(1), [query, status]);
 
-  useEffect(() => {
-    if (
-      requestedSelection &&
-      items.some((item) => item.id === requestedSelection)
-    ) {
-      setSelectedId(requestedSelection);
-    }
-  }, [items, requestedSelection, setSelectedId]);
-
   if (loading) {
     return <CatalogLoadingState label="establecimientos" fullPage />;
   }
 
-  if (error) {
-    return (
-      <div className="min-h-[calc(100dvh-var(--topbar-h))] bg-[var(--brand-page)] p-4 sm:p-6 lg:p-8">
-        <CatalogErrorState message={error} onRetry={() => void refresh()} />
-      </div>
-    );
-  }
-
   async function confirmDelete() {
     if (!selected) return;
-    setDeactivating(true);
-    try {
-      const deactivated = await remove(selected.id);
-      if (deactivated) {
-        setPage(1);
-        setDeleteOpen(false);
-      }
-    } finally {
-      setDeactivating(false);
-    }
+    await remove(selected.id);
+    setPage(1);
+    setDeleteOpen(false);
   }
 
   return (
-    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] grid-rows-[auto_minmax(0,1fr)] gap-5 bg-[var(--brand-page)] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
+    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] grid-rows-[auto_minmax(0,1fr)] gap-5 bg-[#F7FBF5] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
       <CatalogPageHeader
         icon={School}
         title="Establecimientos"
@@ -195,15 +167,11 @@ export function EstablecimientosPage() {
 
       <ConfirmDialog
         open={deleteOpen}
-        title="Desactivar establecimiento"
-        description="El establecimiento dejará de estar disponible para nuevas actividades, pero conservará sus actividades, horarios e historial asociados."
-        confirmLabel="Desactivar"
-        loading={deactivating}
-        loadingLabel="Desactivando..."
+        title="Eliminar establecimiento"
+        description="El establecimiento se eliminará si no posee relaciones que impidan la operación."
+        confirmLabel="Eliminar"
         icon={<Trash2 />}
-        onClose={() => {
-          if (!deactivating) setDeleteOpen(false);
-        }}
+        onClose={() => setDeleteOpen(false)}
         onConfirm={confirmDelete}
       />
     </div>
@@ -229,7 +197,7 @@ function EstablecimientoDetail({
 
   return (
     <AdminDetailPanel onBack={onBack} className="lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-hidden">
-      <AdminDetailHeader title={item.nombre} leading={item.imagenUrl ? <ActivityImagePreview source={item.imagenUrl} alt={`Imagen de ${item.nombre}`} className="size-16 rounded-2xl" /> : <div className="grid size-16 place-items-center rounded-2xl bg-[var(--brand-primary)] text-white shadow-sm"><School className="size-8" /></div>} badge={<CatalogStatusBadge active={item.estado.toLowerCase() === "activo"} />} action={<Button variant="outline" onClick={() => window.location.assign(`/facilities/${item.id}/record/overview`)} className="w-full border-[var(--brand-secondary)] bg-white font-bold text-[var(--brand-primary)]"><Eye />Ver ficha completa</Button>} />
+      <AdminDetailHeader title={item.nombre} leading={item.imagenUrl ? <ActivityImagePreview source={item.imagenUrl} alt={`Imagen de ${item.nombre}`} className="size-16 rounded-2xl" /> : <div className="grid size-16 place-items-center rounded-2xl bg-[var(--brand-primary)] text-white shadow-sm"><School className="size-8" /></div>} badge={<CatalogStatusBadge active={item.estado.toLowerCase() === "activo"} />} action={<Button variant="outline" onClick={() => window.location.assign(`/facilities/${item.id}/record/overview`)} className="w-full border-[#819B56] bg-white font-bold text-[#1D4F36]"><Eye />Ver ficha completa</Button>} />
 
       <div className="brand-scrollbar lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-2"><dl className="mt-6 grid gap-3">
         <CatalogDetailField icon={MapPin} label="Dirección">{item.direccion}</CatalogDetailField>
@@ -256,13 +224,13 @@ function EstablecimientoDetail({
       </dl></div>
       {canEdit || canDelete ? <AdminDetailActions className="lg:shrink-0">
           {canEdit ? (
-            <Button onClick={() => onEdit(item.id)} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]">
+            <Button onClick={() => onEdit(item.id)} className="bg-[#1D4F36] hover:bg-[#143A27]">
               <Edit3 /> Editar
             </Button>
           ) : null}
           {canDelete ? (
             <Button variant="outline" onClick={onDelete} className="text-red-700 hover:bg-red-50">
-              <Trash2 /> Desactivar
+              <Trash2 /> Eliminar
             </Button>
           ) : null}
       </AdminDetailActions> : null}

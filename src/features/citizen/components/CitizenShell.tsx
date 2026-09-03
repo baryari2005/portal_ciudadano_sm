@@ -192,7 +192,7 @@ export function CitizenShell({ children }: { children: ReactNode }) {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="absolute right-3 top-3 text-white hover:bg-[var(--brand-accent)] hover:text-primary lg:hidden"
+                  className="absolute right-3 top-3 text-white hover:bg-[#ddef8f] hover:text-primary lg:hidden"
                   onClick={() => setMobileOpen(false)}
                   aria-label="Cerrar menú"
                 >
@@ -247,7 +247,7 @@ export function CitizenShell({ children }: { children: ReactNode }) {
                     name={fullName}
                     className="h-11 w-11 rounded-lg"
                     imageClassName="size-full scale-125 object-cover object-center"
-                    fallbackBgClass="rounded-lg bg-[var(--brand-accent)]"
+                    fallbackBgClass="rounded-lg bg-[#ddef8f]"
                     textClass="font-bold text-primary"
                   />
                   {!collapsed ? (
@@ -269,7 +269,7 @@ export function CitizenShell({ children }: { children: ReactNode }) {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-[52px] w-[52px] rounded-lg text-white hover:bg-[var(--brand-accent)] hover:text-primary sm:h-[60px] sm:w-[60px]"
+                  className="h-[52px] w-[52px] rounded-lg text-white hover:bg-[#ddef8f] hover:text-primary sm:h-[60px] sm:w-[60px]"
                   onClick={() => {
                     if (window.matchMedia("(min-width: 1024px)").matches) setCollapsed((value) => !value);
                     else setMobileOpen(true);
@@ -280,7 +280,7 @@ export function CitizenShell({ children }: { children: ReactNode }) {
                 </Button>
                 <div className="min-w-0 py-1">
                   <h1 className="truncate text-lg font-bold leading-6 text-white sm:text-xl">Portal ciudadano</h1>
-                  <div className="hidden text-base leading-5 text-[var(--brand-accent)] sm:block">
+                  <div className="hidden text-base leading-5 text-[#ddef8f] sm:block">
                     <p>Sistema de Ayuda</p>
                     <p>y Actividades</p>
                   </div>
@@ -290,7 +290,7 @@ export function CitizenShell({ children }: { children: ReactNode }) {
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="hidden min-w-0 text-right lg:block">
                   <p className="truncate text-sm font-bold text-white">Hola, {fullName}</p>
-                  <div className="mt-0.5 flex items-center justify-end gap-2 text-xs font-semibold text-[var(--brand-accent)]">
+                  <div className="mt-0.5 flex items-center justify-end gap-2 text-xs font-semibold text-[#ddef8f]">
                     <CalendarClock className="h-4 w-4" />
                     <span className="whitespace-nowrap">{serverClock.label}</span>
                   </div>
@@ -302,26 +302,26 @@ export function CitizenShell({ children }: { children: ReactNode }) {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="relative h-11 w-11 rounded-lg bg-[#e9f3d8] text-primary hover:bg-[var(--brand-accent)] hover:text-primary"
+                      className="relative h-11 w-11 rounded-lg bg-[#e9f3d8] text-primary hover:bg-[#ddef8f] hover:text-primary"
                       aria-label={unread ? `${unread} notificaciones sin leer` : "Notificaciones"}
                     >
                       <Bell className="h-5 w-5" />
                       {unread ? (
-                        <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-primary bg-[var(--brand-accent)] px-1 text-[11px] font-extrabold text-primary">
+                        <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-primary bg-[#DDEF8F] px-1 text-[11px] font-extrabold text-primary">
                           {unread > 9 ? "9+" : unread}
                         </span>
                       ) : null}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent align="end" className="w-[min(20rem,calc(100vw-2rem))] rounded-2xl border-[var(--brand-border)] p-4">
+                  <PopoverContent align="end" className="w-[min(20rem,calc(100vw-2rem))] rounded-2xl border-[#C9D9C3] p-4">
                     <p className="font-extrabold text-primary">Notificaciones</p>
                     <div className="mt-3 grid gap-2">
                       {items.length ? items.slice(0, 5).map((item) => (
-                        <Link key={item.id} href={item.actionUrl || "/citizen/notifications"} className="rounded-xl bg-[var(--brand-page)] p-3 text-sm hover:bg-[var(--brand-panel)]">
+                        <Link key={item.id} href={item.actionUrl || "/citizen/notifications"} className="rounded-xl bg-[#F7FBF5] p-3 text-sm hover:bg-[#EEF6E9]">
                           <span className="font-bold text-primary">{item.title}</span>
-                          <span className="line-clamp-2 block text-[var(--brand-muted)]">{item.message}</span>
+                          <span className="line-clamp-2 block text-[#5F6F68]">{item.message}</span>
                         </Link>
-                      )) : <p className="py-3 text-sm text-[var(--brand-muted)]">No tenés notificaciones.</p>}
+                      )) : <p className="py-3 text-sm text-[#5F6F68]">No tenés notificaciones.</p>}
                     </div>
                     <Button asChild variant="link" className="mt-2 h-auto px-0 text-primary">
                       <Link href="/citizen/notifications">Ver todas ({meta.total})</Link>

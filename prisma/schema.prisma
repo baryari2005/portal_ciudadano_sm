@@ -220,7 +220,6 @@ model ParametrosGenerales {
   imagenLoginCollage2   String?
   imagenLoginCollage3   String?
   imagenLoginCollage4   String?
-  paletasExperiencia    Json?
   updatedById           String?  @db.Uuid
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -270,10 +269,6 @@ model Establecimiento {
   barrio      String?
   localidad   String?
   provincia   String?
-  direccionPlaceId String?
-  direccionLat Float?
-  direccionLng Float?
-  codigoPostal String?
   imagenUrl   String?
   tipo        EstablecimientoTipo @default(SEDE)
   activo      Boolean             @default(true)
@@ -295,7 +290,6 @@ model Establecimiento {
 
   @@index([activo])
   @@index([tipo])
-  @@index([direccionPlaceId])
 }
 
 model HorarioEstablecimiento {
@@ -1445,7 +1439,6 @@ enum AsistenciaEstado {
 enum AsistenciaOrigen {
   MANUAL
   QR
-  ACCESO
 }
 
 enum UsuarioQrEstado {

@@ -11,7 +11,7 @@ const STATUS_LABELS: Record<UserStatus, string> = {
 };
 
 const STATUS_CLASSES: Record<UserStatus, string> = {
-  PENDIENTE: "border-[var(--brand-secondary)]/40 bg-[var(--brand-secondary)]/10 text-[var(--brand-primary)]",
+  PENDIENTE: "border-[#819B56]/40 bg-[#819B56]/10 text-[#1D4F36]",
   ACTIVO: "border-emerald-600/30 bg-emerald-50 text-emerald-700",
   RECHAZADO: "border-red-600/30 bg-red-50 text-red-700",
   BLOQUEADO: "border-zinc-500/30 bg-zinc-100 text-zinc-700",

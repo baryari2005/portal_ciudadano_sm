@@ -9,7 +9,7 @@ export const USER_STATUS_LABELS: Record<ManagedUserStatus, string> = {
 
 export const USER_STATUS_CLASSES: Record<ManagedUserStatus, string> = {
   PENDIENTE: "border-[#d9df75] bg-[#f5f7cf] text-primary",
-  ACTIVO: "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white",
+  ACTIVO: "border-[#1D4F36] bg-[#1D4F36] text-white",
   RECHAZADO: "border-red-300 bg-red-50 text-red-700",
   BLOQUEADO: "border-zinc-300 bg-zinc-100 text-zinc-700",
 };

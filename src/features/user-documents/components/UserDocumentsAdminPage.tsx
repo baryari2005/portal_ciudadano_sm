@@ -124,7 +124,7 @@ export function UserDocumentsAdminPage({ userId: userIdProp, embedded = false, o
           </div>
           {filtered.length ? <div className="grid gap-3">
             {filtered.map((item) => (
-              <AdminListCard key={item.id} onClick={() => setSelectedId(item.id)} selected={selected?.id === item.id} leading={<span className="grid size-12 place-items-center rounded-xl bg-[var(--brand-primary)] text-white"><FileText className="size-6" /></span>} title={`${item.user.nombre ?? ""} ${item.user.apellido ?? ""}`.trim() || "Ciudadano sin nombre"} badges={<Badge variant="outline" className="border-[var(--brand-secondary)]/40 bg-[var(--brand-highlight)] text-[var(--brand-primary)]">{labels[item.status]}</Badge>} description={item.requirementName} meta={`DNI ${item.user.documento || "Sin registrar"}${item.status === "APROBADO" ? ` · ${validityLabels[item.validity]}` : ""}`} />
+              <AdminListCard key={item.id} onClick={() => setSelectedId(item.id)} selected={selected?.id === item.id} leading={<span className="grid size-12 place-items-center rounded-xl bg-[var(--brand-primary)] text-white"><FileText className="size-6" /></span>} title={`${item.user.nombre ?? ""} ${item.user.apellido ?? ""}`.trim() || "Ciudadano sin nombre"} badges={<Badge variant="outline" className="border-[var(--brand-secondary)]/40 bg-[#DDEED2] text-[var(--brand-primary)]">{labels[item.status]}</Badge>} description={item.requirementName} meta={`DNI ${item.user.documento || "Sin registrar"}${item.status === "APROBADO" ? ` · ${validityLabels[item.validity]}` : ""}`} />
             ))}
           </div> : <AdminEmptyState title="No hay documentos presentados." description="Los documentos que adjunten los ciudadanos aparecerán aquí para su revisión." filtered={Boolean(query.trim()) || statusFilter !== "all" || validityFilter !== "all"} />}
         </section>
@@ -142,7 +142,7 @@ export function UserDocumentsAdminPage({ userId: userIdProp, embedded = false, o
               {selected.rejectionReason ? <CatalogDetailField icon={XCircle} label="Motivo del rechazo">{selected.rejectionReason}</CatalogDetailField> : null}
             </dl>
             {selected.status === "PENDIENTE" || selected.status === "APROBADO" ? <AdminDetailActions>
-              {selected.status === "PENDIENTE" ? <><Button className="bg-[var(--brand-primary)]" disabled={saving} onClick={() => void review("APROBADO")}>{savingStatus === "APROBADO" ? <><Loader2 className="animate-spin" />Aprobando...</> : <><CheckCircle2 />Aprobar</>}</Button><Button variant="outline" disabled={saving} onClick={() => setRejectOpen(true)}><XCircle />Rechazar</Button></> : null}
+              {selected.status === "PENDIENTE" ? <><Button className="bg-[#1D4F36]" disabled={saving} onClick={() => void review("APROBADO")}>{savingStatus === "APROBADO" ? <><Loader2 className="animate-spin" />Aprobando...</> : <><CheckCircle2 />Aprobar</>}</Button><Button variant="outline" disabled={saving} onClick={() => setRejectOpen(true)}><XCircle />Rechazar</Button></> : null}
               {selected.status === "APROBADO" ? <Button variant="outline" className="text-red-700 hover:bg-red-50" disabled={saving} onClick={() => setRejectOpen(true)}><XCircle />Desaprobar</Button> : null}
             </AdminDetailActions> : null}
           </> : null}
@@ -165,7 +165,7 @@ export function UserDocumentsAdminPage({ userId: userIdProp, embedded = false, o
                 maxLength={500}
                 rows={5}
                 placeholder="Explicá claramente qué debe corregir..."
-                className="min-h-32 resize-none rounded-lg border-[#D7DED6] bg-white text-[var(--brand-primary)] shadow-sm placeholder:text-[#7C877F] focus-visible:border-[var(--brand-primary)] focus-visible:ring-[var(--brand-secondary)]/25"
+                className="min-h-32 resize-none rounded-lg border-[#D7DED6] bg-white text-[#1D4F36] shadow-sm placeholder:text-[#7C877F] focus-visible:border-[#1D4F36] focus-visible:ring-[#819B56]/25"
               />
               <p className="text-right text-xs font-medium text-[#7C877F]">{reason.length}/500</p>
             </ProfileFormField>

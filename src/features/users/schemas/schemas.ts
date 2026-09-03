@@ -189,19 +189,6 @@ function applyCrossChecks<T extends z.ZodTypeAny>(schema: T) {
         message: "El CUIL no coincide con el DNI",
       });
     }
-
-    if (
-      value.domicilio?.trim() &&
-      (!value.domicilioPlaceId ||
-        value.domicilioLat == null ||
-        value.domicilioLng == null)
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["domicilio"],
-        message: "Buscá la dirección y seleccioná una ubicación válida en el mapa",
-      });
-    }
   });
 }
 

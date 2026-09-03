@@ -34,7 +34,7 @@ export function UserAccessQrCard({ user, compact }: UserAccessQrCardProps) {
       margin: 2,
       width: compact ? 180 : 220,
       color: {
-        dark: "var(--brand-heading)",
+        dark: "#003A22",
         light: "#FFFFFF",
       },
     }).then((dataUrl) => {
@@ -53,15 +53,15 @@ export function UserAccessQrCard({ user, compact }: UserAccessQrCardProps) {
   }
 
   return (
-    <div className="rounded-[18px] border border-[var(--brand-border)] bg-white/55 p-5 text-center">
-      <p className="text-sm font-extrabold uppercase tracking-normal text-[var(--brand-heading)]">
+    <div className="rounded-[18px] border border-[#C9D9C3] bg-white/55 p-5 text-center">
+      <p className="text-sm font-extrabold uppercase tracking-normal text-[#003A22]">
         QR de ingreso
       </p>
-      <p className="mt-1 text-xs font-medium text-[var(--brand-muted)]">
+      <p className="mt-1 text-xs font-medium text-[#5F6F68]">
         Credencial del usuario activo
       </p>
 
-      <div className="mt-4 grid place-items-center rounded-2xl border border-[var(--brand-border-soft)] bg-[var(--brand-page)] p-3">
+      <div className="mt-4 grid place-items-center rounded-2xl border border-[#DDE8D7] bg-[#F7FBF5] p-3">
         {qrDataUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -73,8 +73,8 @@ export function UserAccessQrCard({ user, compact }: UserAccessQrCardProps) {
           <div
             className={
               compact
-                ? "grid h-36 w-36 place-items-center text-xs font-bold text-[var(--brand-muted)]"
-                : "grid h-44 w-44 place-items-center text-sm font-bold text-[var(--brand-muted)]"
+                ? "grid h-36 w-36 place-items-center text-xs font-bold text-[#5F6F68]"
+                : "grid h-44 w-44 place-items-center text-sm font-bold text-[#5F6F68]"
             }
           >
             Generando QR...
@@ -85,7 +85,7 @@ export function UserAccessQrCard({ user, compact }: UserAccessQrCardProps) {
       <Button
         type="button"
         variant="outline"
-        className="mt-4 h-10 w-full rounded-xl border-[var(--brand-border)] bg-white/70 font-bold text-[var(--brand-ink)] hover:bg-white"
+        className="mt-4 h-10 w-full rounded-xl border-[#C9D9C3] bg-white/70 font-bold text-[#173C2A] hover:bg-white"
         disabled={!qrDataUrl}
         onClick={printQr}
       >

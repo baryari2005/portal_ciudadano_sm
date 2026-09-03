@@ -1,0 +1,3 @@
+import type { EnrollmentDocumentationSummary } from "@/features/enrollment-documents/types/enrollment-document.types";
+
+export type CitizenEnrollment={id:string;status:string;enrollmentDate:string;waitlistPosition:number|null;observations?:string|null;schedule:{id:string;day:string;startTime:string;endTime:string;activity:{id:string;nombre:string;modalidadOperacion:string;imageUrl:string|null};establishment:{id:string;nombre:string}};selectedSchedules:Array<{id:string;day:string;startTime:string;endTime:string;establishment:{id:string;nombre:string}}>;nextSession:{id:string;date:string}|null;documentation:EnrollmentDocumentationSummary};

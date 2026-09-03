@@ -27,6 +27,7 @@ import { CitizenCard, useCitizenData } from "./CitizenPrimitives";
 type CitizenActivityRequirement = {
   id: string;
   name: string;
+  imageUrl: string | null;
   type:
     | "INFORMACION"
     | "DOCUMENTO"
@@ -51,13 +52,14 @@ type CitizenActivitySchedule = {
   availableCount: number;
   waitlistEnabled: boolean;
   ownEnrollmentStatus: string | null;
+  ownEnrollmentId: string | null;
   ownEnrollmentSlots: Array<{
     startTime: string | null;
     endTime: string | null;
     status: string;
   }>;
 };
-type CitizenActivityDetailData = {
+export type CitizenActivityDetailData = {
   id: string;
   name: string;
   shortDescription: string | null;
@@ -75,7 +77,7 @@ type CitizenActivityDetailData = {
   requiresDocumentation: boolean;
   schedules: CitizenActivitySchedule[];
 };
-type EnrollmentChoice = {
+export type EnrollmentChoice = {
   schedule: CitizenActivitySchedule;
   startTime: string;
   endTime: string;
@@ -115,7 +117,6 @@ export function CitizenActivityDetail({ id }: { id: string }) {
     message: string;
   } | null>(null);
   const [continuingEnrollment, setContinuingEnrollment] = useState(false);
-  const eventSession = data?.modalidadOperacion === "EVENTO_UNICO" && data.eventSessions.length === 1 ? data.eventSessions[0] : null;
 
   async function toggleChoice(choice: EnrollmentChoice) {
     if (!data) return;
@@ -401,24 +402,21 @@ export function CitizenActivityDetail({ id }: { id: string }) {
           <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-[#C9D9C3] bg-[#EEF6E9] p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-extrabold text-[#1D4F36]">
-                {eventSession
-                  ? `${eventSession.date} · ${eventSession.horaInicio} a ${eventSession.horaFin}`
-                  : selectedChoices.length
+                {selectedChoices.length
                   ? `${selectedChoices.length} ${selectedChoices.length === 1 ? "horario seleccionado" : "horarios seleccionados"}`
                   : "Seleccioná uno o más horarios"}
               </p>
               <p className="mt-1 text-sm text-[#5F6F68]">
-                {data.modalidadOperacion === "EVENTO_UNICO" ? eventSession ? "Esta es la única fecha disponible del evento." : "El evento no tiene una fecha u horario válido para inscripciones." : "Podés combinar días y turnos antes de confirmar la inscripción."}
+                Podés combinar días y turnos antes de confirmar la inscripción.
               </p>
             </div>
             <Button
               type="button"
-              disabled={data.modalidadOperacion === "EVENTO_UNICO" ? !eventSession || continuingEnrollment : !selectedChoices.length || continuingEnrollment}
+              disabled={!selectedChoices.length || continuingEnrollment}
               className="h-11 bg-[#1D4F36] font-bold hover:bg-[#143A27]"
               onClick={() => {
                 setContinuingEnrollment(true);
                 const params = new URLSearchParams();
-                if (eventSession) params.set("classId", eventSession.id);
                 selectedChoices.forEach((choice) =>
                   params.append(
                     "slot",

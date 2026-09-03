@@ -42,7 +42,7 @@ type StepStatus = DraftStepStatus;
 const STEP_FIELDS: Record<number, Array<keyof UserFormValues>> = {
   1: ["nombre", "apellido", "documento", "fechaNacimiento", "nacionalidad", "genero", "estadoCivil"],
   2: ["userId", "password", "rolId", "profesorEspecialidad", "profesorMatricula", "profesorDescripcion"],
-  3: ["domicilio", "domicilioPlaceId", "domicilioLat", "domicilioLng", "localidad", "provincia", "codigoPostal"],
+  3: ["domicilio", "localidad", "provincia", "codigoPostal"],
   4: ["email", "celular", "contactoEmergenciaNombre", "contactoEmergenciaTelefono"],
   5: ["coberturaMedicaId", "numeroAfiliado"],
   6: ["avatarUrl", "fotoPerfilUrl"],

@@ -43,7 +43,7 @@ export function UserMenu() {
         <DropdownMenuContent
           align="end"
           sideOffset={8}
-          className="w-72 overflow-hidden rounded-2xl border border-[#DDE5D8] bg-white p-0 text-[var(--brand-primary)] shadow-[0_18px_45px_rgba(0,58,34,0.16)]"
+          className="w-72 overflow-hidden rounded-2xl border border-[#DDE5D8] bg-white p-0 text-[#1D4F36] shadow-[0_18px_45px_rgba(0,58,34,0.16)]"
         >
           <UserMenuHeader
             avatarUrl={avatarUrl}
@@ -76,9 +76,9 @@ export function UserMenu() {
 
           <DropdownMenuItem
             onClick={() => logout()}
-            className="mx-2 mb-2 mt-1 cursor-pointer rounded-xl px-3 py-3 text-[var(--brand-primary)] transition-colors focus:bg-[#F1F7EA] focus:text-[var(--brand-primary)]"
+            className="mx-2 mb-2 mt-1 cursor-pointer rounded-xl px-3 py-3 text-[#1D4F36] transition-colors focus:bg-[#F1F7EA] focus:text-[#1D4F36]"
           >
-            <LogOut className="mr-3 h-4 w-4 text-[var(--brand-primary)]" />
+            <LogOut className="mr-3 h-4 w-4 text-[#1D4F36]" />
             <span className="text-sm font-medium">Salir</span>
           </DropdownMenuItem>
         </DropdownMenuContent>

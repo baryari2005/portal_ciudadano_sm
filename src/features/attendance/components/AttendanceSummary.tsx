@@ -37,10 +37,10 @@ export function AttendanceSummary({ sessionId }: { sessionId: string }) {
   if (!canView) return null;
 
   return (
-    <section className="mt-5 border-t border-[var(--brand-border)] pt-5">
+    <section className="mt-5 border-t border-[#C9D9C3] pt-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="font-extrabold text-[var(--brand-primary)]">Asistencia</h3>
+          <h3 className="font-extrabold text-[#1D4F36]">Asistencia</h3>
           {loading ? (
             <div className="mt-2 h-12 w-72 animate-pulse rounded-xl bg-white/70" />
           ) : error === "technical" ? (
@@ -48,20 +48,20 @@ export function AttendanceSummary({ sessionId }: { sessionId: string }) {
               No pudimos cargar el resumen. <Button variant="ghost" size="sm" onClick={() => void load()}>Reintentar</Button>
             </p>
           ) : error === "assignment" ? (
-            <p className="mt-2 text-sm text-[var(--brand-muted)]">El resumen estará disponible al abrir la planilla.</p>
+            <p className="mt-2 text-sm text-[#5F6F68]">El resumen estará disponible al abrir la planilla.</p>
           ) : data ? (
             <>
-              <p className="mt-1 text-sm font-bold text-[var(--brand-primary)]">
+              <p className="mt-1 text-sm font-bold text-[#1D4F36]">
                 {data.session.status === "CANCELADA" ? "La clase está cancelada y no admite asistencia." : data.session.attendanceState === "CLOSED" ? "Asistencia cerrada" : "Asistencia abierta"}
               </p>
-              <p className="text-sm text-[var(--brand-muted)]">
+              <p className="text-sm text-[#5F6F68]">
                 {data.summary.eligibleCount} habilitadas · {data.summary.presentCount} presentes · {data.summary.absentCount} ausentes · {data.summary.justifiedCount} justificadas · {data.summary.unregisteredCount} sin registrar
               </p>
             </>
           ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button asChild size="sm" className="bg-[var(--brand-primary)]">
+          <Button asChild size="sm" className="bg-[#1D4F36]">
             <Link href={`/attendance/${sessionId}`} prefetch={false}>Ver planilla</Link>
           </Button>
           <AttendanceQrAction sessionId={sessionId} compact />

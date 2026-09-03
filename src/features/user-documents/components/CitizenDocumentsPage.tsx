@@ -115,7 +115,7 @@ export function CitizenDocumentsPage() {
   if (loading) return <CatalogLoadingState label="documentos" fullPage />;
 
   return (
-    <main className="min-h-full bg-[var(--brand-page)] p-4 sm:p-6 lg:p-8">
+    <main className="min-h-full bg-[#F7FBF5] p-4 sm:p-6 lg:p-8">
       <CitizenHeader
         title="Mis documentos"
         description="Completá la documentación requerida y consultá su estado."
@@ -151,22 +151,22 @@ export function CitizenDocumentsPage() {
                   type="button"
                   onClick={() => setSelectedId(item.id)}
                   className={cn(
-                    "grid w-full self-start grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-secondary)]",
+                    "grid w-full self-start grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#819B56]",
                     selectedId === item.id
-                      ? "border-[var(--brand-primary)] bg-[var(--brand-panel)] shadow-sm"
-                      : "border-[var(--brand-border-soft)] bg-white hover:border-[var(--brand-secondary)] hover:shadow-sm",
+                      ? "border-[#1D4F36] bg-[#EEF6E9] shadow-sm"
+                      : "border-[#DDE8D7] bg-white hover:border-[#819B56] hover:shadow-sm",
                   )}
                   data-admin-list-card=""
                 >
                   <DocumentIcon status={currentStatus} />
                   <span className="min-w-0">
-                    <span className="block truncate font-extrabold text-[var(--brand-ink)]">{item.name}</span>
+                    <span className="block truncate font-extrabold text-[#173C2A]">{item.name}</span>
                     <StatusPill status={currentStatus} />
-                    <span className="mt-2 line-clamp-1 block text-xs font-semibold text-[var(--brand-text)]/65">
+                    <span className="mt-2 line-clamp-1 block text-xs font-semibold text-[#315644]/65">
                       {item.current?.originalName ?? "Todavía no adjuntaste un archivo"}
                     </span>
                   </span>
-                  <ChevronRight className="size-5 text-[var(--brand-secondary)]" />
+                  <ChevronRight className="size-5 text-[#819B56]" />
                 </button>
               );
             })}
@@ -203,7 +203,7 @@ function DocumentDetail({
 }) {
   if (!item) {
     return (
-      <aside className="hidden min-h-72 items-center justify-center rounded-3xl border border-[var(--brand-border-soft)] bg-[var(--brand-panel)] p-8 text-center text-sm font-semibold text-[var(--brand-text)]/70 lg:flex">
+      <aside className="hidden min-h-72 items-center justify-center rounded-3xl border border-[#DDE8D7] bg-[#EEF6E9] p-8 text-center text-sm font-semibold text-[#315644]/70 lg:flex">
         Seleccioná un documento para consultar su detalle.
       </aside>
     );
@@ -216,19 +216,19 @@ function DocumentDetail({
     <AdminDetailPanel onBack={onBack} empty="Seleccioná un documento.">
       <AdminDetailHeader title={item.name} leading={<DocumentIcon status={currentStatus} large />} badge={<StatusPill status={currentStatus} />} />
 
-      <div className="mt-6 rounded-2xl border border-[var(--brand-border)] bg-white p-4">
-        <p className="text-xs font-extrabold uppercase text-[var(--brand-secondary)]">Indicaciones</p>
-        <p className="mt-1 text-sm font-medium text-[var(--brand-text)]">
+      <div className="mt-6 rounded-2xl border border-[#C9D9C3] bg-white p-4">
+        <p className="text-xs font-extrabold uppercase text-[#819B56]">Indicaciones</p>
+        <p className="mt-1 text-sm font-medium text-[#315644]">
           {item.instructions || "Adjuntá un archivo PDF, JPG o PNG de hasta 10 MB."}
         </p>
       </div>
 
       {item.current ? (
-        <div className="mt-4 rounded-2xl border border-[var(--brand-border)] bg-white p-4">
-          <p className="text-xs font-extrabold uppercase text-[var(--brand-secondary)]">Archivo presentado</p>
-          <p className="mt-2 break-all font-bold text-[var(--brand-ink)]">{item.current.originalName}</p>
+        <div className="mt-4 rounded-2xl border border-[#C9D9C3] bg-white p-4">
+          <p className="text-xs font-extrabold uppercase text-[#819B56]">Archivo presentado</p>
+          <p className="mt-2 break-all font-bold text-[#173C2A]">{item.current.originalName}</p>
           {item.current.expiresAt ? (
-            <p className="mt-2 text-sm font-semibold text-[var(--brand-text)]">
+            <p className="mt-2 text-sm font-semibold text-[#315644]">
               Vencimiento: {new Date(item.current.expiresAt).toLocaleDateString("es-AR", { timeZone: "UTC" })}
             </p>
           ) : null}
@@ -239,7 +239,7 @@ function DocumentDetail({
           ) : null}
           <Button
             variant="outline"
-            className="mt-4 h-11 rounded-xl border-[var(--brand-secondary)] bg-white font-bold text-[var(--brand-primary)] hover:bg-[var(--brand-panel)]"
+            className="mt-4 h-11 rounded-xl border-[#819B56] bg-white font-bold text-[#1D4F36] hover:bg-[#EEF6E9]"
             onClick={() => void onDownload(item.current!.id)}
           >
             <Download /> Ver archivo
@@ -254,7 +254,7 @@ function DocumentDetail({
           onFile={(file) => void onUpload(item.id, file)}
         />
       ) : (
-        <p className="mt-5 rounded-2xl border border-[var(--brand-border)] bg-[var(--brand-highlight)] p-4 text-center text-sm font-bold text-[var(--brand-primary)]">
+        <p className="mt-5 rounded-2xl border border-[#C9D9C3] bg-[#DDEED2] p-4 text-center text-sm font-bold text-[#1D4F36]">
           {item.current?.status === "PENDIENTE"
             ? "El documento está siendo revisado."
             : "El documento fue aprobado y no requiere otra carga."}
@@ -272,7 +272,7 @@ function DocumentDropzone({ disabled, replacement, onFile }: { disabled: boolean
     <div
       className={cn(
         "mt-5 grid min-h-52 place-items-center rounded-2xl border-2 border-dashed p-6 text-center transition",
-        dragging ? "border-[var(--brand-primary)] bg-[var(--brand-highlight)]" : "border-[var(--brand-secondary)] bg-white/80",
+        dragging ? "border-[#1D4F36] bg-[#DDEED2]" : "border-[#819B56] bg-white/80",
         disabled && "cursor-not-allowed opacity-60",
       )}
       onDragEnter={(event) => { event.preventDefault(); if (!disabled) setDragging(true); }}
@@ -285,11 +285,11 @@ function DocumentDropzone({ disabled, replacement, onFile }: { disabled: boolean
       }}
     >
       <div>
-        {disabled ? <Loader2 className="mx-auto size-10 animate-spin text-[var(--brand-primary)]" /> : <UploadCloud className="mx-auto size-11 text-[var(--brand-primary)]" />}
-        <p className="mt-3 font-extrabold text-[var(--brand-primary)]">
+        {disabled ? <Loader2 className="mx-auto size-10 animate-spin text-[#1D4F36]" /> : <UploadCloud className="mx-auto size-11 text-[#1D4F36]" />}
+        <p className="mt-3 font-extrabold text-[#1D4F36]">
           {disabled ? "Subiendo documento..." : "Arrastrá y soltá el archivo acá"}
         </p>
-        <p className="mt-1 text-sm text-[var(--brand-muted)]">PDF, JPG o PNG · máximo 10 MB</p>
+        <p className="mt-1 text-sm text-[#5F6F68]">PDF, JPG o PNG · máximo 10 MB</p>
         <Input
           ref={inputRef}
           type="file"
@@ -305,7 +305,7 @@ function DocumentDropzone({ disabled, replacement, onFile }: { disabled: boolean
         <Button
           type="button"
           disabled={disabled}
-          className="mt-4 h-11 rounded-xl bg-[var(--brand-primary)] px-5 font-bold hover:bg-[var(--brand-primary-hover)]"
+          className="mt-4 h-11 rounded-xl bg-[#1D4F36] px-5 font-bold hover:bg-[#143A27]"
           onClick={() => inputRef.current?.click()}
         >
           <FileUp /> {replacement ? "Adjuntar nueva versión" : "Seleccionar archivo"}
@@ -318,7 +318,7 @@ function DocumentDropzone({ disabled, replacement, onFile }: { disabled: boolean
 function DocumentIcon({ status, large = false }: { status: string; large?: boolean }) {
   const Icon = status === "APROBADO" ? CheckCircle2 : status === "RECHAZADO" ? XCircle : status === "PENDIENTE" ? FileClock : FileCheck2;
   return (
-    <span className={cn("grid shrink-0 place-items-center rounded-xl bg-[var(--brand-primary)] text-white shadow-sm", large ? "size-16 rounded-2xl" : "size-12")}>
+    <span className={cn("grid shrink-0 place-items-center rounded-xl bg-[#1D4F36] text-white shadow-sm", large ? "size-16 rounded-2xl" : "size-12")}>
       <Icon className={large ? "size-8" : "size-6"} />
     </span>
   );
@@ -336,12 +336,12 @@ function StatusPill({ status }: { status: string }) {
   return (
     <span className={cn(
       "mt-1 inline-flex rounded-full px-2.5 py-1 text-[11px] font-extrabold uppercase",
-      status === "APROBADO" && "bg-[var(--brand-highlight)] text-[var(--brand-primary)]",
+      status === "APROBADO" && "bg-[#DDEED2] text-[#1D4F36]",
       status === "RECHAZADO" && "bg-red-100 text-red-800",
       status === "PENDIENTE" && "bg-amber-100 text-amber-900",
       status === "PROXIMO_A_VENCER" && "bg-amber-100 text-amber-900",
       status === "VENCIDO" && "bg-orange-100 text-orange-900",
-      status === "missing" && "bg-[#EEF1EC] text-[var(--brand-muted)]",
+      status === "missing" && "bg-[#EEF1EC] text-[#5F6F68]",
     )}>
       {statusText[status] ?? status}
     </span>

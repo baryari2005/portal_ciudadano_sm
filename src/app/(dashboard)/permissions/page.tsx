@@ -82,7 +82,7 @@ export default function PermissionsPage() {
   if (loading) return <CatalogLoadingState label="permisos" fullPage />;
 
   return (
-    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-5 bg-[var(--brand-page)] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
+    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-5 bg-[#F7FBF5] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
       <CatalogPageHeader
         title="Permisos"
         description="Consulta las acciones disponibles por modulo del sistema."
@@ -101,26 +101,26 @@ export default function PermissionsPage() {
         <CatalogFilterPopover sections={[{ id: "permission-module", title: "Módulo", value: moduleFilter, options: [{ value: "all", label: "Todos los módulos" }, ...modules.map((module) => ({ value: module, label: module }))], onChange: setModuleFilter }]} />
       </div>
 
-      <section className="min-h-0 overflow-hidden rounded-3xl border border-[var(--brand-secondary)]/20 bg-[var(--brand-panel)] p-4 shadow-sm sm:p-6">
-        <div className="h-full overflow-auto rounded-[18px] border border-[var(--brand-border-soft)] bg-white/70">
+      <section className="min-h-0 overflow-hidden rounded-3xl border border-[#819B56]/20 bg-[#EEF6E9] p-4 shadow-sm sm:p-6">
+        <div className="h-full overflow-auto rounded-[18px] border border-[#DDE8D7] bg-white/70">
           <Table>
             <TableHeader>
-              <TableRow className="border-[var(--brand-border-soft)] hover:bg-transparent">
+              <TableRow className="border-[#DDE8D7] hover:bg-transparent">
                 {['Clave', 'Modulo', 'Accion', 'Descripcion'].map((label) => (
-                  <TableHead key={label} className="font-extrabold text-[var(--brand-heading)]">{label}</TableHead>
+                  <TableHead key={label} className="font-extrabold text-[#003A22]">{label}</TableHead>
                 ))}
               </TableRow>
             </TableHeader>
             <TableBody>
               {visible.length ? visible.map((permission) => (
-                <TableRow key={permission.id} className="border-[var(--brand-border-soft)] hover:bg-[var(--brand-page)]">
-                  <TableCell className="font-bold text-[var(--brand-ink)]">{permission.nombre ?? `${permission.modulo}:${permission.accion}`}</TableCell>
-                  <TableCell className="font-medium text-[var(--brand-text)]">{permission.modulo}</TableCell>
-                  <TableCell className="font-medium text-[var(--brand-text)]">{permission.accion}</TableCell>
-                  <TableCell className="font-medium text-[var(--brand-text)]">{permission.descripcion || "Sin descripcion"}</TableCell>
+                <TableRow key={permission.id} className="border-[#DDE8D7] hover:bg-[#F7FBF5]">
+                  <TableCell className="font-bold text-[#173C2A]">{permission.nombre ?? `${permission.modulo}:${permission.accion}`}</TableCell>
+                  <TableCell className="font-medium text-[#315644]">{permission.modulo}</TableCell>
+                  <TableCell className="font-medium text-[#315644]">{permission.accion}</TableCell>
+                  <TableCell className="font-medium text-[#315644]">{permission.descripcion || "Sin descripcion"}</TableCell>
                 </TableRow>
               )) : (
-                <TableRow><TableCell colSpan={4} className="h-32 text-center font-medium text-[var(--brand-muted)]">No hay permisos para mostrar.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={4} className="h-32 text-center font-medium text-[#5F6F68]">No hay permisos para mostrar.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>

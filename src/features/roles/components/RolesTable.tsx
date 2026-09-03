@@ -59,7 +59,7 @@ export function RolesList({ search = "", refresh }: RolesListProps) {
           <Button
             asChild
             size="lg"
-            className="h-12 rounded-xl bg-[var(--brand-primary-strong)] px-6 font-bold text-white shadow-sm hover:bg-[var(--brand-heading)]"
+            className="h-12 rounded-xl bg-[#00522C] px-6 font-bold text-white shadow-sm hover:bg-[#003A22]"
           >
             <Link href="/roles/new">
               <ShieldPlus className="h-4 w-4" />

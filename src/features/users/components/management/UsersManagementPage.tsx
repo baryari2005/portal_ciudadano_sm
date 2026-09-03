@@ -32,17 +32,16 @@ export function UsersManagementPage({ scope = "citizen", context = "admin" }: { 
     page,
     setPage,
     loading,
-    initialized,
     error,
   } = useUsersManagement(scope, context, searchParams.get("selected") ?? "");
-  const showInitialLoading = (!initialized || rolesLoading) && !error;
+  const showInitialLoading = (loading || rolesLoading) && !error;
 
   if (showInitialLoading) {
     return <UsersManagementLoadingState />;
   }
 
   return (
-    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_minmax(0,1fr)] gap-5 bg-[var(--brand-page)] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
+    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_minmax(0,1fr)] gap-5 bg-[#F7FBF5] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
       <UsersHeader total={meta.total} canCreate={canCreate} scope={scope} context={context} />
 
       <section className="grid min-h-0 gap-6 lg:grid-cols-[minmax(340px,0.95fr)_minmax(420px,1.05fr)]">
@@ -68,7 +67,7 @@ export function UsersManagementPage({ scope = "citizen", context = "admin" }: { 
             meta={meta}
             page={page}
             onPageChange={setPage}
-            loading={!initialized && loading}
+            loading={loading}
             error={error}
             filtered={Boolean(query.trim()) || selectedRoleId !== null || selectedStatus !== "all"}
           />
@@ -86,7 +85,6 @@ export function UsersManagementPage({ scope = "citizen", context = "admin" }: { 
             onUserChanged={refreshUsers}
             compact
             context={context}
-            scope={scope}
           />
         </div>
       </section>

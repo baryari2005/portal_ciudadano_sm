@@ -28,7 +28,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AdminFormCard, AdminFormField as Field, AdminStatusSwitchField, adminControlClass, adminPrimaryButtonClass, adminSecondaryButtonClass } from "@/components/shared/admin-patterns";
 import { EmailInput } from "@/components/forms/EmailInput";
 import { PhoneInput } from "@/components/forms/PhoneInput";
-import { GoogleAddressInput } from "@/components/forms/GoogleAddressInput";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -83,10 +82,6 @@ const emptyPayload: EstablecimientoPayload = {
   direccion: "",
   localidad: "",
   provincia: "",
-  direccionPlaceId: null,
-  direccionLat: null,
-  direccionLng: null,
-  codigoPostal: "",
   imagenUrl: null,
   email: "",
   telefono: "",
@@ -100,7 +95,7 @@ const emptyPayload: EstablecimientoPayload = {
 const inputClass = adminControlClass;
 
 const selectClass =
-  "h-11 rounded-xl border border-[var(--brand-border)] bg-[var(--brand-page)] px-3 text-sm font-medium text-[var(--brand-ink)] shadow-sm";
+  "h-11 rounded-xl border border-[#C9D9C3] bg-[#F7FBF5] px-3 text-sm font-medium text-[#173C2A] shadow-sm";
 
 function timeToMinutes(value: string) {
   const [hours, minutes] = value.split(":").map(Number);
@@ -160,10 +155,6 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
       direccion: defaultValues.direccion,
       localidad: defaultValues.localidad ?? "",
       provincia: defaultValues.provincia ?? "",
-      direccionPlaceId: defaultValues.direccionPlaceId ?? null,
-      direccionLat: defaultValues.direccionLat ?? null,
-      direccionLng: defaultValues.direccionLng ?? null,
-      codigoPostal: defaultValues.codigoPostal ?? "",
       imagenUrl: defaultValues.imagenUrl ?? null,
       email: defaultValues.email ?? "",
       telefono: defaultValues.telefono ?? "",
@@ -291,9 +282,14 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
               {isEdit ? <p className="mt-1.5 text-xs text-[var(--brand-muted)]">El estado se modifica desde las acciones del detalle.</p> : null}
             </div>
 
-            <div className="grid gap-6 sm:col-span-2 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] lg:items-stretch"><div className="grid content-start gap-4 sm:grid-cols-2"><div className="sm:col-span-2">
-              <GoogleAddressInput display="input" id="facility-address" value={form.direccion} placeId={form.direccionPlaceId} lat={form.direccionLat} lng={form.direccionLng} locality={form.localidad} province={form.provincia} postalCode={form.codigoPostal} onChange={(location) => setForm((current) => ({ ...current, direccion: location.address, direccionPlaceId: location.placeId, direccionLat: location.lat, direccionLng: location.lng, localidad: location.locality ?? current.localidad, provincia: location.province ?? current.provincia, codigoPostal: location.postalCode ?? current.codigoPostal }))} className={inputClass} placeholder="Ej: Av. Presidente Peron 1234" />
-            </div>
+            <Field label="Direccion *" icon={MapPin} className="sm:col-span-2">
+              <Input
+                value={form.direccion}
+                onChange={(event) => setValue("direccion", event.target.value)}
+                className={inputClass}
+                placeholder="Ej: Av. Presidente Peron 1234"
+              />
+            </Field>
 
             <Field label="Barrio" icon={MapPin}>
               <Input
@@ -314,12 +310,6 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
                 <SelectContent>{ARGENTINA_PROVINCES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent>
               </Select>
             </Field>
-
-            <Field label="Código postal" icon={MapPin}>
-              <Input value={form.codigoPostal ?? ""} onChange={(event) => setValue("codigoPostal", event.target.value)} className={inputClass} placeholder="Ej: 1625" />
-            </Field>
-
-            </div><div className="min-w-0"><GoogleAddressInput display="map" id="facility-address-map" value={form.direccion} placeId={form.direccionPlaceId} lat={form.direccionLat} lng={form.direccionLng} locality={form.localidad} province={form.provincia} postalCode={form.codigoPostal} onChange={(location) => setForm((current) => ({ ...current, direccion: location.address, direccionPlaceId: location.placeId, direccionLat: location.lat, direccionLng: location.lng, localidad: location.locality ?? current.localidad, provincia: location.province ?? current.provincia, codigoPostal: location.postalCode ?? current.codigoPostal }))} /></div></div>
 
             <Field label="Email" icon={Mail}>
               <EmailInput
@@ -361,10 +351,10 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
           <div className="space-y-4 border-t border-[#D7E0D8] pt-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-bold uppercase tracking-normal text-[var(--brand-primary)]">
+                <p className="text-sm font-bold uppercase tracking-normal text-[#1D4F36]">
                   Horarios de apertura
                 </p>
-                <p className="mt-1 text-sm text-[var(--brand-muted)]">
+                <p className="mt-1 text-sm text-[#5F6F68]">
                   Carga una o mas franjas por dia, por ejemplo 08:00 a 12:00 y
                   14:00 a 18:00.
                 </p>
@@ -390,7 +380,7 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
 
             <div className="grid gap-3">
               {form.horarios.length === 0 ? (
-                <div className="rounded-[18px] border border-dashed border-[var(--brand-border)] bg-[var(--brand-page)] px-4 py-8 text-center text-sm font-medium text-[var(--brand-muted)]">
+                <div className="rounded-[18px] border border-dashed border-[#C9D9C3] bg-[#F7FBF5] px-4 py-8 text-center text-sm font-medium text-[#5F6F68]">
                   Sin horarios cargados.
                 </div>
               ) : null}
@@ -398,7 +388,7 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
               {form.horarios.map((horario, index) => (
                 <div
                   key={`${horario.id ?? "nuevo"}-${index}`}
-                  className="grid gap-3 rounded-[18px] border border-[#D7E0D8] bg-[var(--brand-page)] p-4 lg:grid-cols-[auto_1.2fr_1fr_1fr_auto_auto] lg:items-center"
+                  className="grid gap-3 rounded-[18px] border border-[#D7E0D8] bg-[#F7FBF5] p-4 lg:grid-cols-[auto_1.2fr_1fr_1fr_auto_auto] lg:items-center"
                 >
                   <span className="w-fit rounded-full bg-[var(--brand-secondary)]/15 px-2.5 py-1 text-xs font-bold text-[var(--brand-primary)]">{form.horarios.filter((item) => item.diaSemana === horario.diaSemana && !item.cerrado).length > 1 ? "Partida" : "Completa"}</span>
                   <Select
@@ -410,12 +400,12 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
                     <SelectTrigger className={`${selectClass} w-full`}>
                       <SelectValue placeholder="Seleccionar dia" />
                     </SelectTrigger>
-                    <SelectContent className="border-[var(--brand-border)] bg-[var(--brand-page)] text-[var(--brand-ink)]">
+                    <SelectContent className="border-[#C9D9C3] bg-[#F7FBF5] text-[#173C2A]">
                       {dias.map((dia) => (
                         <SelectItem
                           key={dia}
                           value={dia}
-                          className="focus:bg-[var(--brand-highlight)] focus:text-[var(--brand-heading)] data-[highlighted]:bg-[var(--brand-highlight)] data-[highlighted]:text-[var(--brand-heading)]"
+                          className="focus:bg-[#DDEED2] focus:text-[#003A22] data-[highlighted]:bg-[#DDEED2] data-[highlighted]:text-[#003A22]"
                         >
                           {dia}
                         </SelectItem>
@@ -446,7 +436,7 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-11 rounded-xl border-[var(--brand-border)] bg-white/50 font-bold text-[var(--brand-ink)] hover:bg-white"
+                    className="h-11 rounded-xl border-[#C9D9C3] bg-white/50 font-bold text-[#173C2A] hover:bg-white"
                     onClick={() =>
                       updateHorario(index, "cerrado", !horario.cerrado)
                     }
@@ -458,7 +448,7 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-11 rounded-xl border-[var(--brand-border)] bg-white/50 font-bold text-red-700 hover:bg-red-50"
+                    className="h-11 rounded-xl border-[#C9D9C3] bg-white/50 font-bold text-red-700 hover:bg-red-50"
                     onClick={() => removeHorario(index)}
                   >
                     <Trash2 className="h-4 w-4" />

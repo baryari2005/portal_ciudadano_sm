@@ -10,7 +10,7 @@ import { citizenPost } from "../services/citizen.service";
 type Response={token:string;credential:{status:"ACTIVO";issuedAt:string}};
 export function CitizenQrPage(){
   const requested=useRef(false);const[image,setImage]=useState("");const[loading,setLoading]=useState(true);const[error,setError]=useState(false);
-  const generateQr=useCallback(async()=>{setLoading(true);setError(false);try{const result=await citizenPost<Response>("/qr/issue");setImage(await QRCode.toDataURL(result.token,{width:320,margin:2,color:{dark:"var(--brand-heading)",light:"#FFFFFF"}}))}catch{setImage("");setError(true);toast.error("No pudimos generar el QR de ingreso.")}finally{setLoading(false)}},[]);
+  const generateQr=useCallback(async()=>{setLoading(true);setError(false);try{const result=await citizenPost<Response>("/qr/issue");setImage(await QRCode.toDataURL(result.token,{width:320,margin:2,color:{dark:"#003A22",light:"#FFFFFF"}}))}catch{setImage("");setError(true);toast.error("No pudimos generar el QR de ingreso.")}finally{setLoading(false)}},[]);
   useEffect(()=>{if(requested.current)return;requested.current=true;void generateQr()},[generateQr]);
   if(loading)return <CatalogLoadingState label="credencial QR" fullPage/>;
   return <AdminPageShell><CatalogPageHeader icon={QrCode} title="Mi QR de ingreso" description="Generá una credencial digital para presentar en recepción." total={image?1:0}/>

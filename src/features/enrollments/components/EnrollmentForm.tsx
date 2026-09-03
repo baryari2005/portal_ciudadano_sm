@@ -34,6 +34,7 @@ import {
 } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { listActivitySchedulesClient } from "@/features/activity-schedules/services/activity-schedules.service";
 import type { ActivitySchedule } from "@/features/activity-schedules/types/activity-schedule.types";
+import { listActivitySessionsClient } from "@/features/activity-sessions/services/activity-sessions.service";
 import type { ActivitySession } from "@/features/activity-sessions/types/activity-session.types";
 import { listActividadesClient } from "@/features/actividades/services/actividades.service";
 import type { Actividad } from "@/features/actividades/types/actividad.types";
@@ -42,7 +43,6 @@ import { axiosInstance } from "@/lib/axios";
 import { createEnrollmentSchema } from "../schemas/enrollment.schema";
 import {
   createEnrollmentClient,
-  listEnrollmentSessionsClient,
   updateEnrollmentClient,
 } from "../services/enrollments.service";
 import type { Enrollment } from "../types/enrollment.types";
@@ -194,7 +194,6 @@ export function EnrollmentForm({
       message: string;
     } | null>(null);
   const [checkingSlotKey, setCheckingSlotKey] = useState<string | null>(null);
-  const [sessionsError, setSessionsError] = useState<string | null>(null);
   const [form, setForm] = useState({
     actividadId: initialValues?.activitySchedule.activity.id ?? "",
     horarioActividadIds:
@@ -263,28 +262,21 @@ export function EnrollmentForm({
       )
     ) {
       setSessions([]);
-      setSessionsError(null);
       return;
     }
     setSessionsLoading(true);
-    setSessionsError(null);
-    void listEnrollmentSessionsClient(selectedActivity.id)
-      .then((items) => {
-        setSessions(items);
-        if (items.length === 1) {
-          const session = items[0];
-          setForm((current) => ({ ...current, classId: session.id, horarioActividadIds: [session.activitySchedule.id] }));
-        } else if (items.length === 0) {
-          setSessionsError("El evento no tiene una fecha u horario válido para inscripciones.");
-        }
-      })
-      .catch((error: unknown) => {
-        setSessions([]);
-        const message = typeof error === "object" && error !== null && "response" in error
-          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-          : null;
-        setSessionsError(message ?? "No pudimos cargar las fechas disponibles para la inscripción.");
-      })
+    void listActivitySessionsClient({
+      activityId: selectedActivity.id,
+      dateFrom: new Date().toISOString().slice(0, 10),
+      page: 1,
+      pageSize: 100,
+    })
+      .then((r) =>
+        setSessions(
+          r.data.filter((x) => ["PROGRAMADA", "EN_CURSO"].includes(x.status)),
+        ),
+      )
+      .catch(() => setSessions([]))
       .finally(() => setSessionsLoading(false));
   }, [selectedActivity, initialValues]);
 
@@ -812,11 +804,6 @@ export function EnrollmentForm({
             <div className="grid gap-2 md:grid-cols-2">
               {sessionsLoading ? (
                 <CatalogLoadingState label="clases disponibles" />
-              ) : sessionsError ? (
-                <div className="col-span-full flex gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-medium text-amber-900">
-                  <AlertCircle className="size-5 shrink-0" />
-                  {sessionsError}
-                </div>
               ) : (
                 sessions.map((s) => (
                   <button

@@ -12,10 +12,6 @@ export type Establecimiento = {
   direccion: string;
   localidad: string | null;
   provincia: string | null;
-  direccionPlaceId: string | null;
-  direccionLat: number | null;
-  direccionLng: number | null;
-  codigoPostal: string | null;
   imagenUrl: string | null;
   email: string | null;
   telefono: string | null;

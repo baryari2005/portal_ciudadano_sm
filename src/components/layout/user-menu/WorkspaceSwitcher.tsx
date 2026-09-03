@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { DoorOpen, GraduationCap, LayoutDashboard, UserRound } from "lucide-react";
 import { DropdownMenuItem, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { getTeacherProfileClient } from "@/features/teacher/services/teacher.service";
-import { hasReceptionWorkspace, hasAdministrativeWorkspace, hasTeacherPermissions, workspacePreferenceStorageKey, type WorkspaceKey } from "@/features/auth/libs/workspaces";
+import { hasReceptionWorkspace, hasAdministrativeWorkspace, hasTeacherPermissions, WORKSPACE_STORAGE_KEY, type WorkspaceKey } from "@/features/auth/libs/workspaces";
 import { useAuth } from "@/stores/auth";
 export function WorkspaceSwitcher() {
   const user = useAuth((state) => state.user), [teacherEnabled, setTeacherEnabled] = useState(false), teacherPermissions = hasTeacherPermissions(user);
@@ -16,5 +16,5 @@ export function WorkspaceSwitcher() {
     ...(teacherEnabled && teacherPermissions ? [{ key: "teacher" as const, href: "/teacher", label: "Portal del Profesor", icon: GraduationCap }] : []),
     { key: "citizen", href: "/citizen", label: "Portal Ciudadano", icon: UserRound },
   ];
-  return <><DropdownMenuLabel className="px-5 text-xs uppercase tracking-wide text-[var(--brand-secondary)]">Cambiar experiencia</DropdownMenuLabel>{links.map(({ key, href, label, icon: Icon }) => <DropdownMenuItem key={key} asChild><Link href={href} onClick={() => localStorage.setItem(workspacePreferenceStorageKey(user.id), key)} className="mx-2 cursor-pointer rounded-xl px-3 py-2"><Icon className="mr-3 size-4" />{label}</Link></DropdownMenuItem>)}</>;
+  return <><DropdownMenuLabel className="px-5 text-xs uppercase tracking-wide text-[#819B56]">Cambiar experiencia</DropdownMenuLabel>{links.map(({ key, href, label, icon: Icon }) => <DropdownMenuItem key={key} asChild><Link href={href} onClick={() => localStorage.setItem(WORKSPACE_STORAGE_KEY, key)} className="mx-2 cursor-pointer rounded-xl px-3 py-2"><Icon className="mr-3 size-4" />{label}</Link></DropdownMenuItem>)}</>;
 }

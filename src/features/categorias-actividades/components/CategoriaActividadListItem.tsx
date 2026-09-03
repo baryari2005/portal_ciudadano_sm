@@ -18,7 +18,7 @@ export function CategoriaActividadListItem({
   onSelect: () => void;
 }) {
   const Icon = getCategoryIcon(item.icono);
-  const color = item.color || "var(--brand-primary)";
+  const color = item.color || "#1D4F36";
 
   return (
     <AdminListCard

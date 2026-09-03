@@ -48,7 +48,7 @@ export function RequestAccessField({
       name={name}
       render={({ field }) => (
         <FormItem className={className}>
-          <FormLabel className="font-extrabold text-[var(--brand-ink)]">
+          <FormLabel className="font-extrabold text-[#173C2A]">
             {label}
           </FormLabel>
           <FormControl>
@@ -58,7 +58,7 @@ export function RequestAccessField({
                 value={field.value ?? ""}
                 onChange={(value) => field.onChange(value)}
                 onBlur={field.onBlur}
-                className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9 font-medium text-[var(--brand-ink)]"
+                className="h-11 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] pl-9 font-medium text-[#173C2A]"
                 placeholder={placeholder}
                 required
               />
@@ -68,7 +68,7 @@ export function RequestAccessField({
                 value={field.value ?? ""}
                 onChange={(value) => field.onChange(value)}
                 onBlur={field.onBlur}
-                className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9 font-medium text-[var(--brand-ink)]"
+                className="h-11 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] pl-9 font-medium text-[#173C2A]"
                 placeholder={placeholder}
                 required
               />
@@ -78,14 +78,14 @@ export function RequestAccessField({
                 value={field.value ?? ""}
                 onChange={(value) => field.onChange(value)}
                 onBlur={field.onBlur}
-                className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9 font-medium text-[var(--brand-ink)]"
+                className="h-11 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] pl-9 font-medium text-[#173C2A]"
                 placeholder={placeholder}
                 required
               />
             ) : (
               <IconInput
                 id={name}
-                leftIcon={<Icon className="h-4 w-4 text-[var(--brand-primary)]" />}
+                leftIcon={<Icon className="h-4 w-4 text-[#1D4F36]" />}
                 input={
                   <Input
                     {...field}
@@ -94,7 +94,7 @@ export function RequestAccessField({
                     autoComplete={autoComplete}
                     inputMode={inputMode}
                     placeholder={placeholder}
-                    className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9 font-medium text-[var(--brand-ink)]"
+                    className="h-11 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] pl-9 font-medium text-[#173C2A]"
                   />
                 }
               />

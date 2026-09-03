@@ -246,7 +246,6 @@ exports.Prisma.ParametrosGeneralesScalarFieldEnum = {
   imagenLoginCollage2: 'imagenLoginCollage2',
   imagenLoginCollage3: 'imagenLoginCollage3',
   imagenLoginCollage4: 'imagenLoginCollage4',
-  paletasExperiencia: 'paletasExperiencia',
   updatedById: 'updatedById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -285,10 +284,6 @@ exports.Prisma.EstablecimientoScalarFieldEnum = {
   barrio: 'barrio',
   localidad: 'localidad',
   provincia: 'provincia',
-  direccionPlaceId: 'direccionPlaceId',
-  direccionLat: 'direccionLat',
-  direccionLng: 'direccionLng',
-  codigoPostal: 'codigoPostal',
   imagenUrl: 'imagenUrl',
   tipo: 'tipo',
   activo: 'activo',
@@ -1170,8 +1165,7 @@ exports.AsistenciaEstado = exports.$Enums.AsistenciaEstado = {
 
 exports.AsistenciaOrigen = exports.$Enums.AsistenciaOrigen = {
   MANUAL: 'MANUAL',
-  QR: 'QR',
-  ACCESO: 'ACCESO'
+  QR: 'QR'
 };
 
 exports.UsuarioQrEstado = exports.$Enums.UsuarioQrEstado = {

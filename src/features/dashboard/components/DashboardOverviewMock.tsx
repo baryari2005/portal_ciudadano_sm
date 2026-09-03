@@ -107,7 +107,7 @@ export function DashboardOverviewMock() {
         </div>
 
         <div className="flex items-center gap-3 rounded-lg px-2 py-1 text-primary">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--brand-accent)]">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#ddef8f]">
             <CalendarDays className="h-6 w-6" />
           </span>
           <span className="text-xl font-bold leading-5">
@@ -259,7 +259,7 @@ export function DashboardOverviewMock() {
       <Card className="rounded-lg border-0 bg-white/90 py-0 shadow-sm">
         <CardContent className="grid gap-6 px-7 py-6 lg:grid-cols-[1fr_auto_360px] lg:items-center">
           <div className="flex items-center gap-5">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--brand-accent)] text-primary">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#ddef8f] text-primary">
               <BarChart3 className="h-9 w-9" />
             </span>
             <div>

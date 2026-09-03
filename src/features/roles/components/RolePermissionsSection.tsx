@@ -30,15 +30,15 @@ export function RolePermissionsSection({
     permissionIds.every((permissionId) => selectedPermisos.includes(permissionId));
 
   return (
-    <section className="rounded-[22px] border border-[var(--brand-border)] bg-white/45 p-6">
+    <section className="rounded-[22px] border border-[#C9D9C3] bg-white/45 p-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--brand-highlight)] text-[var(--brand-primary-strong)]">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#DDEED2] text-[#00522C]">
             <Wrench className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-xl font-extrabold text-[var(--brand-heading)]">Permisos</h3>
-            <p className="mt-1 text-sm font-medium text-[var(--brand-muted)]">
+            <h3 className="text-xl font-extrabold text-[#003A22]">Permisos</h3>
+            <p className="mt-1 text-sm font-medium text-[#5F6F68]">
               Activa las acciones que este rol puede realizar dentro del sistema.
             </p>
           </div>
@@ -48,7 +48,7 @@ export function RolePermissionsSection({
           variant="outline"
           onClick={onToggleAll}
           disabled={permissionIds.length === 0}
-          className="shrink-0 border-[var(--brand-border)] bg-[var(--brand-page)] font-bold text-[var(--brand-primary)] hover:bg-[var(--brand-panel)]"
+          className="shrink-0 border-[#C9D9C3] bg-[#F7FBF5] font-bold text-[#1D4F36] hover:bg-[#EEF6E9]"
         >
           {allSelected ? "Quitar todos" : "Activar todos"}
         </Button>
@@ -58,9 +58,9 @@ export function RolePermissionsSection({
         {permisos.map((grupo) => (
           <div
             key={grupo.modulo}
-            className="rounded-[18px] border border-[var(--brand-border-soft)] bg-[var(--brand-panel)] p-5"
+            className="rounded-[18px] border border-[#DDE8D7] bg-[#EEF6E9] p-5"
           >
-            <Label className="text-base font-extrabold text-[var(--brand-heading)]">
+            <Label className="text-base font-extrabold text-[#003A22]">
               {grupo.modulo}
             </Label>
 
@@ -76,19 +76,19 @@ export function RolePermissionsSection({
                     <div className="flex min-w-0 items-start gap-3">
                       <PermissionIcon
                         name={permiso.icono}
-                        className="mt-0.5 h-5 w-5 shrink-0 text-[var(--brand-primary-strong)]"
+                        className="mt-0.5 h-5 w-5 shrink-0 text-[#00522C]"
                       />
 
                       <div className="min-w-0">
                         <Label
                           htmlFor={`permiso-${permiso.id}`}
-                          className="cursor-pointer font-extrabold text-[var(--brand-ink)]"
+                          className="cursor-pointer font-extrabold text-[#173C2A]"
                         >
                           {permiso.accion}
                         </Label>
 
                         {permiso.descripcion ? (
-                          <p className="mt-1 line-clamp-2 text-sm font-medium text-[var(--brand-muted)]">
+                          <p className="mt-1 line-clamp-2 text-sm font-medium text-[#5F6F68]">
                             {permiso.descripcion}
                           </p>
                         ) : null}

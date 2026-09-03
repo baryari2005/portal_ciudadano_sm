@@ -120,15 +120,15 @@ export function PublicoObjetivoForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full text-[var(--brand-ink)]"
+      className="w-full text-[#173C2A]"
       noValidate
     >
-      <div className="w-full rounded-3xl border border-[var(--brand-secondary)]/20 bg-white/80 p-5 shadow-sm sm:p-6 lg:p-8">
-        <div className="mb-6 border-b border-[var(--brand-border)] pb-5">
-          <h2 className="text-lg font-extrabold text-[var(--brand-heading)]">
+      <div className="w-full rounded-3xl border border-[#819B56]/20 bg-white/80 p-5 shadow-sm sm:p-6 lg:p-8">
+        <div className="mb-6 border-b border-[#C9D9C3] pb-5">
+          <h2 className="text-lg font-extrabold text-[#003A22]">
             Datos del público objetivo
           </h2>
-          <p className="mt-1 text-sm font-medium text-[var(--brand-muted)]">
+          <p className="mt-1 text-sm font-medium text-[#5F6F68]">
             Información requerida para identificar a quién está dirigida cada actividad.
           </p>
         </div>
@@ -155,15 +155,15 @@ export function PublicoObjetivoForm({
           onChange={(event) => setValue("nombre", event.target.value)}
           aria-invalid={Boolean(errors.nombre)}
           placeholder="Ej. Adolescentes"
-          className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-medium text-[var(--brand-ink)]"
+          className="h-11 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A]"
         />
       </Field>
 
-      <div className="rounded-xl border border-[var(--brand-secondary)]/25 bg-[var(--brand-page)] px-4 py-3">
-        <p className="text-xs font-bold uppercase tracking-wide text-[var(--brand-text)]/70">
+      <div className="rounded-xl border border-[#819B56]/25 bg-[#F7FBF5] px-4 py-3">
+        <p className="text-xs font-bold uppercase tracking-wide text-[#315644]/70">
           Vista previa del slug
         </p>
-        <p className="mt-1 break-all font-mono text-sm text-[var(--brand-primary)]">
+        <p className="mt-1 break-all font-mono text-sm text-[#1D4F36]">
           {slug || "se-generara-desde-el-nombre"}
         </p>
       </div>
@@ -179,26 +179,26 @@ export function PublicoObjetivoForm({
           value={form.descripcion}
           onChange={(event) => setValue("descripcion", event.target.value)}
           rows={3}
-          className="min-h-28 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-medium text-[var(--brand-ink)]"
+          className="min-h-28 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A]"
           placeholder="Descripción breve del público al que se dirige"
         />
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Edad mínima" htmlFor="publico-edad-minima" error={errors.edadMinimaSugerida} icon={Cake}>
-          <Input id="publico-edad-minima" type="number" min="0" max="120" value={form.edadMinimaSugerida} onChange={(event) => setValue("edadMinimaSugerida", event.target.value)} placeholder="Sin mínimo" className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-medium text-[var(--brand-ink)]" />
+          <Input id="publico-edad-minima" type="number" min="0" max="120" value={form.edadMinimaSugerida} onChange={(event) => setValue("edadMinimaSugerida", event.target.value)} placeholder="Sin mínimo" className="h-11 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A]" />
         </Field>
         <Field label="Edad máxima" htmlFor="publico-edad-maxima" error={errors.edadMaximaSugerida} icon={Cake}>
-          <Input id="publico-edad-maxima" type="number" min="0" max="120" value={form.edadMaximaSugerida} onChange={(event) => setValue("edadMaximaSugerida", event.target.value)} placeholder="Sin máximo" className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-medium text-[var(--brand-ink)]" />
+          <Input id="publico-edad-maxima" type="number" min="0" max="120" value={form.edadMaximaSugerida} onChange={(event) => setValue("edadMaximaSugerida", event.target.value)} placeholder="Sin máximo" className="h-11 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A]" />
         </Field>
       </div>
 
       <div className="space-y-2">
-        <Label className="flex items-center gap-2 font-extrabold text-[var(--brand-ink)]">Sexo / género admitido</Label>
-        <div className="grid gap-2 rounded-2xl border border-[var(--brand-border)] bg-[var(--brand-page)] p-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Label className="flex items-center gap-2 font-extrabold text-[#173C2A]">Sexo / género admitido</Label>
+        <div className="grid gap-2 rounded-2xl border border-[#C9D9C3] bg-[#F7FBF5] p-4 sm:grid-cols-2 lg:grid-cols-3">
           {GENERO_OPCIONES.map((genero) => <label key={genero} className="flex cursor-pointer items-center gap-2 rounded-xl  px-3 py-2 text-sm font-bold"><Checkbox checked={form.generosAdmitidos.includes(genero)} onCheckedChange={(checked) => setValue("generosAdmitidos", checked ? [...form.generosAdmitidos, genero] : form.generosAdmitidos.filter((item) => item !== genero))} />{genero.replaceAll("_", " ")}</label>)}
         </div>
-        <p className="text-xs font-medium text-[var(--brand-muted)]">Si no seleccionás ninguna opción, se admiten todos los géneros.</p>
+        <p className="text-xs font-medium text-[#5F6F68]">Si no seleccionás ninguna opción, se admiten todos los géneros.</p>
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
@@ -210,14 +210,14 @@ export function PublicoObjetivoForm({
             value={form.orden}
             onChange={(event) => setValue("orden", event.target.value)}
             aria-invalid={Boolean(errors.orden)}
-            className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-medium text-[var(--brand-ink)]"
+            className="h-11 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A]"
           />
         </Field>
 
         <div>
           <AdminStatusSwitchField checked={form.activo} onCheckedChange={(checked) => setValue("activo", checked)} icon={Power} activeDescription="Público disponible para asociar con actividades." inactiveDescription="No estará disponible para nuevas asociaciones." disabled={isEdit} />
           {isEdit ? (
-            <p className="mt-1.5 text-xs text-[var(--brand-text)]/70">
+            <p className="mt-1.5 text-xs text-[#315644]/70">
               El estado se cambia desde las acciones del detalle.
             </p>
           ) : null}
@@ -232,7 +232,7 @@ export function PublicoObjetivoForm({
           variant="outline"
           onClick={onCancel}
           disabled={loading}
-          className="h-12 w-full justify-center gap-3 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] px-8 text-base font-bold text-[var(--brand-ink)] shadow-sm hover:bg-[var(--brand-panel)] sm:w-auto"
+          className="h-12 w-full justify-center gap-3 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] px-8 text-base font-bold text-[#173C2A] shadow-sm hover:bg-[#EEF6E9] sm:w-auto"
         >
           <ArrowLeft className="h-5 w-5" />
           Volver
@@ -240,7 +240,7 @@ export function PublicoObjetivoForm({
         <Button
           type="submit"
           disabled={loading}
-          className="h-12 w-full rounded-xl bg-[#014D31] px-8 text-base font-bold text-white shadow-sm hover:bg-[var(--brand-heading)] sm:w-auto"
+          className="h-12 w-full rounded-xl bg-[#014D31] px-8 text-base font-bold text-white shadow-sm hover:bg-[#003A22] sm:w-auto"
         >
           {loading ? <Loader2 className="animate-spin" /> : <Save />}
           {isEdit ? "Guardar cambios" : "Crear público"}
@@ -267,7 +267,7 @@ function Field({
 }) {
   return (
     <div className="space-y-1">
-      <Label htmlFor={htmlFor} className="font-extrabold text-[var(--brand-ink)]">
+      <Label htmlFor={htmlFor} className="font-extrabold text-[#173C2A]">
         {label}
         {required ? " *" : ""}
       </Label>

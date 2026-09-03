@@ -13,11 +13,6 @@ export async function listEstablecimientosClient() {
   return data.data;
 }
 
-export async function listActiveEstablecimientosClient() {
-  const items = await listEstablecimientosClient();
-  return items.filter((item) => item.estado.toLowerCase() === "activo");
-}
-
 export async function getEstablecimientoClient(id: string) {
   const { data } = await axiosInstance.get<ItemResponse>(
     `/establecimientos/${id}`,
@@ -46,6 +41,6 @@ export async function updateEstablecimientoClient(
   return data.data;
 }
 
-export async function deactivateEstablecimientoClient(id: string) {
+export async function deleteEstablecimientoClient(id: string) {
   await axiosInstance.delete(`/establecimientos/${id}`);
 }

@@ -15,7 +15,7 @@ import { LoginLogo } from "./LoginLogo";
 import { LoginPageLayout } from "./LoginPageLayout";
 import { SecureNotice } from "./SecureNotice";
 import { getTeacherProfileClient } from "@/features/teacher/services/teacher.service";
-import { availableWorkspaces, getDefaultWorkspace, hasTeacherPermissions, workspaceForPath, workspacePreferenceStorageKey } from "../../libs/workspaces";
+import { availableWorkspaces, getDefaultWorkspace, hasTeacherPermissions, WORKSPACE_STORAGE_KEY, workspaceForPath } from "../../libs/workspaces";
 
 type Props = {
   nextParam?: string;
@@ -53,7 +53,7 @@ export default function LoginForm({ nextParam, imageSources }: Props) {
     let active = true;
     void (async () => {
       const teacherEnabled = hasTeacherPermissions(user) ? await getTeacherProfileClient().then((profile) => profile.estado === "ACTIVO").catch(() => false) : false;
-      const preferred = localStorage.getItem(workspacePreferenceStorageKey(user.id));
+      const preferred = localStorage.getItem(WORKSPACE_STORAGE_KEY);
       const requestedWorkspace = workspaceForPath(next || "/");
       const destination = availableWorkspaces(user, teacherEnabled).includes(requestedWorkspace) && nextParam ? next : getDefaultWorkspace(user, teacherEnabled, preferred);
       if (!active || lastReplaceRef.current === destination) return;

@@ -35,10 +35,6 @@ export const establecimientoSchema = z
     direccion: z.string().trim().min(1, "La direccion es obligatoria"),
     localidad: z.string().trim().optional().nullable(),
     provincia: z.string().trim().optional().nullable(),
-    direccionPlaceId: z.string().trim().optional().nullable(),
-    direccionLat: z.number().finite().optional().nullable(),
-    direccionLng: z.number().finite().optional().nullable(),
-    codigoPostal: z.string().trim().optional().nullable(),
     imagenUrl: z.string().url("La imagen debe tener una URL válida").optional().nullable(),
     email: z
       .string()

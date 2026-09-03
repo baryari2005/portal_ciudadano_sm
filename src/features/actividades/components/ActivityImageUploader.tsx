@@ -55,7 +55,7 @@ export function ActivityImageUploader({ value, onChange, endpoint = "/activities
     <div className="space-y-3">
       {allowUrl ? <Input
         id="activity-image"
-        className="rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] text-[var(--brand-ink)]"
+        className="rounded-xl border-[#C9D9C3] bg-[#F7FBF5] text-[#173C2A]"
         placeholder="URL de la imagen"
         value={value ?? ""}
         onChange={(event) => onChange(event.target.value || null)}
@@ -64,7 +64,7 @@ export function ActivityImageUploader({ value, onChange, endpoint = "/activities
       <div
         className={cn(
           "grid min-h-44 cursor-pointer place-items-center rounded-2xl border-2 border-dashed p-4 text-center transition",
-          dragging ? "border-[var(--brand-primary)] bg-[var(--brand-highlight)]" : "border-[var(--brand-secondary)] bg-[var(--brand-page)] hover:bg-[var(--brand-panel)]",
+          dragging ? "border-[#1D4F36] bg-[#DDEED2]" : "border-[#819B56] bg-[#F7FBF5] hover:bg-[#EEF6E9]",
           uploading && "pointer-events-none opacity-65",
         )}
         role="button"
@@ -77,14 +77,14 @@ export function ActivityImageUploader({ value, onChange, endpoint = "/activities
         onDrop={(event) => { event.preventDefault(); setDragging(false); void upload(event.dataTransfer.files[0]); }}
       >
         <div>
-          {uploading ? <Loader2 className="mx-auto size-9 animate-spin text-[var(--brand-primary)]" /> : <UploadCloud className="mx-auto size-10 text-[var(--brand-primary)]" />}
-          <p className="mt-2 font-extrabold text-[var(--brand-primary)]">{uploading ? "Subiendo imagen..." : "Arrastrá una imagen acá"}</p>
-          <p className="mt-1 text-xs font-medium text-[var(--brand-muted)]">JPG, PNG o WebP · máximo 5 MB{maxDimension ? ` · hasta ${maxDimension} × ${maxDimension} px` : ""}</p>
-          <Button type="button" variant="outline" disabled={uploading} className="mt-3 rounded-xl border-[var(--brand-secondary)] bg-white font-bold text-[var(--brand-primary)]" onClick={(event) => { event.stopPropagation(); inputRef.current?.click(); }}><ImageUp />Seleccionar imagen</Button>
+          {uploading ? <Loader2 className="mx-auto size-9 animate-spin text-[#1D4F36]" /> : <UploadCloud className="mx-auto size-10 text-[#1D4F36]" />}
+          <p className="mt-2 font-extrabold text-[#1D4F36]">{uploading ? "Subiendo imagen..." : "Arrastrá una imagen acá"}</p>
+          <p className="mt-1 text-xs font-medium text-[#5F6F68]">JPG, PNG o WebP · máximo 5 MB{maxDimension ? ` · hasta ${maxDimension} × ${maxDimension} px` : ""}</p>
+          <Button type="button" variant="outline" disabled={uploading} className="mt-3 rounded-xl border-[#819B56] bg-white font-bold text-[#1D4F36]" onClick={(event) => { event.stopPropagation(); inputRef.current?.click(); }}><ImageUp />Seleccionar imagen</Button>
         </div>
       </div>
       {sidePreview ? (
-        value ? <div className="grid min-h-44 place-items-center rounded-2xl border border-[var(--brand-secondary)]/25 bg-[var(--brand-page)] p-3"><ActivityImagePreview source={value} alt={`Vista previa de ${subject}`} className="size-36 max-h-full max-w-full object-contain p-1 sm:size-40" /></div> : <div className="grid min-h-44 place-items-center rounded-2xl border border-dashed border-[var(--brand-secondary)]/45 bg-[var(--brand-page)] p-5 text-center text-sm font-bold text-[var(--brand-muted)]">La imagen cargada se mostrará acá.</div>
+        value ? <div className="grid min-h-44 place-items-center rounded-2xl border border-[#819B56]/25 bg-[#F7FBF5] p-3"><ActivityImagePreview source={value} alt={`Vista previa de ${subject}`} className="size-36 max-h-full max-w-full object-contain p-1 sm:size-40" /></div> : <div className="grid min-h-44 place-items-center rounded-2xl border border-dashed border-[#819B56]/45 bg-[#F7FBF5] p-5 text-center text-sm font-bold text-[#5F6F68]">La imagen cargada se mostrará acá.</div>
       ) : null}
       </ImageUploadColumns>
       <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(event) => { void upload(event.target.files?.[0]); event.target.value = ""; }} />

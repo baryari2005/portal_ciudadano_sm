@@ -112,10 +112,10 @@ export function QrScannerCard({
   const currentStatus = statusContent[status];
 
   return (
-    <section className="rounded-[28px] border border-[var(--brand-border-soft)] bg-[var(--brand-panel)] p-5 text-[var(--brand-ink)] shadow-sm lg:p-8">
+    <section className="rounded-[28px] border border-[#DDE8D7] bg-[#EEF6E9] p-5 text-[#173C2A] shadow-sm lg:p-8">
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="rounded-[24px] bg-[var(--brand-highlight)] p-3 shadow-sm">
-          <div className="relative min-h-[390px] overflow-hidden rounded-[20px] border border-[var(--brand-border)] bg-[#0A2F1F] shadow-[inset_0_0_0_1px_rgba(221,239,143,0.18)]">
+        <div className="rounded-[24px] bg-[#DDEED2] p-3 shadow-sm">
+          <div className="relative min-h-[390px] overflow-hidden rounded-[20px] border border-[#C9D9C3] bg-[#0A2F1F] shadow-[inset_0_0_0_1px_rgba(221,239,143,0.18)]">
             <video
               ref={videoRef}
               className="h-full min-h-[390px] w-full object-cover"
@@ -126,7 +126,7 @@ export function QrScannerCard({
             {!scanning ? (
               <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(circle_at_center,rgba(221,239,143,0.12),rgba(10,47,31,0.98)_58%)] text-center text-white">
                 <div>
-                  <div className="mx-auto grid h-20 w-20 place-items-center rounded-[22px] bg-white/10 text-[var(--brand-accent)] shadow-[0_18px_45px_rgba(0,0,0,0.18)] ring-1 ring-white/15">
+                  <div className="mx-auto grid h-20 w-20 place-items-center rounded-[22px] bg-white/10 text-[#DDEF8F] shadow-[0_18px_45px_rgba(0,0,0,0.18)] ring-1 ring-white/15">
                     <QrCode className="h-10 w-10" />
                   </div>
                   <p className="mt-4 text-lg font-extrabold">
@@ -139,15 +139,15 @@ export function QrScannerCard({
               </div>
             ) : null}
 
-            <div className="pointer-events-none absolute inset-8 rounded-[22px] border-2 border-[var(--brand-accent)] shadow-[0_0_0_999px_rgba(0,0,0,0.28)]" />
+            <div className="pointer-events-none absolute inset-8 rounded-[22px] border-2 border-[#DDEF8F] shadow-[0_0_0_999px_rgba(0,0,0,0.28)]" />
             <div className="pointer-events-none absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-white/35" />
           </div>
         </div>
 
-        <aside className="flex flex-col justify-between rounded-[24px] bg-[var(--brand-panel)] p-8 text-[var(--brand-ink)]">
+        <aside className="flex flex-col justify-between rounded-[24px] bg-[#EEF6E9] p-8 text-[#173C2A]">
           <div>
             <div className="flex items-center gap-5">
-              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[18px] bg-[var(--brand-highlight)] text-[var(--brand-primary-strong)]">
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[18px] bg-[#DDEED2] text-[#00522C]">
                 {status === "searching" ? (
                   <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
@@ -155,18 +155,18 @@ export function QrScannerCard({
                 )}
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-[var(--brand-secondary)]">
+                <p className="text-xs font-bold uppercase tracking-wide text-[#819B56]">
                   Estado
                 </p>
-                <p className="text-base font-extrabold text-[var(--brand-heading)]">
+                <p className="text-base font-extrabold text-[#003A22]">
                   {currentStatus.title}
                 </p>
               </div>
             </div>
 
-            <div className="my-7 h-px bg-[var(--brand-border)]" />
+            <div className="my-7 h-px bg-[#C9D9C3]" />
 
-            <p className="text-base font-medium leading-6 text-[var(--brand-text)]">
+            <p className="text-base font-medium leading-6 text-[#315644]">
               {currentStatus.detail}
             </p>
 
@@ -175,8 +175,8 @@ export function QrScannerCard({
             {showFallback ? (
               <div className="mt-6 rounded-[18px] bg-white/55 p-5">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--brand-primary-strong)]" />
-                  <p className="text-sm font-semibold leading-5 text-[var(--brand-text)]">
+                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#00522C]" />
+                  <p className="text-sm font-semibold leading-5 text-[#315644]">
                     {currentStatus.detail}
                   </p>
                 </div>
@@ -186,7 +186,7 @@ export function QrScannerCard({
 
           <div className="mt-7 grid gap-3">
             <Button
-              className="h-12 rounded-xl bg-[var(--brand-primary-strong)] font-bold text-white hover:bg-[var(--brand-heading)]"
+              className="h-12 rounded-xl bg-[#00522C] font-bold text-white hover:bg-[#003A22]"
               onClick={onStart}
               disabled={scanning || status === "searching"}
             >
@@ -195,7 +195,7 @@ export function QrScannerCard({
             </Button>
             <Button
               variant="outline"
-              className="h-12 rounded-xl border-[var(--brand-border)] bg-white font-bold text-[var(--brand-ink)] hover:bg-[var(--brand-page)]"
+              className="h-12 rounded-xl border-[#C9D9C3] bg-white font-bold text-[#173C2A] hover:bg-[#F7FBF5]"
               onClick={onStop}
               disabled={!scanning}
             >
@@ -205,7 +205,7 @@ export function QrScannerCard({
             <Button
               asChild
               variant="outline"
-              className="h-12 rounded-xl border-[var(--brand-border)] bg-white font-bold text-[var(--brand-ink)] hover:bg-[var(--brand-accent)]"
+              className="h-12 rounded-xl border-[#C9D9C3] bg-white font-bold text-[#173C2A] hover:bg-[#DDEF8F]"
             >
               <Link href="/reception/manual">
                 <Search className="h-5 w-5" />

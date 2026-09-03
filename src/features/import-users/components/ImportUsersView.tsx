@@ -457,19 +457,19 @@ export default function ImportUsersView() {
   } = useImportUsers();
 
   return (
-    <div className="grid h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_minmax(0,1fr)] gap-6 overflow-hidden bg-[var(--brand-page)] p-8">
+    <div className="grid h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_minmax(0,1fr)] gap-6 overflow-hidden bg-[#F7FBF5] p-8">
       <header>
-        <h1 className="flex items-center gap-3 text-3xl font-extrabold leading-tight text-[var(--brand-heading)]">
-          <UploadCloud className="h-7 w-7 text-[var(--brand-primary)]" />
+        <h1 className="flex items-center gap-3 text-3xl font-extrabold leading-tight text-[#003A22]">
+          <UploadCloud className="h-7 w-7 text-[#1D4F36]" />
           Importar usuarios
         </h1>
-        <p className="mt-2 text-base font-medium text-[var(--brand-muted)]">
+        <p className="mt-2 text-base font-medium text-[#5F6F68]">
           Carga usuarios desde PDF, Excel o CSV y revisa el resultado antes de
           guardar.
         </p>
       </header>
 
-      <section className="min-h-0 overflow-y-auto rounded-[24px] bg-[var(--brand-panel)] p-8 text-[var(--brand-ink)] shadow-sm">
+      <section className="min-h-0 overflow-y-auto rounded-[24px] bg-[#EEF6E9] p-8 text-[#173C2A] shadow-sm">
         <div className="space-y-5">
           <SourceSelector
             source={source}

@@ -30,7 +30,7 @@ export function UsersRoleFilters({
       value={selectedRoleId == null ? "all" : String(selectedRoleId)}
       onValueChange={(value) => onSelectRole(value === "all" ? null : Number(value))}
     >
-      <SelectTrigger className="h-11 w-full rounded-xl border-0 bg-[#F1F5EC] px-5 text-base text-[var(--brand-ink)] shadow-sm focus:ring-[var(--brand-secondary)]/25">
+      <SelectTrigger className="h-11 w-full rounded-xl border-0 bg-[#F1F5EC] px-5 text-base text-[#173C2A] shadow-sm focus:ring-[#819B56]/25">
         <Filter className="mr-2 h-5 w-5 shrink-0 text-primary" />
         <SelectValue placeholder="Todos" />
       </SelectTrigger>

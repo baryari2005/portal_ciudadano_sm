@@ -39,20 +39,20 @@ function buildPrintDocument(user: ManagedUser, qrDataUrl: string) {
         min-height: 100vh;
         display: grid;
         place-items: center;
-        background: var(--brand-page);
+        background: #f7fbf5;
         font-family: Arial, sans-serif;
-        color: var(--brand-heading);
+        color: #003a22;
       }
       .card {
         width: 340px;
-        border: 1px solid var(--brand-border);
+        border: 1px solid #c9d9c3;
         border-radius: 18px;
         overflow: hidden;
         background: #ffffff;
         box-shadow: 0 18px 45px rgba(0, 58, 34, 0.14);
       }
       .header {
-        background: var(--brand-primary);
+        background: #1d4f36;
         color: #ffffff;
         padding: 18px 20px;
       }
@@ -62,7 +62,7 @@ function buildPrintDocument(user: ManagedUser, qrDataUrl: string) {
         letter-spacing: 0;
       }
       .subtitle {
-        color: var(--brand-accent);
+        color: #ddef8f;
         font-size: 12px;
         font-weight: 700;
         margin-top: 4px;
@@ -85,7 +85,7 @@ function buildPrintDocument(user: ManagedUser, qrDataUrl: string) {
       .fallback {
         display: grid;
         place-items: center;
-        background: var(--brand-primary-strong);
+        background: #00522c;
         color: #ffffff;
         font-size: 26px;
         font-weight: 800;
@@ -97,7 +97,7 @@ function buildPrintDocument(user: ManagedUser, qrDataUrl: string) {
       }
       .meta {
         margin-top: 5px;
-        color: var(--brand-text);
+        color: #315644;
         font-size: 13px;
         font-weight: 700;
       }
@@ -105,10 +105,10 @@ function buildPrintDocument(user: ManagedUser, qrDataUrl: string) {
         margin-top: 22px;
         display: grid;
         place-items: center;
-        border: 1px solid var(--brand-border-soft);
+        border: 1px solid #dde8d7;
         border-radius: 14px;
         padding: 14px;
-        background: var(--brand-page);
+        background: #f7fbf5;
       }
       .qr img {
         width: 170px;
@@ -116,7 +116,7 @@ function buildPrintDocument(user: ManagedUser, qrDataUrl: string) {
       }
       .foot {
         margin-top: 12px;
-        color: var(--brand-muted);
+        color: #5f6f68;
         font-size: 11px;
         font-weight: 700;
         text-align: center;
@@ -181,7 +181,7 @@ export function UserAccessCardDialog({
       margin: 2,
       width: 220,
       color: {
-        dark: "var(--brand-heading)",
+        dark: "#003A22",
         light: "#FFFFFF",
       },
     }).then((dataUrl) => {
@@ -222,39 +222,39 @@ export function UserAccessCardDialog({
         </DialogHeader>
 
         {user ? (
-          <div className="overflow-hidden rounded-[18px] border border-[var(--brand-border)] bg-white">
-            <div className="bg-[var(--brand-primary)] px-5 py-4 text-white">
+          <div className="overflow-hidden rounded-[18px] border border-[#C9D9C3] bg-white">
+            <div className="bg-[#1D4F36] px-5 py-4 text-white">
               <p className="text-xl font-extrabold">MÁS San Miguel</p>
-              <p className="text-sm font-bold text-[var(--brand-accent)]">
+              <p className="text-sm font-bold text-[#DDEF8F]">
                 Carnet de ingreso
               </p>
             </div>
 
             <div className="space-y-5 p-5">
               <div className="flex items-center gap-4">
-                <Avatar className="h-20 w-20 rounded-2xl border border-[var(--brand-border-soft)]">
+                <Avatar className="h-20 w-20 rounded-2xl border border-[#DDE8D7]">
                   <AvatarImage
                     src={user.avatarUrl ?? undefined}
                     alt={user.fullName}
                   />
-                  <AvatarFallback className="rounded-2xl bg-[var(--brand-primary-strong)] text-xl font-extrabold text-white">
+                  <AvatarFallback className="rounded-2xl bg-[#00522C] text-xl font-extrabold text-white">
                     {user.initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                  <p className="truncate text-xl font-extrabold text-[var(--brand-heading)]">
+                  <p className="truncate text-xl font-extrabold text-[#003A22]">
                     {user.fullName}
                   </p>
-                  <p className="text-sm font-bold text-[var(--brand-text)]">
+                  <p className="text-sm font-bold text-[#315644]">
                     Usuario: {user.userId}
                   </p>
-                  <p className="text-sm font-bold text-[var(--brand-text)]">
+                  <p className="text-sm font-bold text-[#315644]">
                     DNI: {user.dni}
                   </p>
                 </div>
               </div>
 
-              <div className="grid place-items-center rounded-2xl border border-[var(--brand-border-soft)] bg-[var(--brand-page)] p-4">
+              <div className="grid place-items-center rounded-2xl border border-[#DDE8D7] bg-[#F7FBF5] p-4">
                 {qrDataUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -263,7 +263,7 @@ export function UserAccessCardDialog({
                     className="h-44 w-44"
                   />
                 ) : (
-                  <div className="grid h-44 w-44 place-items-center text-sm font-bold text-[var(--brand-muted)]">
+                  <div className="grid h-44 w-44 place-items-center text-sm font-bold text-[#5F6F68]">
                     Generando QR...
                   </div>
                 )}
@@ -276,7 +276,7 @@ export function UserAccessCardDialog({
           <Button
             type="button"
             variant="outline"
-            className="rounded-xl border-[var(--brand-border)] font-bold text-[var(--brand-ink)]"
+            className="rounded-xl border-[#C9D9C3] font-bold text-[#173C2A]"
             disabled={!qrDataUrl}
             onClick={() => user && navigator.clipboard?.writeText(qrPayload)}
           >
@@ -285,7 +285,7 @@ export function UserAccessCardDialog({
           </Button>
           <Button
             type="button"
-            className="rounded-xl bg-[var(--brand-heading)] font-bold text-white hover:bg-[var(--brand-primary)]"
+            className="rounded-xl bg-[#003A22] font-bold text-white hover:bg-[#1D4F36]"
             disabled={!qrDataUrl}
             onClick={printCard}
           >

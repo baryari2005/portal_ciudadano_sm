@@ -28,7 +28,7 @@ export function AdminFormPage({
         {breadcrumbs?.length ? (
           <nav
             aria-label="Breadcrumb"
-            className="mb-4 flex flex-wrap items-center gap-1 text-sm text-[var(--brand-text)]/75"
+            className="mb-4 flex flex-wrap items-center gap-1 text-sm text-[#315644]/75"
           >
             {breadcrumbs.map((item, index) => (
               <span
@@ -38,7 +38,7 @@ export function AdminFormPage({
                 {index > 0 && <ChevronRight className="size-4" />}
                 {item.href ? (
                   <Link
-                    className="font-medium hover:text-[var(--brand-primary)] hover:underline"
+                    className="font-medium hover:text-[#1D4F36] hover:underline"
                     href={item.href}
                   >
                     {item.label}
@@ -81,9 +81,9 @@ export function AdminFormLoading({
   label?: string;
 }) {
   return (
-    <div className="flex min-h-80 items-center justify-center rounded-3xl border border-[var(--brand-secondary)]/20 bg-white/80">
-      <Loader2 className="mr-3 size-6 animate-spin text-[var(--brand-primary)]" />
-      <span className="font-semibold text-[var(--brand-primary)]">{label}</span>
+    <div className="flex min-h-80 items-center justify-center rounded-3xl border border-[#819B56]/20 bg-white/80">
+      <Loader2 className="mr-3 size-6 animate-spin text-[#1D4F36]" />
+      <span className="font-semibold text-[#1D4F36]">{label}</span>
     </div>
   );
 }

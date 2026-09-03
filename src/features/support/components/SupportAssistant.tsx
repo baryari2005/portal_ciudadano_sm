@@ -128,16 +128,16 @@ export function SupportAssistant() {
   };
 
   return (
-    <Card className="border border-[var(--brand-border-soft)] shadow-sm">
+    <Card className="border border-[#DDE8D7] shadow-sm">
       <CardHeader className="space-y-3">
-        <div className="inline-flex w-fit items-center gap-2 rounded-full bg-[var(--brand-highlight)] px-3 py-1 text-xs font-medium text-[var(--brand-primary)]">
+        <div className="inline-flex w-fit items-center gap-2 rounded-full bg-[#DDEED2] px-3 py-1 text-xs font-medium text-[#1D4F36]">
           <Sparkles className="h-3.5 w-3.5" />
           Asistente IA
         </div>
 
         <div className="space-y-2">
           <CardTitle className="flex items-center gap-2 text-xl">
-            <Bot className="h-5 w-5 text-[var(--brand-primary)]" />
+            <Bot className="h-5 w-5 text-[#1D4F36]" />
             Preguntale al sistema como hacer una tarea
           </CardTitle>
           <p className="text-sm leading-6 text-muted-foreground">
@@ -163,7 +163,7 @@ export function SupportAssistant() {
           ))}
         </div>
 
-        <ScrollArea className="h-80 rounded-xl border border-[var(--brand-border-soft)] bg-[var(--brand-page)]">
+        <ScrollArea className="h-80 rounded-xl border border-[#DDE8D7] bg-[#F7FBF5]">
           <div className="space-y-3 p-4">
             {messages.map((message) => (
               <div
@@ -172,7 +172,7 @@ export function SupportAssistant() {
                   "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm",
                   message.role === "assistant"
                     ? "bg-white text-slate-800"
-                    : "ml-auto bg-[var(--brand-primary)] text-white",
+                    : "ml-auto bg-[#1D4F36] text-white",
                 )}
               >
                 <div className="mb-1 text-xs font-medium uppercase tracking-wide opacity-70">
@@ -204,7 +204,7 @@ export function SupportAssistant() {
               type="button"
               onClick={() => askAssistant(question)}
               disabled={loading || !question.trim()}
-              className="h-11 rounded bg-[var(--brand-primary)] hover:bg-[#163D2A]"
+              className="h-11 rounded bg-[#1D4F36] hover:bg-[#163D2A]"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">

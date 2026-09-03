@@ -38,7 +38,7 @@ export function ForgotPasswordPageForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
       <div className="space-y-1">
-        <label htmlFor="email" className="text-sm font-medium text-[var(--brand-heading)]">
+        <label htmlFor="email" className="text-sm font-medium text-[#003A22]">
           Email
         </label>
         <Input
@@ -55,7 +55,7 @@ export function ForgotPasswordPageForm() {
 
       <Button
         type="submit"
-        className="h-11 w-full rounded-md bg-[var(--brand-heading)] hover:bg-[var(--brand-heading)]/90"
+        className="h-11 w-full rounded-md bg-[#003A22] hover:bg-[#003A22]/90"
         disabled={isSubmitting}
       >
         {isSubmitting ? (
@@ -69,7 +69,7 @@ export function ForgotPasswordPageForm() {
       </Button>
 
       {message && (
-        <p className="rounded-md border border-[var(--brand-secondary)]/30 bg-[var(--brand-secondary)]/10 p-3 text-sm text-[var(--brand-heading)]">
+        <p className="rounded-md border border-[#819B56]/30 bg-[#819B56]/10 p-3 text-sm text-[#003A22]">
           {message}
         </p>
       )}

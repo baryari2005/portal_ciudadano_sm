@@ -64,7 +64,7 @@ export function AccessQrPage() {
   const scannerStatus = scanner.error ?? status;
 
   return (
-    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] gap-6 bg-[var(--brand-page)] p-8">
+    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] gap-6 bg-[#F7FBF5] p-8">
       <AccessPageHeader
         title="Validar QR"
         description="Escanea el QR de la persona para verificar su identidad."

@@ -20,23 +20,23 @@ export function RoleBasicFields({
   return (
     <div className="grid gap-6">
       <div className="space-y-1">
-        <Label className="font-extrabold text-[var(--brand-ink)]">Nombre *</Label>
+        <Label className="font-extrabold text-[#173C2A]">Nombre *</Label>
         <Input
           value={nombre}
-          className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-medium text-[var(--brand-ink)]"
+          className="h-11 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A]"
           onChange={(event) => onNombreChange(event.target.value)}
           placeholder="Ej: Supervisor"
         />
       </div>
 
       <div className="space-y-1">
-        <Label className="font-extrabold text-[var(--brand-ink)]">
+        <Label className="font-extrabold text-[#173C2A]">
           Descripcion corta
         </Label>
         <Textarea
           value={descripcion}
           rows={3}
-          className="min-h-28 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-medium text-[var(--brand-ink)]"
+          className="min-h-28 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A]"
           onChange={(event) => onDescripcionChange(event.target.value)}
           placeholder="Ej: Gestioná usuarios y configuracion"
         />

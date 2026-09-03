@@ -30,7 +30,7 @@ type FormState = {
 const emptyForm: FormState = {
   nombre: "",
   descripcion: "",
-  color: "var(--brand-primary)",
+  color: "#1D4F36",
   icono: "dumbbell",
   orden: "0",
   activo: true,
@@ -68,7 +68,7 @@ export function CategoriaActividadForm({
         ? {
             nombre: item.nombre,
             descripcion: item.descripcion ?? "",
-            color: item.color ?? "var(--brand-primary)",
+            color: item.color ?? "#1D4F36",
             icono: item.icono ?? "dumbbell",
             orden: String(item.orden),
             activo: item.activo,
@@ -124,15 +124,15 @@ export function CategoriaActividadForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full text-[var(--brand-ink)]"
+      className="w-full text-[#173C2A]"
       noValidate
     >
-      <div className="w-full rounded-3xl border border-[var(--brand-secondary)]/20 bg-white/80 p-5 shadow-sm sm:p-6 lg:p-8">
-        <div className="mb-6 border-b border-[var(--brand-border)] pb-5">
-        <h2 className="text-lg font-extrabold text-[var(--brand-heading)]">
+      <div className="w-full rounded-3xl border border-[#819B56]/20 bg-white/80 p-5 shadow-sm sm:p-6 lg:p-8">
+        <div className="mb-6 border-b border-[#C9D9C3] pb-5">
+        <h2 className="text-lg font-extrabold text-[#003A22]">
           Datos de la categoría
         </h2>
-        <p className="mt-1 text-sm font-medium text-[var(--brand-muted)]">
+        <p className="mt-1 text-sm font-medium text-[#5F6F68]">
           Información requerida para clasificar las actividades del sistema.
         </p>
       </div>
@@ -159,15 +159,15 @@ export function CategoriaActividadForm({
             onChange={(event) => setValue("nombre", event.target.value)}
             aria-invalid={Boolean(errors.nombre)}
             placeholder="Ej. Deportes"
-            className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-medium text-[var(--brand-ink)]"
+            className="h-11 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A]"
           />
         </Field>
 
-        <div className="rounded-xl border border-[var(--brand-secondary)]/25 bg-[var(--brand-page)] px-4 py-3">
-          <p className="text-xs font-bold uppercase tracking-wide text-[var(--brand-text)]/70">
+        <div className="rounded-xl border border-[#819B56]/25 bg-[#F7FBF5] px-4 py-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-[#315644]/70">
             Vista previa del slug
           </p>
-          <p className="mt-1 break-all font-mono text-sm text-[var(--brand-primary)]">
+          <p className="mt-1 break-all font-mono text-sm text-[#1D4F36]">
             {slug || "se-generara-desde-el-nombre"}
           </p>
         </div>
@@ -183,7 +183,7 @@ export function CategoriaActividadForm({
             value={form.descripcion}
             onChange={(event) => setValue("descripcion", event.target.value)}
             rows={3}
-            className="min-h-28 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-medium text-[var(--brand-ink)]"
+            className="min-h-28 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A]"
             placeholder="Descripción breve para identificar la categoría"
           />
         </Field>
@@ -196,19 +196,19 @@ export function CategoriaActividadForm({
                 value={form.color}
                 onChange={(event) => setValue("color", event.target.value)}
                 aria-invalid={Boolean(errors.color)}
-                placeholder="var(--brand-primary)"
-                className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-medium text-[var(--brand-ink)]"
+                placeholder="#1D4F36"
+                className="h-11 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A]"
               />
               <Input
                 type="color"
                 value={
-                  /^#[0-9a-fA-F]{6}$/.test(form.color) ? form.color : "var(--brand-primary)"
+                  /^#[0-9a-fA-F]{6}$/.test(form.color) ? form.color : "#1D4F36"
                 }
                 onChange={(event) =>
                   setValue("color", event.target.value.toUpperCase())
                 }
                 aria-label="Seleccionar color"
-                className="h-11 cursor-pointer rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] p-1"
+                className="h-11 cursor-pointer rounded-xl border-[#C9D9C3] bg-[#F7FBF5] p-1"
               />
             </div>
           </Field>
@@ -216,7 +216,7 @@ export function CategoriaActividadForm({
           <div className="space-y-2">
             <Label
               id="categoria-icono-label"
-              className="flex items-center gap-2 font-extrabold text-[var(--brand-ink)]"
+              className="flex items-center gap-2 font-extrabold text-[#173C2A]"
             >
               <Shapes className="size-5 text-[var(--brand-primary)]" aria-hidden="true" />
               Icono
@@ -224,7 +224,7 @@ export function CategoriaActividadForm({
             <div
               role="radiogroup"
               aria-labelledby="categoria-icono-label"
-              className="grid grid-cols-4 gap-1 rounded-xl border border-[var(--brand-border)] bg-[var(--brand-page)] p-1 sm:grid-cols-8"
+              className="grid grid-cols-4 gap-1 rounded-xl border border-[#C9D9C3] bg-[#F7FBF5] p-1 sm:grid-cols-8"
             >
               {visibleIconOptions.map((option) => {
                 const OptionIcon = option.icon;
@@ -239,10 +239,10 @@ export function CategoriaActividadForm({
                     aria-label={option.label}
                     title={option.label}
                     onClick={() => setValue("icono", option.value)}
-                    className={`grid h-8 place-items-center rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-secondary)]/40 ${
+                    className={`grid h-8 place-items-center rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#819B56]/40 ${
                       selected
-                        ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white shadow-sm"
-                        : "border-transparent bg-white text-[var(--brand-primary)] hover:border-[var(--brand-secondary)]/50 hover:bg-[var(--brand-panel)]"
+                        ? "border-[#1D4F36] bg-[#1D4F36] text-white shadow-sm"
+                        : "border-transparent bg-white text-[#1D4F36] hover:border-[#819B56]/50 hover:bg-[#EEF6E9]"
                     }`}
                   >
                     <OptionIcon className="size-4" aria-hidden="true" />
@@ -254,7 +254,7 @@ export function CategoriaActividadForm({
                 aria-label={showAllIcons ? "Mostrar menos iconos" : "Elegir otro icono"}
                 title={showAllIcons ? "Mostrar menos" : "Elegir otro"}
                 onClick={() => setShowAllIcons((current) => !current)}
-                className="grid h-8 place-items-center rounded-lg border border-dashed border-[var(--brand-secondary)]/50 bg-white text-[var(--brand-primary)] transition-colors hover:bg-[var(--brand-panel)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-secondary)]/40"
+                className="grid h-8 place-items-center rounded-lg border border-dashed border-[#819B56]/50 bg-white text-[#1D4F36] transition-colors hover:bg-[#EEF6E9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#819B56]/40"
               >
                 <Ellipsis className="size-4" aria-hidden="true" />
               </button>
@@ -276,14 +276,14 @@ export function CategoriaActividadForm({
               value={form.orden}
               onChange={(event) => setValue("orden", event.target.value)}
               aria-invalid={Boolean(errors.orden)}
-              className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-medium text-[var(--brand-ink)]"
+              className="h-11 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A]"
             />
           </Field>
 
           <div>
             <AdminStatusSwitchField checked={form.activo} onCheckedChange={(checked) => setValue("activo", checked)} icon={Power} activeLabel="Activa" inactiveLabel="Inactiva" activeDescription="Categoría disponible para clasificar actividades." inactiveDescription="No estará disponible para nuevas actividades." disabled={isEdit} />
             {isEdit ? (
-              <p className="mt-1.5 text-xs text-[var(--brand-text)]/70">
+              <p className="mt-1.5 text-xs text-[#315644]/70">
                 El estado se cambia desde las acciones del detalle.
               </p>
             ) : null}
@@ -297,7 +297,7 @@ export function CategoriaActividadForm({
           variant="outline"
           onClick={onCancel}
           disabled={loading}
-          className="h-12 w-full justify-center gap-3 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] px-8 text-base font-bold text-[var(--brand-ink)] shadow-sm hover:bg-[var(--brand-panel)] sm:w-auto"
+          className="h-12 w-full justify-center gap-3 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] px-8 text-base font-bold text-[#173C2A] shadow-sm hover:bg-[#EEF6E9] sm:w-auto"
         >
           <ArrowLeft className="h-5 w-5" />
           Volver
@@ -305,7 +305,7 @@ export function CategoriaActividadForm({
         <Button
           type="submit"
           disabled={loading}
-          className="h-12 w-full rounded-xl bg-[#014D31] px-8 text-base font-bold text-white shadow-sm hover:bg-[var(--brand-heading)] sm:w-auto"
+          className="h-12 w-full rounded-xl bg-[#014D31] px-8 text-base font-bold text-white shadow-sm hover:bg-[#003A22] sm:w-auto"
         >
           {loading ? <Loader2 className="animate-spin" /> : <Save />}
           {isEdit ? "Guardar cambios" : "Crear categoría"}
@@ -332,7 +332,7 @@ function Field({
 }) {
   return (
     <div className="space-y-1">
-      <Label htmlFor={htmlFor} className="font-extrabold text-[var(--brand-ink)]">
+      <Label htmlFor={htmlFor} className="font-extrabold text-[#173C2A]">
         {label}
         {required ? " *" : ""}
       </Label>

@@ -21,7 +21,7 @@ export default function EditFacilityPage() {
   if (!initial) return <Loading />;
 
   return (
-    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_minmax(0,1fr)] gap-5 bg-[var(--brand-page)] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
+    <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_minmax(0,1fr)] gap-5 bg-[#F7FBF5] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
       <AdminFormHeader icon={Building2} title="Editar establecimiento" description="Actualizá los datos de la sede, sus datos de contacto y horarios." className="mb-0" />
       <div className="min-h-0 overflow-y-auto pr-2"><EstablecimientoForm mode="edit" defaultValues={initial} /></div>
     </div>

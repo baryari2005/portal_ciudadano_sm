@@ -17,7 +17,7 @@ import { useCitizenData } from "./CitizenPrimitives";
 
 type Requirement = { id: string; type: "INFORMACION" | "DOCUMENTO" | "CONSENTIMIENTO" | "ELEMENTO_PERSONAL" | "CONDICION"; mandatory: boolean };
 type Schedule = { id: string; day: string; startTime: string; endTime: string; slotDurationMinutes: number | null; slotGapMinutes: number; establishment: { name: string } | null };
-type Activity = { id: string; name: string; level: "INICIAL" | "INTERMEDIO" | "AVANZADO" | null; enrollmentMode: "PERMANENTE" | "POR_PERIODO" | "POR_CLASE"; modalidadOperacion: string; eventSessions: Array<{id:string;date:string;horaInicio:string;horaFin:string}>; requirements: Requirement[]; requiresDocumentation: boolean; schedules: Schedule[] };
+type Activity = { id: string; name: string; level: "INICIAL" | "INTERMEDIO" | "AVANZADO" | null; enrollmentMode: "PERMANENTE" | "POR_PERIODO" | "POR_CLASE"; requirements: Requirement[]; requiresDocumentation: boolean; schedules: Schedule[] };
 type Choice = { schedule: Schedule; startTime: string; endTime: string };
 type EnrollmentResult = { status: "PENDIENTE" | "CONFIRMADA" | "LISTA_ESPERA" };
 
@@ -32,14 +32,12 @@ export function CitizenEnrollmentConfirmationPage({ id }: { id: string }) {
   const [saving, setSaving] = useState(false);
 
   const requestedSlots = useMemo(() => [...new Set(searchParams.getAll("slot"))], [searchParams]);
-  const requestedClassId = searchParams.get("classId");
   const choices = useMemo(() => {
     if (!data) return [];
     const requested = new Set(requestedSlots);
     return data.schedules.flatMap(buildScheduleChoices).filter((choice) => requested.has(slotKey(choice)));
   }, [data, requestedSlots]);
-  const eventSession = data?.modalidadOperacion === "EVENTO_UNICO" ? data.eventSessions.find((session)=>session.id===requestedClassId) : null;
-  const validSelection = data?.modalidadOperacion === "EVENTO_UNICO" ? Boolean(eventSession) : requestedSlots.length > 0 && choices.length === requestedSlots.length;
+  const validSelection = requestedSlots.length > 0 && choices.length === requestedSlots.length;
   const needsRequirementsConsent = Boolean(data?.requirements.some((item) => item.mandatory && ["ELEMENTO_PERSONAL", "CONDICION"].includes(item.type)));
   const canSubmit = validSelection && levelConsent && (!needsRequirementsConsent || requirementsConsent) && !saving;
 
@@ -49,8 +47,7 @@ export function CitizenEnrollmentConfirmationPage({ id }: { id: string }) {
     try {
       const result = await citizenPost<EnrollmentResult>("/enrollments", {
         activityId: data.id,
-        classId: eventSession?.id,
-        selectedSlots: eventSession ? undefined : choices.map((choice) => ({ activityScheduleId: choice.schedule.id, startTime: choice.startTime, endTime: choice.endTime })),
+        selectedSlots: choices.map((choice) => ({ activityScheduleId: choice.schedule.id, startTime: choice.startTime, endTime: choice.endTime })),
         nivelConsentido: true,
       });
       if (result.status === "PENDIENTE") toast.success("La inscripción quedó pendiente hasta completar la documentación obligatoria.");
@@ -75,7 +72,7 @@ export function CitizenEnrollmentConfirmationPage({ id }: { id: string }) {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
         <AdminFormCard title="Horarios seleccionados" description={`Actividad: ${data.name}`}>
           <div className="grid gap-3 sm:grid-cols-2">
-            {eventSession ? <article className="rounded-2xl border border-[var(--brand-border)] bg-[var(--brand-page)] p-4"><div className="flex items-center gap-2 font-extrabold text-[var(--brand-primary)]"><Clock3 className="size-5 text-[var(--brand-secondary)]" />{eventSession.date} · {eventSession.horaInicio} a {eventSession.horaFin}</div></article> : choices.map((choice) => (
+            {choices.map((choice) => (
               <article key={slotKey(choice)} className="rounded-2xl border border-[var(--brand-border)] bg-[var(--brand-page)] p-4">
                 <div className="flex items-center gap-2 font-extrabold text-[var(--brand-primary)]"><Clock3 className="size-5 text-[var(--brand-secondary)]" />{dayLabels[choice.schedule.day] ?? choice.schedule.day} · {choice.startTime} a {choice.endTime}</div>
                 <p className="mt-2 flex items-center gap-2 text-sm text-[var(--brand-muted)]"><MapPin className="size-4" />{choice.schedule.establishment?.name || "Sin establecimiento asignado"}</p>

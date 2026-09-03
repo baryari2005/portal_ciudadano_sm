@@ -45,7 +45,7 @@ export function UsersList({
               ? Array.from({ length: 4 }).map((_, index) => (
                   <div
                     key={index}
-                    className="h-[120px] animate-pulse rounded-[20px] border border-[var(--brand-border-soft)] bg-[var(--brand-panel)]"
+                    className="h-[120px] animate-pulse rounded-[20px] border border-[#DDE8D7] bg-[#EEF6E9]"
                   />
                 ))
               : users.map((user) => (
@@ -67,7 +67,7 @@ export function UsersList({
           ) : null}
         </div>
 
-        <CatalogPagination page={page} total={meta.total} pageSize={meta.pageSize} onPageChange={onPageChange} />
+        {!loading ? <CatalogPagination page={page} total={meta.total} pageSize={meta.pageSize} onPageChange={onPageChange} /> : null}
       </div>
     </div>
   );

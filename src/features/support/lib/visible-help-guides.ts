@@ -40,7 +40,6 @@ export function formatGuidesForAssistant(guides: HelpGuide[]) {
     `Titulo: ${guide.title}`,
     `Descripcion: ${guide.description}`,
     `Rutas: ${(guide.links ?? []).map((link) => `${link.label} (${link.href})`).join(", ") || "Sin ruta"}`,
-    ...(guide.prerequisites?.length ? ["Antes de comenzar:", ...guide.prerequisites.map((item) => `- ${item}`)] : []),
     "Pasos:",
     ...guide.steps.map((step) => `- ${step}`),
     ...(guide.warnings?.length ? ["Advertencias:", ...guide.warnings.map((warning) => `- ${warning}`)] : []),

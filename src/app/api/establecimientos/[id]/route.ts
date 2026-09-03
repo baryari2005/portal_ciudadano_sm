@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { establecimientoSchema } from "@/features/establecimientos/schemas/establecimiento.schema";
 import {
-  deactivateEstablecimiento,
+  deleteEstablecimiento,
   EstablecimientoConflictError,
   getEstablecimiento,
   updateEstablecimiento,
@@ -66,12 +66,12 @@ export async function DELETE(req: NextRequest, { params }: Params) {
 
     const { id } = await params;
     const before = await getEstablecimiento(id);
-    await deactivateEstablecimiento(id);
+    await deleteEstablecimiento(id);
     await createAuditLog({actorId:user.id,action:"DESACTIVAR",entityType:"ESTABLECIMIENTO",entityId:id,entityName:before?.nombre??null,changes:{estado:{before:before?.estado??null,after:"inactivo"}},origin:"ADMINISTRACION",requestContext:getAuditRequestContext(req.headers)});
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return handleRouteError(error, "No pudimos desactivar el establecimiento.");
+    return handleRouteError(error, "No pudimos eliminar el establecimiento.");
   }
 }
 

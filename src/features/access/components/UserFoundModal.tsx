@@ -34,74 +34,74 @@ export function UserFoundModal({ person, open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="overflow-hidden rounded-[24px] border-[var(--brand-border-soft)] bg-[var(--brand-panel)] p-0 text-[var(--brand-ink)] shadow-[0_24px_70px_rgba(0,58,34,0.18)] sm:max-w-lg">
-        <DialogHeader className="border-b border-[var(--brand-border)] bg-[var(--brand-panel)] px-6 py-5">
+      <DialogContent className="overflow-hidden rounded-[24px] border-[#DDE8D7] bg-[#EEF6E9] p-0 text-[#173C2A] shadow-[0_24px_70px_rgba(0,58,34,0.18)] sm:max-w-lg">
+        <DialogHeader className="border-b border-[#C9D9C3] bg-[#EEF6E9] px-6 py-5">
           <div className="flex items-start gap-3 text-left">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[16px] bg-[var(--brand-highlight)] text-[var(--brand-primary-strong)]">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[16px] bg-[#DDEED2] text-[#00522C]">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-extrabold text-[var(--brand-heading)]">
+              <DialogTitle className="text-xl font-extrabold text-[#003A22]">
                 Persona encontrada
               </DialogTitle>
-              <DialogDescription className="text-sm font-medium text-[var(--brand-text)]">
+              <DialogDescription className="text-sm font-medium text-[#315644]">
                 Usuario identificado correctamente.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="bg-[var(--brand-panel)] px-6 py-7">
+        <div className="bg-[#EEF6E9] px-6 py-7">
           <div className="flex items-center gap-5">
-            <div className="rounded-[18px] bg-[var(--brand-highlight)] p-3">
+            <div className="rounded-[18px] bg-[#DDEED2] p-3">
               <AccessPersonAvatar person={person} size="lg" />
             </div>
             <div className="min-w-0">
-              <h3 className="truncate text-2xl font-extrabold text-[var(--brand-heading)]">
+              <h3 className="truncate text-2xl font-extrabold text-[#003A22]">
                 {getAccessPersonName(person)}
               </h3>
-              <p className="mt-1 text-base font-semibold text-[var(--brand-text)]">
+              <p className="mt-1 text-base font-semibold text-[#315644]">
                 Usuario identificado correctamente.
               </p>
             </div>
           </div>
 
-          <div className="my-7 h-px bg-[var(--brand-border)]" />
+          <div className="my-7 h-px bg-[#C9D9C3]" />
 
           <dl className="grid gap-5">
             <div className="grid grid-cols-[auto_1fr] gap-4">
-              <UserRound className="mt-0.5 h-6 w-6 text-[var(--brand-primary-strong)]" />
+              <UserRound className="mt-0.5 h-6 w-6 text-[#00522C]" />
               <div className="grid gap-1 sm:grid-cols-[130px_1fr]">
-                <dt className="font-extrabold text-[var(--brand-ink)]">Nombre:</dt>
-                <dd className="font-medium text-[var(--brand-text)]">
+                <dt className="font-extrabold text-[#173C2A]">Nombre:</dt>
+                <dd className="font-medium text-[#315644]">
                   {getAccessPersonFirstName(person)}
                 </dd>
               </div>
             </div>
 
             <div className="grid grid-cols-[auto_1fr] gap-4">
-              <UserCheck className="mt-0.5 h-6 w-6 text-[var(--brand-primary-strong)]" />
+              <UserCheck className="mt-0.5 h-6 w-6 text-[#00522C]" />
               <div className="grid gap-1 sm:grid-cols-[130px_1fr]">
-                <dt className="font-extrabold text-[var(--brand-ink)]">Apellido:</dt>
-                <dd className="font-medium text-[var(--brand-text)]">
+                <dt className="font-extrabold text-[#173C2A]">Apellido:</dt>
+                <dd className="font-medium text-[#315644]">
                   {getAccessPersonLastName(person)}
                 </dd>
               </div>
             </div>
 
             <div className="grid grid-cols-[auto_1fr] gap-4">
-              <IdCard className="mt-0.5 h-6 w-6 text-[var(--brand-primary-strong)]" />
+              <IdCard className="mt-0.5 h-6 w-6 text-[#00522C]" />
               <div className="grid gap-1 sm:grid-cols-[130px_1fr]">
-                <dt className="font-extrabold text-[var(--brand-ink)]">DNI:</dt>
-                <dd className="font-medium text-[var(--brand-text)]">{person.dni}</dd>
+                <dt className="font-extrabold text-[#173C2A]">DNI:</dt>
+                <dd className="font-medium text-[#315644]">{person.dni}</dd>
               </div>
             </div>
           </dl>
         </div>
 
-        <DialogFooter className="border-t border-[var(--brand-border)] bg-[var(--brand-panel)] px-6 py-4">
+        <DialogFooter className="border-t border-[#C9D9C3] bg-[#EEF6E9] px-6 py-4">
           <DialogClose asChild>
-            <Button className="h-11 rounded-xl bg-[var(--brand-primary-strong)] px-6 font-bold text-white hover:bg-[var(--brand-heading)]">
+            <Button className="h-11 rounded-xl bg-[#00522C] px-6 font-bold text-white hover:bg-[#003A22]">
               Cerrar
             </Button>
           </DialogClose>

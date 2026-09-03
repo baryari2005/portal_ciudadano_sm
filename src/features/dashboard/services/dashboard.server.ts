@@ -44,9 +44,6 @@ export async function getDashboardSummary(
       where: scheduleWhere,
       select: {
         id: true,
-        diaSemana: true,
-        horaInicio: true,
-        horaFin: true,
         cupoMaximo: true,
         permiteSobrecupo: true,
         sobrecupoMaximo: true,
@@ -212,12 +209,8 @@ export async function getDashboardSummary(
         .filter((a) => a.estado === "PRESENTE").length,
       totalAttendance = s.clases.flatMap((c) => c.asistencias).length;
     return {
-      id: s.id,
       activityId: s.actividad.id,
       activity: s.actividad.nombre,
-      day: s.diaSemana,
-      startTime: s.horaInicio,
-      endTime: s.horaFin,
       establishmentId: s.establecimiento.id,
       establishment: s.establecimiento.nombre,
       schedules: 1,
@@ -368,10 +361,6 @@ export async function getDashboardSummary(
       fullSchedules: full,
       lowOccupancySchedules: rows.filter((r) => r.occupancy < 50).length,
     },
-    capacityByClass: rows
-      .map((row) => ({ id: row.id, name: row.activity, day: row.day, startTime: row.startTime, endTime: row.endTime, capacity: row.capacity, confirmed: row.confirmed, available: row.available, occupancy: row.occupancy }))
-      .sort((a, b) => b.confirmed - a.confirmed)
-      .slice(0, 10),
     topActivities: merge("activityId", "activity"),
     topEstablishments: merge("establishmentId", "establishment"),
     upcomingSessions: upcoming.map((s) => ({
