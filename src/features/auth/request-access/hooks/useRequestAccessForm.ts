@@ -17,7 +17,7 @@ const defaultValues: RequestAccessFormValues = {
   nacionalidad: "ARGENTINA",
   dni: "",
   direccion: "",
-  localidad: "",
+  localidad: "San Miguel",
   provincia: "",
   codigoPostal: "",
   direccionPlaceId: "",

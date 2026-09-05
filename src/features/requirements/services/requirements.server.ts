@@ -5,7 +5,7 @@ import { toSlug } from "@/lib/slug";
 import { requirementSchema, type RequirementInput, type UpdateRequirementInput } from "../schemas/requirement.schema";
 
 export type RequirementListParams = { search?: string; type?: RequisitoTipo; active?: boolean; requiresDocument?: boolean; orderBy?: "orden" | "nombre" | "createdAt" | "updatedAt"; orderDir?: "asc" | "desc" };
-const normalize = (input: RequirementInput) => ({ ...input, requiereDocumento: input.tipo === "DOCUMENTO", documentoPersonal: input.tipo === "DOCUMENTO", tieneVencimiento: input.tipo === "DOCUMENTO" && input.tieneVencimiento, vigenciaDias: input.tipo === "DOCUMENTO" && input.tieneVencimiento ? input.vigenciaDias : null, nombre: input.nombre.trim(), slug: toSlug(input.slug || input.nombre), descripcion: input.descripcion || null, instrucciones: input.instrucciones || null });
+const normalize = (input: RequirementInput) => ({ ...input, requiereDocumento: input.tipo === "DOCUMENTO", documentoPersonal: input.tipo === "DOCUMENTO", tieneVencimiento: input.tipo === "DOCUMENTO" && input.tieneVencimiento, vigenciaDias: input.tipo === "DOCUMENTO" && input.tieneVencimiento ? input.vigenciaDias : null, nombre: input.nombre.trim(), slug: toSlug(input.slug || input.nombre), descripcion: input.descripcion || null, imagenUrl: input.imagenUrl || null, instrucciones: input.instrucciones || null });
 async function assertUnique(slug: string, id?: string) { const found = await prisma.requisito.findFirst({ where: { slug, ...(id ? { id: { not: id } } : {}) } }); if (found) throw new CatalogConflictError("Ya existe un requisito con ese slug."); }
 
 export async function listRequirements(params: RequirementListParams = {}) {

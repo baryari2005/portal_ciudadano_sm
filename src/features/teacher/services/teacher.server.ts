@@ -142,14 +142,18 @@ export async function getTeacherSummary(userId: string, establishmentId: string)
   await assertTeacherEstablishment(userId, establishmentId);
   const today = new Date(); today.setHours(0, 0, 0, 0); const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
   const ownership = { establecimientoId: establishmentId, ...teacherSessionAssignment(teacher.id) };
-  const [todaySessions, nextSession, pendingRosters, unreadCount, schedulesChanged] = await Promise.all([
+  const sessionSummaryInclude = { horarioActividad: { include: { actividad: { select: { nombre: true, imagenUrl: true } }, inscripciones: { where: { estado: "CONFIRMADA" as const }, select: { id: true } } } }, establecimiento: { select: { nombre: true } } };
+  const [todaySessions, todayClasses, upcomingSessions, nextSession, pendingRosters, unreadCount, schedulesChanged] = await Promise.all([
     prisma.claseActividad.count({ where: { ...ownership, fecha: { gte: today, lt: tomorrow } } }),
-    prisma.claseActividad.findFirst({ where: { ...ownership, fecha: { gte: today }, estado: { in: ["PROGRAMADA", "EN_CURSO"] } }, include: { horarioActividad: { include: { actividad: { select: { nombre: true } }, inscripciones: { where: { estado: "CONFIRMADA" }, select: { id: true } } } }, establecimiento: { select: { nombre: true } } }, orderBy: [{ fecha: "asc" }, { horaInicio: "asc" }] }),
+    prisma.claseActividad.findMany({ where: { ...ownership, fecha: { gte: today, lt: tomorrow } }, include: sessionSummaryInclude, orderBy: { horaInicio: "asc" } }),
+    prisma.claseActividad.count({ where: { ...ownership, fecha: { gte: today }, estado: { in: ["PROGRAMADA", "EN_CURSO"] } } }),
+    prisma.claseActividad.findFirst({ where: { ...ownership, fecha: { gte: today }, estado: { in: ["PROGRAMADA", "EN_CURSO"] } }, include: sessionSummaryInclude, orderBy: [{ fecha: "asc" }, { horaInicio: "asc" }] }),
     prisma.claseActividad.count({ where: { ...ownership, fecha: { lt: tomorrow }, estado: { in: ["PROGRAMADA", "EN_CURSO", "FINALIZADA"] }, asistenciaCerradaAt: null } }),
     getUnreadCount(userId),
     prisma.horarioActividad.count({ where: { establecimientoId: establishmentId, profesores: { some: { profesorId: teacher.id } }, estado: { in: ["SUSPENDIDO", "CANCELADO"] } } }),
   ]);
-  return { todaySessions, pendingRosters, unreadCount, schedulesChanged, nextSession: nextSession ? { id: nextSession.id, date: nextSession.fecha, startTime: nextSession.horaInicio, activityName: nextSession.horarioActividad.actividad.nombre, establishmentName: nextSession.establecimiento.nombre, confirmedCount: nextSession.horarioActividad.inscripciones.length } : null };
+  const mapSession = (session: NonNullable<typeof nextSession>) => ({ id: session.id, date: session.fecha, startTime: session.horaInicio, endTime: session.horaFin, activityName: session.horarioActividad.actividad.nombre, activityImageUrl: session.horarioActividad.actividad.imagenUrl, establishmentName: session.establecimiento.nombre, space: session.espacio, status: session.estado, confirmedCount: session.horarioActividad.inscripciones.length });
+  return { todaySessions, upcomingSessions, pendingRosters, unreadCount, schedulesChanged, todayClasses: todayClasses.map(mapSession), nextSession: nextSession ? mapSession(nextSession) : null };
 }
 
 export async function getTeacherNotifications(userId: string, page = 1) {

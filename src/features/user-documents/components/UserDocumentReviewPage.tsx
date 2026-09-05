@@ -3,24 +3,296 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, FileText, Loader2, XCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  FileText,
+  Loader2,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
-import { AdminDetailActions, AdminDetailHeader, AdminDetailPanel } from "@/components/shared/admin-patterns";
+import {
+  AdminDetailActions,
+  AdminDetailHeader,
+  AdminDetailPanel,
+} from "@/components/shared/admin-patterns";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { CatalogDetailField } from "@/features/activity-catalogs/components/CatalogPrimitives";
-import { ProfileDialogBody, ProfileDialogFooter, ProfileDialogHeader, ProfileFormField, profilePrimaryButtonClassName, profileSecondaryButtonClassName } from "@/components/layout/user-menu/ProfileDialogParts";
+import {
+  ProfileDialogBody,
+  ProfileDialogFooter,
+  ProfileDialogHeader,
+  ProfileFormField,
+  profilePrimaryButtonClassName,
+  profileSecondaryButtonClassName,
+} from "@/components/layout/user-menu/ProfileDialogParts";
 import { axiosInstance } from "@/lib/axios";
+import Image from "next/image";
 
-type DocumentRow = { id: string; requirementName: string; status: "PENDIENTE" | "APROBADO" | "RECHAZADO"; originalName: string; uploadedAt: string; version: number; mimeType: string; rejectionReason: string | null; citizenObservations: string | null; expiresAt: string | null; validity: "SIN_VENCIMIENTO" | "VIGENTE" | "PROXIMO_A_VENCER" | "VENCIDO"; user: { id: string; nombre: string | null; apellido: string | null; documento: string | null } };
-const labels = { PENDIENTE: "Pendiente", APROBADO: "Aprobado", RECHAZADO: "Rechazado" };
-const validityLabels = { SIN_VENCIMIENTO: "Sin vencimiento", VIGENTE: "Vigente", PROXIMO_A_VENCER: "Próximo a vencer", VENCIDO: "Vencido" };
+type DocumentRow = {
+  id: string;
+  requirementName: string;
+  status: "PENDIENTE" | "APROBADO" | "RECHAZADO";
+  originalName: string;
+  uploadedAt: string;
+  version: number;
+  mimeType: string;
+  rejectionReason: string | null;
+  citizenObservations: string | null;
+  expiresAt: string | null;
+  validity: "SIN_VENCIMIENTO" | "VIGENTE" | "PROXIMO_A_VENCER" | "VENCIDO";
+  user: {
+    id: string;
+    nombre: string | null;
+    apellido: string | null;
+    documento: string | null;
+  };
+};
+const labels = {
+  PENDIENTE: "Pendiente",
+  APROBADO: "Aprobado",
+  RECHAZADO: "Rechazado",
+};
+const validityLabels = {
+  SIN_VENCIMIENTO: "Sin vencimiento",
+  VIGENTE: "Vigente",
+  PROXIMO_A_VENCER: "Próximo a vencer",
+  VENCIDO: "Vencido",
+};
 
 export function UserDocumentReviewPage({ documentId }: { documentId: string }) {
-  const router = useRouter(); const [document, setDocument] = useState<DocumentRow | null>(null); const [url, setUrl] = useState(""); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [rejectOpen, setRejectOpen] = useState(false); const [reason, setReason] = useState("");
-  useEffect(() => { void Promise.all([axiosInstance.get("/user-documents"), axiosInstance.get(`/user-documents/${documentId}/download`)]).then(([list, download]) => { setDocument((list.data.data as DocumentRow[]).find((item) => item.id === documentId) ?? null); setUrl(download.data.data.url); }).catch(() => toast.error("No pudimos cargar el documento.")).finally(() => setLoading(false)); }, [documentId]);
-  async function review(status: "APROBADO" | "RECHAZADO") { if (!document) return; if (status === "RECHAZADO" && !reason.trim()) { toast.error("Indicá el motivo."); return; } setSaving(true); try { await axiosInstance.post(`/user-documents/${document.id}/review`, { status, reason: status === "RECHAZADO" ? reason : undefined }); toast.success(status === "APROBADO" ? "Documento aprobado y usuario notificado." : "Documento desaprobado y usuario notificado."); router.replace("/user-documents"); } catch { toast.error("No pudimos revisar el documento."); } finally { setSaving(false); } }
-  return <main className="min-h-[calc(100dvh-var(--topbar-h)-48px)] bg-[var(--brand-page)] p-4 sm:p-6 lg:p-8"><header className="flex flex-col gap-4 border-b border-[var(--brand-border)] pb-6 sm:flex-row sm:items-start sm:justify-between"><div className="flex items-start gap-3"><span className="grid size-11 place-items-center rounded-xl bg-[var(--brand-panel)] text-[var(--brand-primary)]"><FileText className="size-6" /></span><div><h1 className="text-3xl font-bold text-[var(--brand-primary)] sm:text-4xl">Revisión del documento</h1><p className="mt-2 text-[var(--brand-text)]/80">Visualizá el archivo y revisá su información antes de tomar una decisión.</p></div></div><Button asChild variant="outline" className="h-12 rounded-xl border-[var(--brand-border)] bg-[var(--brand-control)] px-8 font-bold"><Link href="/user-documents"><ArrowLeft />Volver</Link></Button></header><div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(380px,.7fr)]"><section className="relative min-h-[70dvh] overflow-hidden rounded-3xl border border-[var(--brand-border-soft)] bg-[#EEF1EC] p-3 sm:p-5">{loading ? <Loading /> : document && url ? document.mimeType.startsWith("image/") ? <div className="grid h-full min-h-[65dvh] place-items-center overflow-auto rounded-2xl bg-white"><img src={url} alt={`Vista previa de ${document.originalName}`} className="max-h-full max-w-full object-contain" /></div> : <iframe src={url} title={`Vista previa de ${document.originalName}`} className="h-[65dvh] w-full rounded-2xl border-0 bg-white" /> : <p>No pudimos mostrar el archivo.</p>}</section>{loading ? <AdminDetailPanel loading loadingLabel="datos del documento" /> : document ? <AdminDetailPanel><AdminDetailHeader title={document.requirementName} leading={<span className="grid size-16 place-items-center rounded-2xl bg-[var(--brand-primary)] text-white"><FileText className="size-8" /></span>} badge={<span className="inline-flex items-center gap-2 rounded-full border border-[var(--brand-secondary)]/40 bg-[var(--brand-secondary)]/15 px-2.5 py-1 text-xs font-bold text-[var(--brand-primary)]"><span className="size-1.5 rounded-full bg-[var(--brand-primary)]" />{labels[document.status]}</span>} /><dl className="mt-6 grid gap-3"><CatalogDetailField icon={FileText} label="Ciudadano">{document.user.nombre} {document.user.apellido} · DNI {document.user.documento || "Sin registrar"}</CatalogDetailField><CatalogDetailField icon={FileText} label="Archivo">{document.originalName}</CatalogDetailField><CatalogDetailField icon={FileText} label="Versión">Versión {document.version}</CatalogDetailField><CatalogDetailField icon={FileText} label="Presentación">{new Date(document.uploadedAt).toLocaleString("es-AR")}</CatalogDetailField><CatalogDetailField icon={FileText} label="Vigencia">{document.status === "APROBADO" ? validityLabels[document.validity] : "Se define al aprobar"}</CatalogDetailField><CatalogDetailField icon={FileText} label="Observaciones">{document.citizenObservations || "Sin observaciones"}</CatalogDetailField>{document.rejectionReason ? <CatalogDetailField icon={XCircle} label="Motivo del rechazo">{document.rejectionReason}</CatalogDetailField> : null}</dl>{document.status !== "RECHAZADO" ? <AdminDetailActions>{document.status === "PENDIENTE" ? <Button className="bg-[var(--brand-primary)]" disabled={saving} onClick={() => void review("APROBADO")}><CheckCircle2 />Aprobar</Button> : null}<Button variant="outline" className="text-red-700 hover:bg-red-50" disabled={saving} onClick={() => setRejectOpen(true)}><XCircle />{document.status === "APROBADO" ? "Desaprobar" : "Rechazar"}</Button></AdminDetailActions> : null}</AdminDetailPanel> : <AdminDetailPanel empty="No pudimos cargar los datos del documento." />}</div><Dialog open={rejectOpen} onOpenChange={(open) => { if (!saving) setRejectOpen(open); }}><DialogContent className="overflow-hidden rounded-2xl border-[#DDE5D8] bg-white p-0 sm:max-w-md"><ProfileDialogHeader icon={XCircle} title={document?.status === "APROBADO" ? "Desaprobar documento" : "Rechazar documento"} description="Indicá claramente el motivo. El ciudadano será notificado." /><ProfileDialogBody><ProfileFormField label="Motivo *"><Textarea value={reason} onChange={(event) => setReason(event.target.value)} rows={5} className="min-h-32" /></ProfileFormField></ProfileDialogBody><ProfileDialogFooter><Button variant="outline" className={profileSecondaryButtonClassName} disabled={saving} onClick={() => setRejectOpen(false)}>Cancelar</Button><Button className={profilePrimaryButtonClassName} disabled={saving || !reason.trim()} onClick={() => void review("RECHAZADO")}>{saving ? <Loader2 className="animate-spin" /> : <XCircle />}Confirmar y notificar</Button></ProfileDialogFooter></DialogContent></Dialog></main>;
+  const router = useRouter();
+  const [document, setDocument] = useState<DocumentRow | null>(null);
+  const [url, setUrl] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  useEffect(() => {
+    void Promise.all([
+      axiosInstance.get("/user-documents"),
+      axiosInstance.get(`/user-documents/${documentId}/download`),
+    ])
+      .then(([list, download]) => {
+        setDocument(
+          (list.data.data as DocumentRow[]).find(
+            (item) => item.id === documentId,
+          ) ?? null,
+        );
+        setUrl(download.data.data.url);
+      })
+      .catch(() => toast.error("No pudimos cargar el documento."))
+      .finally(() => setLoading(false));
+  }, [documentId]);
+  async function review(status: "APROBADO" | "RECHAZADO") {
+    if (!document) return;
+    if (status === "RECHAZADO" && !reason.trim()) {
+      toast.error("Indicá el motivo.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await axiosInstance.post(`/user-documents/${document.id}/review`, {
+        status,
+        reason: status === "RECHAZADO" ? reason : undefined,
+      });
+      toast.success(
+        status === "APROBADO"
+          ? "Documento aprobado y usuario notificado."
+          : "Documento desaprobado y usuario notificado.",
+      );
+      router.replace("/user-documents");
+    } catch {
+      toast.error("No pudimos revisar el documento.");
+    } finally {
+      setSaving(false);
+    }
+  }
+  return (
+    <main className="min-h-[calc(100dvh-var(--topbar-h)-48px)] bg-[var(--brand-page)] p-4 sm:p-6 lg:p-8">
+      <header className="flex flex-col gap-4 border-b border-[var(--brand-border)] pb-6 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <span className="grid size-11 place-items-center rounded-xl bg-[var(--brand-panel)] text-[var(--brand-primary)]">
+            <FileText className="size-6" />
+          </span>
+          <div>
+            <h1 className="text-3xl font-bold text-[var(--brand-primary)] sm:text-4xl">
+              Revisión del documento
+            </h1>
+            <p className="mt-2 text-[var(--brand-text)]/80">
+              Visualizá el archivo y revisá su información antes de tomar una
+              decisión.
+            </p>
+          </div>
+        </div>
+        <Button
+          asChild
+          variant="outline"
+          className="h-12 rounded-xl border-[var(--brand-border)] bg-[var(--brand-control)] px-8 font-bold"
+        >
+          <Link href="/user-documents">
+            <ArrowLeft />
+            Volver
+          </Link>
+        </Button>
+      </header>
+      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(380px,.7fr)]">
+        <section className="relative min-h-[70dvh] overflow-hidden rounded-3xl border border-[var(--brand-border-soft)] bg-[#EEF1EC] p-3 sm:p-5">
+          {loading ? (
+            <Loading />
+          ) : document && url ? (
+            document.mimeType.startsWith("image/") ? (
+              <div className="grid h-full min-h-[65dvh] place-items-center overflow-auto rounded-2xl bg-white">
+                <Image
+                  src={url}
+                  alt={`Vista previa de ${document.originalName}`}
+                  className="max-h-full max-w-full object-contain"
+                  fill
+                />
+              </div>
+            ) : (
+              <iframe
+                src={url}
+                title={`Vista previa de ${document.originalName}`}
+                className="h-[65dvh] w-full rounded-2xl border-0 bg-white"
+              />
+            )
+          ) : (
+            <p>No pudimos mostrar el archivo.</p>
+          )}
+        </section>
+        {loading ? (
+          <AdminDetailPanel loading loadingLabel="datos del documento" />
+        ) : document ? (
+          <AdminDetailPanel>
+            <AdminDetailHeader
+              title={document.requirementName}
+              leading={
+                <span className="grid size-16 place-items-center rounded-2xl bg-[var(--brand-primary)] text-white">
+                  <FileText className="size-8" />
+                </span>
+              }
+              badge={
+                <span className="inline-flex items-center gap-2 rounded-full border border-[var(--brand-secondary)]/40 bg-[var(--brand-secondary)]/15 px-2.5 py-1 text-xs font-bold text-[var(--brand-primary)]">
+                  <span className="size-1.5 rounded-full bg-[var(--brand-primary)]" />
+                  {labels[document.status]}
+                </span>
+              }
+            />
+            <dl className="mt-6 grid gap-3">
+              <CatalogDetailField icon={FileText} label="Ciudadano">
+                {document.user.nombre} {document.user.apellido} · DNI{" "}
+                {document.user.documento || "Sin registrar"}
+              </CatalogDetailField>
+              <CatalogDetailField icon={FileText} label="Archivo">
+                {document.originalName}
+              </CatalogDetailField>
+              <CatalogDetailField icon={FileText} label="Versión">
+                Versión {document.version}
+              </CatalogDetailField>
+              <CatalogDetailField icon={FileText} label="Presentación">
+                {new Date(document.uploadedAt).toLocaleString("es-AR")}
+              </CatalogDetailField>
+              <CatalogDetailField icon={FileText} label="Vigencia">
+                {document.status === "APROBADO"
+                  ? validityLabels[document.validity]
+                  : "Se define al aprobar"}
+              </CatalogDetailField>
+              <CatalogDetailField icon={FileText} label="Observaciones">
+                {document.citizenObservations || "Sin observaciones"}
+              </CatalogDetailField>
+              {document.rejectionReason ? (
+                <CatalogDetailField icon={XCircle} label="Motivo del rechazo">
+                  {document.rejectionReason}
+                </CatalogDetailField>
+              ) : null}
+            </dl>
+            {document.status !== "RECHAZADO" ? (
+              <AdminDetailActions>
+                {document.status === "PENDIENTE" ? (
+                  <Button
+                    className="bg-[var(--brand-primary)]"
+                    disabled={saving}
+                    onClick={() => void review("APROBADO")}
+                  >
+                    <CheckCircle2 />
+                    Aprobar
+                  </Button>
+                ) : null}
+                <Button
+                  variant="outline"
+                  className="text-red-700 hover:bg-red-50"
+                  disabled={saving}
+                  onClick={() => setRejectOpen(true)}
+                >
+                  <XCircle />
+                  {document.status === "APROBADO" ? "Desaprobar" : "Rechazar"}
+                </Button>
+              </AdminDetailActions>
+            ) : null}
+          </AdminDetailPanel>
+        ) : (
+          <AdminDetailPanel empty="No pudimos cargar los datos del documento." />
+        )}
+      </div>
+      <Dialog
+        open={rejectOpen}
+        onOpenChange={(open) => {
+          if (!saving) setRejectOpen(open);
+        }}
+      >
+        <DialogContent className="overflow-hidden rounded-2xl border-[#DDE5D8] bg-white p-0 sm:max-w-md">
+          <ProfileDialogHeader
+            icon={XCircle}
+            title={
+              document?.status === "APROBADO"
+                ? "Desaprobar documento"
+                : "Rechazar documento"
+            }
+            description="Indicá claramente el motivo. El ciudadano será notificado."
+          />
+          <ProfileDialogBody>
+            <ProfileFormField label="Motivo *">
+              <Textarea
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                rows={5}
+                className="min-h-32"
+              />
+            </ProfileFormField>
+          </ProfileDialogBody>
+          <ProfileDialogFooter>
+            <Button
+              variant="outline"
+              className={profileSecondaryButtonClassName}
+              disabled={saving}
+              onClick={() => setRejectOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className={profilePrimaryButtonClassName}
+              disabled={saving || !reason.trim()}
+              onClick={() => void review("RECHAZADO")}
+            >
+              {saving ? <Loader2 className="animate-spin" /> : <XCircle />}
+              Confirmar y notificar
+            </Button>
+          </ProfileDialogFooter>
+        </DialogContent>
+      </Dialog>
+    </main>
+  );
 }
-function Loading() { return <div className="absolute inset-0 grid place-items-center"><span className="flex items-center gap-3 font-bold text-[var(--brand-primary)]"><Loader2 className="animate-spin" />Cargando documento...</span></div>; }
+function Loading() {
+  return (
+    <div className="absolute inset-0 grid place-items-center">
+      <span className="flex items-center gap-3 font-bold text-[var(--brand-primary)]">
+        <Loader2 className="animate-spin" />
+        Cargando documento...
+      </span>
+    </div>
+  );
+}

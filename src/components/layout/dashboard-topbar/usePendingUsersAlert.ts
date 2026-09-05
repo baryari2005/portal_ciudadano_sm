@@ -27,11 +27,13 @@ export function usePendingUsersAlert(includePendingUsers = true) {
   const hasHydrated = useAuth((state) => state.hasHydrated);
   const [pendingCount, setPendingCount] = useState(0);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const fetchPendingCount = useCallback(async () => {
     if (!hasHydrated || !token || !user) {
       setPendingCount(0);
       setUnreadNotificationCount(0);
+      setLoading(false);
       return;
     }
 
@@ -65,6 +67,8 @@ export function usePendingUsersAlert(includePendingUsers = true) {
     } catch {
       setPendingCount(0);
       setUnreadNotificationCount(0);
+    } finally {
+      setLoading(false);
     }
   }, [includePendingUsers, hasHydrated, token, user]);
 
@@ -85,6 +89,7 @@ export function usePendingUsersAlert(includePendingUsers = true) {
     hasPendingUsers: pendingCount > 0,
     pendingCount,
     unreadNotificationCount,
+    loading,
     totalActions: unreadNotificationCount,
     notificationItems:
       [

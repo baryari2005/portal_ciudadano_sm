@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { type UseFormReturn } from "react-hook-form";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 
 import { AuthInput } from "./AuthInput";
 
@@ -25,6 +26,9 @@ export function LoginFields({ form }: Props) {
   return (
     <>
       <div className="space-y-1">
+        <span className="block pb-1 text-sm font-bold text-[var(--auth-text-primary)] lg:hidden">
+          Usuario o email
+        </span>
         <label htmlFor="userId" className="sr-only">
           Usuario
         </label>
@@ -49,18 +53,26 @@ export function LoginFields({ form }: Props) {
       </div>
 
       <div className="space-y-1">
+        <span className="block pb-1 text-sm font-bold text-[var(--auth-text-primary)] lg:hidden">
+          Contraseña
+        </span>
         <label htmlFor="password" className="sr-only">
           Contraseña
         </label>
         <AuthInput
           id="password"
           icon={
-            <img
-              src="/icons/cerrar.svg"
-              alt=""
-              className="size-4 invert"
-              aria-hidden="true"
-            />
+            <>
+              <LockKeyhole className="size-5 lg:hidden" aria-hidden="true" />
+              <Image
+                src="/icons/cerrar.svg"
+                alt=""
+                width={16}
+                height={16}
+                className="hidden size-4 invert lg:block"
+                aria-hidden="true"
+              />
+            </>
           }
           type={show ? "text" : "password"}
           autoComplete="current-password"

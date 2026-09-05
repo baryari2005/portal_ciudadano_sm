@@ -9,6 +9,7 @@ import { EnrollmentForm } from "@/features/enrollments/components/EnrollmentForm
 import { getEnrollmentClient } from "@/features/enrollments/services/enrollments.service";
 import type { Enrollment } from "@/features/enrollments/types/enrollment.types";
 import { useCan } from "@/hooks/useCan";
+import { ReceptionMobileHeader } from "@/features/reception/components/mobile/ReceptionMobileHeader";
 
 export default function ReceptionEditEnrollmentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -25,7 +26,7 @@ export default function ReceptionEditEnrollmentPage({ params }: { params: Promis
   if (!canEdit) return <AccessDenied403Page />;
   if (loading) return <CatalogLoadingState label="inscripción" fullPage />;
   if (error || !item) return <AdminFormPage icon={ClipboardCheck} title="Editar inscripción" description=""><AdminFormError message="No pudimos cargar la inscripción." backHref="/reception/enrollments" onRetry={load} /></AdminFormPage>;
-  return <AdminFormPage icon={ClipboardCheck} title="Editar inscripción" description="Actualizá las observaciones y gestioná su estado desde el detalle." breadcrumbs={[{ label: "Inscripciones", href: "/reception/enrollments" }, { label: "Editar inscripción" }]} fullWidth>
-    <EnrollmentForm initialValues={item} backHref="/reception/enrollments" />
-  </AdminFormPage>;
+  return <><ReceptionMobileHeader/><AdminFormPage icon={ClipboardCheck} title="Editar inscripción" description="Actualizá las observaciones y gestioná su estado desde el detalle." breadcrumbs={[{ label: "Inscripciones", href: "/reception/enrollments" }, { label: "Editar inscripción" }]} fullWidth mobileReception>
+    <EnrollmentForm initialValues={item} backHref="/reception/enrollments" mobileReception />
+  </AdminFormPage></>;
 }

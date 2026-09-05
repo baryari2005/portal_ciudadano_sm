@@ -51,12 +51,12 @@ export function AccessPersonAvatar({ person, size = "md" }: Props) {
     <Avatar
       aria-label={fullName}
       className={cn(
-        "shrink-0 rounded-full border border-[#DDE8D7] bg-[#00522C] shadow-sm",
+        "shrink-0 rounded-full border border-[var(--brand-border-soft)] bg-[var(--brand-primary-strong)] shadow-sm",
         sizeClasses[size],
       )}
     >
       <AvatarImage src={person.profilePhotoUrl ?? undefined} alt={`Foto de identidad de ${fullName}`} />
-      <AvatarFallback className="bg-[#00522C] font-extrabold text-white">
+      <AvatarFallback className="bg-[var(--brand-primary-strong)] font-extrabold text-white">
         {getAccessPersonInitials(person)}
       </AvatarFallback>
     </Avatar>

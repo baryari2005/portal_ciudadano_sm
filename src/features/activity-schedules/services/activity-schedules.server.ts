@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Tipos intermedios del servicio Prisma legado pendientes de extracción. */
 import { HorarioActividadEstado, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { CatalogConflictError, CatalogNotFoundError, CatalogValidationError } from "@/lib/errors/catalog-errors";

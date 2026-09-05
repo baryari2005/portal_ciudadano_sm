@@ -77,10 +77,10 @@ const statusBadgeClass = (status: NotificationStatus) =>
   cn(
     "rounded-full border px-2.5 py-0.5 text-xs font-bold",
     status === "NO_LEIDA"
-      ? "border-[#819B56]/40 bg-[#DDEF8F] text-[#1D4F36] hover:bg-[#DDEF8F]"
+      ? "border-[var(--brand-secondary)]/40 bg-[var(--brand-accent)] text-[var(--brand-primary)] hover:bg-[var(--brand-accent)]"
       : status === "ARCHIVADA"
-        ? "border-[#B2B2B2] bg-[#B2B2B2]/15 text-[#555] hover:bg-[#B2B2B2]/15"
-        : "border-[#C9D9C3] bg-white text-[#315644] hover:bg-white",
+        ? "border-[var(--brand-neutral)] bg-[var(--brand-neutral)]/15 text-[#555] hover:bg-[var(--brand-neutral)]/15"
+        : "border-[var(--brand-border)] bg-white text-[var(--brand-text)] hover:bg-white",
   );
 
 function accessRequestStatus(item: Notification) {
@@ -119,7 +119,7 @@ function notificationAction(item: Notification, scope: Scope, workspace: Persona
     : null;
 }
 
-export function CitizenNotificationsPage({
+export function NotificationsWorkspacePage({
   title = "Mis notificaciones",
   scope = "citizen",
   workspace = "citizen",
@@ -346,6 +346,8 @@ export function CitizenNotificationsPage({
   );
 }
 
+export function CitizenNotificationsPage(props:Parameters<typeof NotificationsWorkspacePage>[0]){return <NotificationsWorkspacePage {...props}/>}
+
 function NotificationListItem({
   item,
   active,
@@ -369,7 +371,7 @@ function NotificationListItem({
       badges={
         <>
           {requestStatus ? <RequestBadge status={requestStatus} /> : null}
-          {item.deliveryOrigin === "ROL" ? <Badge className="rounded-full border border-[#819B56]/40 bg-[#819B56]/15 text-[#1D4F36]">Por rol</Badge> : null}
+          {item.deliveryOrigin === "ROL" ? <Badge className="rounded-full border border-[var(--brand-secondary)]/40 bg-[var(--brand-secondary)]/15 text-[var(--brand-primary)]">Por rol</Badge> : null}
           {item.priority === "ALTA" ? <Badge variant="destructive" className="rounded-full">Importante</Badge> : null}
         </>
       }
@@ -459,7 +461,7 @@ function NotificationDetail({
 
 function RequestBadge({ status, prefix }: { status: string; prefix?: string }) {
   return (
-    <Badge className="rounded-full border border-[#819B56]/40 bg-[#819B56]/15 text-[#1D4F36] hover:bg-[#819B56]/15">
+    <Badge className="rounded-full border border-[var(--brand-secondary)]/40 bg-[var(--brand-secondary)]/15 text-[var(--brand-primary)] hover:bg-[var(--brand-secondary)]/15">
       {prefix ? `${prefix} ${status.toLowerCase()}` : status}
     </Badge>
   );

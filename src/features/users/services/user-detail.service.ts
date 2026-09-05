@@ -81,7 +81,7 @@ export async function updateUserById(id: string, dto: PatchUserDto) {
   if ("nacionalidad" in dto) data.nacionalidad = dto.nacionalidad ?? null;
 
   return prisma.$transaction(async (tx) => {
-    const updated = await tx.usuario.update({
+    await tx.usuario.update({
       where: { id },
       data,
       include: { rol: true, coberturaMedica: true, profesor: true },

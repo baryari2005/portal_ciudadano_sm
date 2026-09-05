@@ -7,6 +7,7 @@ import { AdminFormPage } from "@/components/layout/admin-form-page";
 import { CatalogLoadingState } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { EnrollmentForm } from "@/features/enrollments/components/EnrollmentForm";
 import { useCan } from "@/hooks/useCan";
+import { ReceptionMobileHeader } from "@/features/reception/components/mobile/ReceptionMobileHeader";
 
 export default function ReceptionNewEnrollmentPage() {
   const [loading, setLoading] = useState(true);
@@ -17,8 +18,9 @@ export default function ReceptionNewEnrollmentPage() {
   return <>
     {loading ? <CatalogLoadingState label="formulario de inscripción" fullPage /> : null}
     <div className={loading ? "hidden" : undefined}>
-      <AdminFormPage icon={ClipboardCheck} title="Nueva inscripción" description="Inscribí a un ciudadano aplicando las validaciones de edad, documentación y cupo." fullWidth>
-        <EnrollmentForm onLoadingChange={setLoading} backHref="/reception/enrollments" />
+      <ReceptionMobileHeader />
+      <AdminFormPage icon={ClipboardCheck} title="Nueva inscripción" description="Inscribí a un ciudadano aplicando las validaciones de edad, documentación y cupo." fullWidth mobileReception>
+        <EnrollmentForm onLoadingChange={setLoading} backHref="/reception/enrollments" mobileReception />
       </AdminFormPage>
     </div>
   </>;

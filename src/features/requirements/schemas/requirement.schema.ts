@@ -3,12 +3,14 @@ import { z } from "zod";
 export const REQUIREMENT_TYPES = ["INFORMACION", "DOCUMENTO", "CONSENTIMIENTO", "ELEMENTO_PERSONAL", "CONDICION"] as const;
 export const REQUIREMENT_OBLIGATORINESS = ["OBLIGATORIO", "RECOMENDADO"] as const;
 const optionalText = z.string().trim().optional().nullable().transform((value) => value || null);
+const optionalImageUrl = z.string().trim().url("Ingresá una URL de imagen válida").optional().nullable().or(z.literal("")).transform((value) => value || null);
 const slug = z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "El slug debe estar normalizado").optional();
 
 const requirementFields = z.object({
   nombre: z.string().trim().min(1, "El nombre es obligatorio").max(100, "El nombre admite hasta 100 caracteres"),
   slug,
   descripcion: optionalText,
+  imagenUrl: optionalImageUrl,
   tipo: z.enum(REQUIREMENT_TYPES),
   requiereDocumento: z.boolean().default(false),
   documentoPersonal: z.boolean().default(false),

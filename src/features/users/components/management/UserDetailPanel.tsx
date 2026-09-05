@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import {
-  ArrowLeft,
   CalendarDays,
   CheckCircle2,
   Clock,
@@ -51,6 +50,7 @@ type UserDetailPanelProps = {
   compact?: boolean;
   showFullRecordAction?: boolean;
   context?: "admin" | "reception";
+  scope?: "citizen" | "personnel";
 };
 
 async function updateUserStatus(
@@ -76,6 +76,7 @@ export function UserDetailPanel({
   compact = false,
   showFullRecordAction = compact,
   context = "admin",
+  scope = "citizen",
 }: UserDetailPanelProps) {
   const [actionLoading, setActionLoading] = useState<ManagedUserStatus | null>(
     null,
@@ -184,7 +185,7 @@ export function UserDetailPanel({
         onBack={onBack}
         className={compact ? "lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-hidden" : undefined}
       >
-        <AdminDetailHeader title={user.fullName} leading={<UserAvatarMark user={user} size="lg" />} badge={<div className="flex flex-wrap gap-2"><StatusPill status={user.status} />{context === "admin" ? <RolePill role={user.role} /> : null}</div>} action={showFullRecordAction && context === "admin" ? <Button asChild variant="outline" className="w-full border-[#819B56] bg-white font-bold text-[#1D4F36]"><Link href={`/users/${user.id}/record/overview`}><Eye />Ver ficha completa</Link></Button> : null} />
+        <AdminDetailHeader title={user.fullName} leading={<UserAvatarMark user={user} size="lg" />} badge={<div className="flex flex-wrap gap-2"><StatusPill status={user.status} />{context === "admin" ? <RolePill role={user.role} /> : null}</div>} action={showFullRecordAction && context === "admin" ? <Button asChild variant="outline" className="w-full border-[var(--brand-secondary)] bg-white font-bold text-[var(--brand-primary)]"><Link href={`/users/${user.id}/record/overview${scope === "personnel" ? "?source=personnel" : ""}`}><Eye />Ver ficha completa</Link></Button> : null} />
 
         <div className={compact ? "brand-scrollbar lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-2" : undefined}>
         <div className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
@@ -206,11 +207,11 @@ export function UserDetailPanel({
         </div>
 
         {!compact ? <>{accessRequests.length ? (
-          <section className="mt-6 rounded-[18px] border border-[#DDE8D7] bg-white/70 p-5">
-            <h4 className="font-extrabold text-[#003A22]">Historial de solicitudes de acceso</h4>
+          <section className="mt-6 rounded-[18px] border border-[var(--brand-border-soft)] bg-white/70 p-5">
+            <h4 className="font-extrabold text-[var(--brand-heading)]">Historial de solicitudes de acceso</h4>
             <div className="mt-3 space-y-3">
               {accessRequests.map((request) => (
-                <div key={request.id} className="rounded-xl border border-[#DDE8D7] p-3 text-sm">
+                <div key={request.id} className="rounded-xl border border-[var(--brand-border-soft)] p-3 text-sm">
                   <p className="font-bold">{request.estado}</p>
                   <p>Enviada: {new Date(request.enviadaAt).toLocaleString("es-AR")}</p>
                   {request.revisadaAt ? <p>Revisada: {new Date(request.revisadaAt).toLocaleString("es-AR")}</p> : null}
@@ -224,29 +225,29 @@ export function UserDetailPanel({
 
         <EnrollmentSummary userId={user.id} compact />
         <UserAttendanceHistory userId={user.id} />
-        <section className="mt-6 rounded-[18px] border border-[#DDE8D7] bg-white/70 p-5">
-          <div className="flex items-start gap-3"><AlertTriangle className="mt-0.5 size-5 text-[#819B56]" /><div><h4 className="font-extrabold text-[#003A22]">Control de ausencias</h4><p className="mt-1 text-sm text-[#315644]">Los valores vacíos utilizan los umbrales generales: 10 justificadas y 3 injustificadas.</p></div></div>
+        <section className="mt-6 rounded-[18px] border border-[var(--brand-border-soft)] bg-white/70 p-5">
+          <div className="flex items-start gap-3"><AlertTriangle className="mt-0.5 size-5 text-[var(--brand-secondary)]" /><div><h4 className="font-extrabold text-[var(--brand-heading)]">Control de ausencias</h4><p className="mt-1 text-sm text-[var(--brand-text)]">Los valores vacíos utilizan los umbrales generales: 10 justificadas y 3 injustificadas.</p></div></div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div className="space-y-2"><Label>Ausencias justificadas</Label><Input type="number" min={1} max={100} value={justifiedThreshold} onChange={(event) => setJustifiedThreshold(event.target.value)} placeholder="General: 10" /></div>
             <div className="space-y-2"><Label>Ausencias injustificadas</Label><Input type="number" min={1} max={100} value={unjustifiedThreshold} onChange={(event) => setUnjustifiedThreshold(event.target.value)} placeholder="General: 3" /></div>
             <div className="space-y-2 sm:col-span-2"><Label>Estado de participación</Label><Select value={participationStatus} onValueChange={(value) => setParticipationStatus(value as ManagedUser["participationStatus"])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="HABILITADO">Habilitado</SelectItem><SelectItem value="EN_REVISION">En revisión</SelectItem><SelectItem value="SUSPENDIDO_PROVISORIO">Suspendido provisoriamente</SelectItem></SelectContent></Select></div>
             <div className="space-y-2 sm:col-span-2"><Label>Observaciones administrativas</Label><Textarea value={participationNotes} onChange={(event) => setParticipationNotes(event.target.value)} /></div>
           </div>
-          <Button disabled={savingParticipation} className="mt-4 bg-[#1D4F36] hover:bg-[#143A27]" onClick={() => void saveParticipationPolicy()}>{savingParticipation ? <Clock className="animate-spin" /> : <Save />}Guardar política</Button>
+          <Button disabled={savingParticipation} className="mt-4 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]" onClick={() => void saveParticipationPolicy()}>{savingParticipation ? <Clock className="animate-spin" /> : <Save />}Guardar política</Button>
         </section>
         </> : null}
         </div>
 
         <AdminDetailActions className={compact ? "lg:shrink-0" : undefined}>
-          <Button asChild className="bg-[#1D4F36] hover:bg-[#143A27]">
-            <Link href={context === "reception" ? `/reception/citizens/${user.id}` : `/users/${user.id}`}>
+          <Button asChild className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]">
+            <Link href={context === "reception" ? `/reception/citizens/${user.id}` : `/users/${user.id}${scope === "personnel" ? "?source=personnel" : ""}`}>
               <Edit3 /> {context === "reception" ? "Editar perfil" : "Editar"}
             </Link>
           </Button>
           {context === "admin" && canReviewRequest ? (
             <Button
               variant="outline"
-              className="text-[#1D4F36]"
+              className="text-[var(--brand-primary)]"
               disabled={Boolean(actionLoading)}
               onClick={() => setConfirmStatus("ACTIVO")}
             >

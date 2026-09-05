@@ -1,1 +1,1 @@
-import { TeacherSessionDetailPage } from "@/features/teacher/components/TeacherPages"; export default async function Page({params}:{params:Promise<{id:string}>}){return <TeacherSessionDetailPage id={(await params).id}/>}
+import { TeacherClassDetailPage } from "@/features/teacher/components/TeacherClassDetailPage"; export default async function Page({params}:{params:Promise<{id:string}>}){return <TeacherClassDetailPage id={(await params).id}/>}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   listCitizenNotificationsClient,
   listNotificationsClient,
@@ -18,7 +18,8 @@ export function useCitizenNotifications(
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const paramsKey = JSON.stringify(params);
+  const paramsKey = JSON.stringify(params ?? {});
+  const stableParams = useMemo<Record<string, unknown>>(() => JSON.parse(paramsKey), [paramsKey]);
 
   const refresh = useCallback(
     async (showLoading = true) => {
@@ -26,18 +27,18 @@ export function useCitizenNotifications(
       setError(null);
       try {
         if (mailbox === "sent") {
-          const result = await listSentNotificationsClient(params);
+          const result = await listSentNotificationsClient(stableParams);
           setItems(result.items);
           setMeta({ total: result.meta.total, unreadCount: 0 });
         } else if (scope === "admin") {
-          const result = await listNotificationsClient(params);
+          const result = await listNotificationsClient(stableParams);
           setItems(result);
           setMeta({
             total: result.length,
             unreadCount: result.filter((item) => item.status === "NO_LEIDA").length,
           });
         } else {
-          const result = await listCitizenNotificationsClient(params);
+          const result = await listCitizenNotificationsClient(stableParams);
           setItems(result.items);
           setMeta(result.meta);
         }
@@ -48,7 +49,7 @@ export function useCitizenNotifications(
         if (showLoading) setLoading(false);
       }
     },
-    [paramsKey, scope, mailbox],
+    [stableParams, scope, mailbox],
   );
 
   useEffect(() => {
@@ -62,18 +63,19 @@ export function useNotifications(params?: Record<string, unknown>) {
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const paramsKey = JSON.stringify(params);
+  const paramsKey = JSON.stringify(params ?? {});
+  const stableParams = useMemo<Record<string, unknown>>(() => JSON.parse(paramsKey), [paramsKey]);
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      setItems(await listNotificationsClient(params));
+      setItems(await listNotificationsClient(stableParams));
     } catch {
       setError("No pudimos cargar las notificaciones.");
     } finally {
       setLoading(false);
     }
-  }, [paramsKey]);
+  }, [stableParams]);
   useEffect(() => {
     void refresh();
   }, [refresh]);

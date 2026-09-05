@@ -21,16 +21,21 @@ TabsList.displayName = TabsPrimitive.List.displayName;
 export const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.Trigger
-    ref={ref}
-    className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all
-    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-    disabled:pointer-events-none disabled:opacity-50
-    data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow ${className ?? ""}`}
-    {...props}
-  />
-));
+>(({ className, ...props }, ref) => {
+  const usesBrandActiveState = className?.includes(
+    "data-[state=active]:bg-[var(--brand-primary)] data-[state=active]:text-white",
+  );
+  return (
+    <TabsPrimitive.Trigger
+      ref={ref}
+      className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm ${usesBrandActiveState ? "min-w-0 px-1" : "px-3"} py-1.5 text-sm font-medium ring-offset-background transition-all
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+      disabled:pointer-events-none disabled:opacity-50
+      ${usesBrandActiveState ? "" : "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"} ${className ?? ""}`}
+      {...props}
+    />
+  );
+});
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName;
 
 export const TabsContent = React.forwardRef<

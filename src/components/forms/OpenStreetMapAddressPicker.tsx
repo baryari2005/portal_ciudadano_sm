@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { LeafletMouseEvent, Map as LeafletMap, Marker } from "leaflet";
 import { Building2, CheckCircle2, Hash, Loader2, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +10,10 @@ import { joinExactAddress, splitExactAddress } from "@/features/geocoding/helper
 
 type Props = { id: string; value: string; placeId?: string | null; lat?: number | null; lng?: number | null; locality?: string | null; province?: string | null; postalCode?: string | null; display?: "full" | "input" | "map"; onChange: (value: AddressLocation) => void; className?: string; disabled?: boolean; placeholder?: string };
 const DEFAULT_CENTER: [number, number] = [-34.5431, -58.7119];
+type GeocodingResponse<T> = { data?: T; message?: string };
 
 export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, locality, province, postalCode, display = "full", onChange, className, disabled, placeholder }: Props) {
-  const mapHost = useRef<HTMLDivElement>(null), mapRef = useRef<any>(null), markerRef = useRef<any>(null), callbackRef = useRef(onChange), exactAddressRef = useRef(value), coordinatesRef = useRef({ lat, lng });
+  const mapHost = useRef<HTMLDivElement>(null), mapRef = useRef<LeafletMap | null>(null), markerRef = useRef<Marker | null>(null), callbackRef = useRef(onChange), exactAddressRef = useRef(value), coordinatesRef = useRef({ lat, lng });
   const [query, setQuery] = useState(value), [results, setResults] = useState<GeocodingResult[]>([]), [loading, setLoading] = useState(false), [message, setMessage] = useState("");
   const initialExact = splitExactAddress(value);
   const [street, setStreet] = useState(initialExact.street), [streetNumber, setStreetNumber] = useState(initialExact.number), [complement, setComplement] = useState(initialExact.complement);
@@ -54,13 +56,13 @@ export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, local
       const selectPoint = async (point: { lat: number; lng: number }) => {
         markerRef.current?.setLatLng(point);
         setLoading(true); setMessage("");
-        try { const response = await fetch(`/api/geocoding?lat=${point.lat}&lng=${point.lng}`); const body = await response.json(); if (!response.ok || !body.data) throw new Error(); callbackRef.current({ ...body.data, address: normalizedAddress(body.data, exactAddressRef.current) }); }
+        try { const response = await fetch(`/api/geocoding?lat=${point.lat}&lng=${point.lng}`); const body = await response.json() as GeocodingResponse<AddressLocation>; if (!response.ok || !body.data) throw new Error(); callbackRef.current({ ...body.data, address: normalizedAddress(body.data, exactAddressRef.current) }); }
         catch { callbackRef.current({ address: exactAddressRef.current, placeId: null, lat: point.lat, lng: point.lng, provider: "openstreetmap" }); setMessage("Punto seleccionado; completá la dirección manualmente."); }
         finally { setLoading(false); }
       };
       const marker = L.marker(center, { draggable: true, icon, opacity: hasCoordinates ? 1 : 0 }).addTo(map);
       marker.on("dragend", () => void selectPoint(marker.getLatLng()));
-      map.on("click", (event: any) => { marker.setOpacity(1); void selectPoint(event.latlng); });
+      map.on("click", (event: LeafletMouseEvent) => { marker.setOpacity(1); void selectPoint(event.latlng); });
       mapRef.current = map; markerRef.current = marker;
     });
     return () => { active = false; mapRef.current?.remove(); mapRef.current = null; markerRef.current = null; };
@@ -73,7 +75,7 @@ export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, local
     const exact = splitExactAddress(query);
     const searchableAddress = [exact.street, exact.number].filter(Boolean).join(" ");
     const contextualQuery = [searchableAddress, locality?.trim(), province?.trim(), postalCode?.trim(), "Argentina"].filter(Boolean).join(", ");
-    try { const response = await fetch(`/api/geocoding?q=${encodeURIComponent(contextualQuery)}`); const body = await response.json(); if (!response.ok) throw new Error(body.message); setResults(body.data); if (!body.data.length) setMessage("No encontramos resultados. Podés marcar el punto en el mapa."); }
+    try { const response = await fetch(`/api/geocoding?q=${encodeURIComponent(contextualQuery)}`); const body = await response.json() as GeocodingResponse<GeocodingResult[]>; if (!response.ok) throw new Error(body.message); const items=body.data??[];setResults(items); if (!items.length) setMessage("No encontramos resultados. Podés marcar el punto en el mapa."); }
     catch (error) { setMessage(error instanceof Error ? error.message : "No pudimos buscar la dirección."); }
     finally { setLoading(false); }
   }

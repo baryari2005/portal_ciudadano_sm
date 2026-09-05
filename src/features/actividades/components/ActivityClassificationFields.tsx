@@ -76,16 +76,16 @@ export function ActivityClassificationFields({
   return (
     <section className="space-y-4 border-t border-[#D7E0D8] pt-6">
       <div>
-        <p className="text-sm font-bold uppercase tracking-normal text-[#1D4F36]">
+        <p className="text-sm font-bold uppercase tracking-normal text-[var(--brand-primary)]">
           Clasificación
         </p>
-        <p className="mt-1 text-sm text-[#5F6F68]">
+        <p className="mt-1 text-sm text-[var(--brand-muted)]">
           Definí una categoría principal y los públicos a los que se dirige.
         </p>
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 rounded-xl border border-[#C9D9C3] bg-[#F7FBF5] p-4 text-sm font-semibold text-[#315644]">
+        <div className="flex items-center gap-2 rounded-xl border border-[var(--brand-border)] bg-[var(--brand-page)] p-4 text-sm font-semibold text-[var(--brand-text)]">
           <Loader2 className="size-4 animate-spin" /> Cargando catálogos...
         </div>
       ) : error ? (
@@ -112,7 +112,7 @@ export function ActivityClassificationFields({
             >
               <SelectTrigger
                 id="activity-category"
-                className="h-11 w-full rounded-xl border-[#C9D9C3] bg-[#F7FBF5]"
+                className="h-11 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)]"
               >
                 <SelectValue placeholder="Sin categoría" />
               </SelectTrigger>
@@ -130,7 +130,7 @@ export function ActivityClassificationFields({
                         <span
                           className="grid size-6 place-items-center rounded-md text-white"
                           style={{
-                            backgroundColor: category.color || "#1D4F36",
+                            backgroundColor: category.color || "var(--brand-primary)",
                           }}
                         >
                           <Icon className="size-3.5" />
@@ -144,14 +144,14 @@ export function ActivityClassificationFields({
               </SelectContent>
             </Select>
             {categories.length === 0 ? (
-              <p className="text-xs text-[#5F6F68]">
+              <p className="text-xs text-[var(--brand-muted)]">
                 No hay categorías activas disponibles.
               </p>
             ) : null}
             {canViewCategories ? (
               <Link
                 href="/activity-categories"
-                className="inline-flex text-xs font-bold text-[#1D4F36] hover:underline"
+                className="inline-flex text-xs font-bold text-[var(--brand-primary)] hover:underline"
               >
                 Administrar categorías
               </Link>
@@ -165,7 +165,7 @@ export function ActivityClassificationFields({
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-11 w-full justify-between rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A]"
+                  className="h-11 w-full justify-between rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-medium text-[var(--brand-ink)]"
                 >
                   <span className="flex items-center gap-2">
                     <UsersRound className="size-4" />
@@ -193,7 +193,7 @@ export function ActivityClassificationFields({
                         <label
                           key={item.id}
                           className={cn(
-                            "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-[#819B56]/10",
+                            "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-[var(--brand-secondary)]/10",
                             disabled && "cursor-not-allowed opacity-55",
                           )}
                         >
@@ -202,14 +202,14 @@ export function ActivityClassificationFields({
                             checked={checked}
                             disabled={disabled}
                             onChange={() => togglePublic(item.id)}
-                            className="size-4 accent-[#1D4F36]"
+                            className="size-4 accent-[var(--brand-primary)]"
                           />
                           <span className="flex-1">
                             {item.nombre}
                             {!item.activo ? " (inactivo)" : ""}
                           </span>
                           {checked ? (
-                            <Check className="size-4 text-[#1D4F36]" />
+                            <Check className="size-4 text-[var(--brand-primary)]" />
                           ) : null}
                         </label>
                       );
@@ -224,7 +224,7 @@ export function ActivityClassificationFields({
             {canViewPublics ? (
               <Link
                 href="/target-audiences"
-                className="inline-flex text-xs font-bold text-[#1D4F36] hover:underline"
+                className="inline-flex text-xs font-bold text-[var(--brand-primary)] hover:underline"
               >
                 Administrar públicos objetivo
               </Link>
@@ -243,7 +243,7 @@ export function ActivityClassificationFields({
         >
           <SelectTrigger
             id="activity-level"
-            className="h-11 w-full rounded-xl border-[#C9D9C3] bg-[#F7FBF5]"
+            className="h-11 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)]"
           >
             <SelectValue placeholder="Sin nivel definido" />
           </SelectTrigger>
@@ -266,8 +266,8 @@ export function ActivityClassificationFields({
               key={item.id}
               variant="outline"
               className={cn(
-                "gap-1 rounded-full border-[#819B56]/40 bg-white px-3 py-1 text-[#1D4F36]",
-                !item.activo && "border-[#B2B2B2] text-[#666]",
+                "gap-1 rounded-full border-[var(--brand-secondary)]/40 bg-white px-3 py-1 text-[var(--brand-primary)]",
+                !item.activo && "border-[var(--brand-neutral)] text-[#666]",
               )}
             >
               <Tags className="size-3" />

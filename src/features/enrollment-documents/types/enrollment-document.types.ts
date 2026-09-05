@@ -3,3 +3,8 @@ export type EnrollmentDocumentationStatus = "NO_REQUERIDA" | "PENDIENTE" | "EN_R
 export type EnrollmentDocument = { id: string; enrollmentId: string; requirementId: string; version: number; status: EnrollmentDocumentStatus; originalName: string; mimeType: string; sizeBytes: number; requirementName: string; mandatory: boolean; instructions: string | null; citizenObservations: string | null; rejectionReason: string | null; reviewObservations: string | null; uploadedAt: string; reviewedAt: string | null; citizen?: { id: string; firstName: string | null; lastName: string | null; documentNumber: string | null }; activity?: { id: string; name: string }; schedule?: { id: string; day: string; startTime: string; endTime: string }; history?: EnrollmentDocument[] };
 export type EnrollmentDocumentRequirement = { id: string; name: string; mandatory: boolean; instructions: string | null; current: EnrollmentDocument | null; history: EnrollmentDocument[] };
 export type EnrollmentDocumentationSummary = { status: EnrollmentDocumentationStatus; requiredCount: number; uploadedCount: number; pendingReviewCount: number; approvedCount: number; rejectedCount: number; missingCount: number; missingRequirementNames?: string[]; updatedAt: string | null };
+export type CitizenEnrollmentDocuments = {
+  enrollment: { id: string; status: string; activity: { id: string; name: string }; schedule: { day: string; startTime: string; endTime: string } };
+  requirements: EnrollmentDocumentRequirement[];
+  summary: EnrollmentDocumentationSummary;
+};

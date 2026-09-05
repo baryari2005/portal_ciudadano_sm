@@ -16,6 +16,7 @@ export type HelpGuide = {
   order: number;
   requiredPermissions?: HelpPermission[];
   permissionMode?: HelpPermissionMode;
+  prerequisites?: string[];
   steps: string[];
   warnings?: string[];
   links?: HelpLink[];
@@ -34,11 +35,12 @@ export const HELP_CATEGORY_META: Record<HelpCategory, { label: string; descripti
 export const HELP_GUIDES: HelpGuide[] = [
   {
     id: "citizen-registration-access", category: "citizen", order: 10,
+    prerequisites: ["Tené a mano tu DNI, datos de contacto, domicilio exacto y una foto de identidad legible.", "Elegí un email y un User ID que no estén registrados en otra cuenta."],
     title: "Registrarte e ingresar", description: "Datos requeridos, aprobación de la cuenta e inicio de sesión.",
     keywords: ["registro", "cuenta", "acceso", "contraseña", "perfil"],
     steps: [
       "Desde el inicio de sesión elegí Solicitar acceso.",
-      "Completá nombre, apellido, DNI, domicilio, email, teléfono, fecha de nacimiento, usuario y contraseña.",
+      "Completá nombre, apellido, DNI, email, teléfono, fecha de nacimiento, usuario y contraseña. En Domicilio registrá calle, altura, piso o departamento si corresponde, localidad, provincia y código postal; después buscá o ajustá la ubicación en el mapa.",
       "Enviá la solicitud. La cuenta queda pendiente hasta que un administrador la habilite.",
       "Ingresá con tus credenciales para consultar el estado. Si se rechaza, verás el motivo y podrás corregir los datos y reenviar.",
       "Cuando esté activa, iniciá sesión y elegí Portal Ciudadano.",
@@ -49,6 +51,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "citizen-find-activities", category: "citizen", order: 20,
+    prerequisites: ["Tu cuenta debe estar aprobada y activa.", "La actividad debe estar publicada y contar con al menos un horario disponible."],
     title: "Buscar actividades y horarios", description: "Cómo consultar la oferta disponible antes de inscribirte.",
     keywords: ["actividad", "buscar", "horario", "cupo", "precio", "edad", "requisito"],
     steps: [
@@ -62,6 +65,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "citizen-enrollment", category: "citizen", order: 30,
+    prerequisites: ["Completá tu fecha de nacimiento y los datos personales requeridos en Mi perfil.", "La actividad debe estar publicada y el horario debe admitir nuevas inscripciones."],
     title: "Inscribirte o cancelar", description: "Confirmación, lista de espera, documentación y baja voluntaria.",
     keywords: ["inscripción", "cancelar", "baja", "lista de espera", "documentación"],
     steps: [
@@ -76,6 +80,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "citizen-schedule-attendance", category: "citizen", order: 40,
+    prerequisites: ["Necesitás una inscripción confirmada.", "Administración debe haber generado las fechas concretas de las clases del horario."],
     title: "Agenda y asistencias", description: "Diferencia entre inscripción, próxima clase y asistencia registrada.",
     keywords: ["agenda", "clase", "asistencia", "presente", "ausente"],
     steps: [
@@ -88,6 +93,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "citizen-qr", category: "citizen", order: 50,
+    prerequisites: ["Tu cuenta debe estar activa.", "Para asistencia, necesitás una inscripción confirmada y el profesor debe tener abierta la clase correcta."],
     title: "Usar tu credencial QR", description: "Emisión, uso seguro, revocación y reemisión.",
     keywords: ["qr", "credencial", "reemitir", "revocar", "ingreso"],
     steps: [
@@ -100,6 +106,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "teacher-assignment", category: "teacher", order: 10,
+    prerequisites: ["Tu usuario debe estar activo, tener rol Profesor y estar vinculado a un perfil profesional activo.", "Un administrador debe asignarte a un horario publicado y generar sus clases concretas."],
     title: "Asignación y consulta de clases", description: "Cómo llega un profesor a sus horarios y clases.",
     requiredPermissions: [permission("activity_schedules", "ver"), permission("activity_sessions", "ver"), permission("enrollments", "ver")], permissionMode: "all",
     keywords: ["profesor", "asignación", "horario", "clase", "alumnos"],
@@ -114,6 +121,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "teacher-manual-attendance", category: "teacher", order: 20,
+    prerequisites: ["La clase debe estar generada, asignada a tu perfil y no estar suspendida ni cancelada.", "Los alumnos deben tener una inscripción confirmada en el mismo horario."],
     title: "Tomar asistencia manual", description: "Marcar alumnos, guardar y cerrar la planilla.",
     requiredPermissions: [permission("attendance", "ver"), permission("attendance", "asignar")], permissionMode: "all",
     keywords: ["asistencia", "manual", "cerrar", "reabrir", "ausente", "justificada"],
@@ -129,6 +137,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "teacher-qr-attendance", category: "teacher", order: 30,
+    prerequisites: ["Cumplí los requisitos de la asistencia manual y abrí la clase correcta.", "Permití el uso de la cámara y verificá que el alumno tenga una credencial QR activa."],
     title: "Tomar asistencia mediante QR", description: "Escanear credenciales dentro de la clase correcta.",
     requiredPermissions: [permission("attendance", "ver"), permission("attendance", "asignar")], permissionMode: "all",
     keywords: ["qr", "escanear", "asistencia", "duplicado", "inválido"],
@@ -143,6 +152,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "reception-qr-access", category: "reception", order: 10,
+    prerequisites: ["Tu usuario debe tener acceso a Recepción y al establecimiento donde realizás el control.", "La persona debe tener una credencial QR activa, una inscripción confirmada y una clase válida para esa sede y franja horaria."],
     title: "Controlar ingreso mediante QR", description: "Validación de identidad, clase, sede y ventana horaria.",
     requiredPermissions: [permission("access", "ver"), permission("access", "crear")], permissionMode: "all",
     keywords: ["recepción", "acceso", "qr", "cámara", "ingreso"],
@@ -157,6 +167,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "reception-manual-access", category: "reception", order: 20,
+    prerequisites: ["Seleccioná el establecimiento correcto antes de buscar.", "Tené un dato confiable de la persona y permiso para justificar decisiones manuales."],
     title: "Buscar y registrar un ingreso manual", description: "Alternativa cuando la persona no puede presentar su QR.",
     requiredPermissions: [permission("access", "ver"), permission("access", "crear"), permission("access", "asignar")], permissionMode: "all",
     keywords: ["búsqueda", "manual", "dni", "nombre", "apellido", "autorizar"],
@@ -170,7 +181,72 @@ export const HELP_GUIDES: HelpGuide[] = [
     links: [{ label: "Búsqueda manual", href: "/reception/manual", permission: permission("access", "ver") }],
   },
   {
+    id: "citizen-profile-documents", category: "citizen", order: 60,
+    title: "Actualizar tu perfil y domicilio", description: "Cómo conservar tus datos personales, tu dirección exacta y tus documentos.",
+    keywords: ["perfil", "domicilio", "calle", "altura", "piso", "departamento", "mapa", "documentos"],
+    prerequisites: ["Ingresá con tu cuenta activa.", "Para ubicar el domicilio con precisión, tené calle, altura, localidad, provincia y código postal."],
+    steps: ["Abrí Mi perfil y revisá tus datos personales y de contacto.", "En Domicilio completá calle, altura y, si corresponde, piso o departamento; luego cargá localidad, provincia y código postal.", "Presioná Buscar ubicación en el mapa. Podés seleccionar o ajustar el punto sin perder la altura ni el complemento que escribiste.", "Guardá los cambios y verificá que la ficha muestre tanto la dirección exacta como la ubicación seleccionada.", "Usá Mis documentos para consultar presentaciones y cargar los archivos asociados a una inscripción cuando sean requeridos."],
+    warnings: ["El punto del mapa complementa la dirección escrita; no reemplaza calle, altura, piso o departamento."],
+    links: [{ label: "Mi perfil", href: "/citizen/profile" }, { label: "Mis documentos", href: "/citizen/documents" }],
+  },
+  {
+    id: "citizen-notifications", category: "citizen", order: 70,
+    title: "Consultar notificaciones", description: "Avisos sobre solicitudes, inscripciones, documentos y clases.",
+    keywords: ["notificaciones", "avisos", "documentos", "clase", "inscripción"],
+    prerequisites: ["Ingresá al Portal Ciudadano con tu cuenta activa."],
+    steps: ["Abrí Notificaciones para consultar primero los avisos no leídos.", "Entrá al detalle para conocer el motivo y usar la acción asociada cuando exista.", "Marcá como leído o archivá el aviso cuando termines de revisarlo."],
+    links: [{ label: "Notificaciones", href: "/citizen/notifications" }],
+  },
+  {
+    id: "teacher-suspend-class", category: "teacher", order: 40,
+    title: "Suspender una clase", description: "Registrar una suspensión y mantener informados a los alumnos.",
+    requiredPermissions: [permission("activity_sessions", "ver")],
+    keywords: ["clase", "suspender", "motivo", "notificación"],
+    prerequisites: ["La clase debe estar asignada a tu perfil y encontrarse en un estado que permita suspenderla.", "Confirmá que seleccionaste la fecha y el horario correctos."],
+    steps: ["Abrí Mis clases y entrá al detalle de la fecha afectada.", "Elegí Suspender clase e informá un motivo claro.", "Revisá el resumen y confirmá la acción.", "Consultá el nuevo estado; las personas alcanzadas reciben el aviso correspondiente."],
+    warnings: ["Suspender una clase no cancela la actividad ni modifica las demás fechas del horario."],
+    links: [{ label: "Mis clases", href: "/teacher/sessions", permission: permission("activity_sessions", "ver") }],
+  },
+  {
+    id: "teacher-profile-notifications", category: "teacher", order: 50,
+    title: "Revisar perfil y notificaciones", description: "Datos de la cuenta y avisos relacionados con la tarea docente.",
+    keywords: ["perfil", "notificaciones", "avisos", "cuenta"],
+    prerequisites: ["Ingresá al Portal del Profesor con tu usuario activo."],
+    steps: ["Abrí Mi perfil para verificar los datos asociados a tu cuenta y perfil profesional.", "Abrí Notificaciones para consultar cambios de clases, asignaciones y otros avisos.", "Entrá al detalle y marcá el aviso como leído o archivado cuando corresponda."],
+    links: [{ label: "Mi perfil", href: "/teacher/profile" }, { label: "Notificaciones", href: "/teacher/notifications" }],
+  },
+  {
+    id: "reception-workspace-history", category: "reception", order: 30,
+    title: "Seleccionar sede y revisar ingresos", description: "Contexto de trabajo, resultados e historial de accesos.",
+    requiredPermissions: [permission("access", "ver")],
+    keywords: ["establecimiento", "sede", "historial", "ingresos", "recepción"],
+    prerequisites: ["Tu cuenta debe estar vinculada o autorizada para al menos un establecimiento."],
+    steps: ["Desde el inicio de Recepción seleccioná la sede en la que estás trabajando.", "Realizá los controles QR o manuales sin cambiar de sede durante la operación.", "Abrí Historial para revisar ingresos permitidos y rechazados con su fecha, persona y motivo.", "Si cambiás de establecimiento, comprobá nuevamente el contexto antes del siguiente control."],
+    warnings: ["La sede seleccionada forma parte de la validación; una clase de otro establecimiento puede ser rechazada."],
+    links: [{ label: "Control de ingreso", href: "/reception" }, { label: "Historial", href: "/reception/history", permission: permission("access", "ver") }],
+  },
+  {
+    id: "reception-citizens-enrollments-documents", category: "reception", order: 40,
+    title: "Asistir a ciudadanos e inscripciones", description: "Consulta de personas, altas de inscripción y recepción de documentos.",
+    requiredPermissions: [permission("enrollments", "ver")],
+    keywords: ["ciudadano", "inscripción", "documento", "recepción", "alta"],
+    prerequisites: ["La persona debe existir como ciudadano activo.", "La actividad y su horario deben estar publicados; para documentos debe existir el requisito correspondiente."],
+    steps: ["Buscá al ciudadano y abrí su ficha para confirmar identidad y datos relevantes.", "Desde Inscripciones elegí Nueva inscripción, seleccioná actividad y horario y revisá cupo y estado antes de confirmar.", "Si necesitás corregir una inscripción existente, abrila desde el listado y modificá sólo los datos habilitados.", "Para recibir documentación, iniciá la carga, asociá ciudadano, requisito e inscripción correctos y adjuntá un archivo legible."],
+    warnings: ["Una inscripción no reemplaza la aprobación de documentos obligatorios ni garantiza por sí sola un ingreso válido."],
+    links: [{ label: "Ciudadanos", href: "/reception/citizens" }, { label: "Inscripciones", href: "/reception/enrollments", permission: permission("enrollments", "ver") }, { label: "Cargar documento", href: "/reception/documents/new" }],
+  },
+  {
+    id: "reception-access-profile", category: "reception", order: 50,
+    title: "Solicitar acceso y consultar avisos", description: "Alta de la cuenta de recepción, perfil y notificaciones.",
+    keywords: ["solicitud", "acceso", "perfil", "notificaciones", "recepción"],
+    prerequisites: ["Para solicitar acceso, tené disponibles tus datos personales, domicilio exacto, contacto y foto de identidad."],
+    steps: ["Si todavía no tenés cuenta, abrí Solicitar acceso, completá todos los datos y enviá la solicitud para revisión administrativa.", "Cuando la cuenta esté habilitada, ingresá y revisá Mi perfil.", "Usá Notificaciones para consultar decisiones sobre la solicitud y avisos operativos."],
+    warnings: ["Enviar la solicitud no habilita el acceso inmediatamente; requiere aprobación y asignación de los permisos correspondientes."],
+    links: [{ label: "Solicitar acceso", href: "/reception/request-access" }, { label: "Mi perfil", href: "/reception/profile" }, { label: "Notificaciones", href: "/reception/notifications" }],
+  },
+  {
     id: "admin-create-activity", category: "administration", order: 10,
+    prerequisites: ["Creá una categoría y al menos un establecimiento activo.", "Si la modalidad requiere profesor, creá Personal con rol Profesor y vinculalo a un perfil profesional activo.", "Dirigido a, requisitos y recursos son catálogos opcionales según la actividad."],
     title: "Crear una actividad mediante el workflow", description: "Los diez pasos actuales, los datos previos, los borradores y la publicación.",
     requiredPermissions: [permission("actividades", "crear")],
     keywords: ["crear", "actividad", "workflow", "borrador", "publicar", "horario", "clase", "cupo", "profesor"],
@@ -194,6 +270,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "admin-catalogs-facilities", category: "administration", order: 20,
+    prerequisites: ["Definí qué actividad querés publicar para preparar solamente los catálogos que realmente necesita.", "Contá con permisos de consulta y, para crear faltantes, con permisos de alta en cada catálogo."],
     title: "Preparar catálogos y datos previos", description: "Qué debe existir antes del workflow y qué puede completarse más adelante.",
     requiredPermissions: [permission("actividades", "ver")],
     keywords: ["categoría", "dirigido a", "requisito", "establecimiento", "recurso", "profesor", "dependencia"],
@@ -202,6 +279,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "admin-professors-schedules", category: "administration", order: 30,
+    prerequisites: ["La actividad debe estar publicada con horarios creados desde el workflow.", "Para operar fechas concretas, las clases deben haber sido generadas."],
     title: "Operar horarios y clases ya publicadas", description: "Para qué sirven estas pantallas después del workflow y qué cambios admiten.",
     requiredPermissions: [permission("profesores", "ver"), permission("activity_schedules", "ver")], permissionMode: "all",
     keywords: ["profesor", "horario", "clase", "suspender", "cancelar", "superposición"],
@@ -211,6 +289,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "admin-enrollments-attendance", category: "administration", order: 40,
+    prerequisites: ["La actividad debe estar publicada y tener horarios; para asistencia también debe tener clases concretas.", "El ciudadano debe estar activo y contar con una inscripción en el horario correspondiente."],
     title: "Operar inscripciones, clases y asistencias", description: "Seguimiento diario después de publicar la actividad.",
     requiredPermissions: [permission("enrollments", "editar"), permission("activity_sessions", "editar"), permission("attendance", "editar")], permissionMode: "all",
     keywords: ["inscripción", "documentación", "clase", "asistencia", "lista de espera"],
@@ -219,6 +298,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "admin-citizen-workflow", category: "administration", order: 50,
+    prerequisites: ["Tené disponibles DNI, datos personales, domicilio exacto, contacto, cobertura e imágenes del ciudadano.", "Verificá que el DNI, email y User ID no pertenezcan a otra cuenta y que exista el rol base Ciudadano."],
     title: "Dar de alta o editar un ciudadano", description: "Workflow de siete pasos con rol Ciudadano fijo y revisión antes de guardar.",
     requiredPermissions: [permission("usuarios", "crear")],
     keywords: ["ciudadano", "usuario", "alta", "editar", "workflow", "credenciales", "imágenes"],
@@ -226,7 +306,7 @@ export const HELP_GUIDES: HelpGuide[] = [
       "Entrá en Ciudadanos y elegí Nuevo ciudadano. El listado sólo contiene cuentas con rol Ciudadano; este rol queda asignado automáticamente y no se puede reemplazar desde el alta.",
       "1. Datos personales: completá nombre, apellido, DNI, fecha de nacimiento, nacionalidad y sexo o género. La edad se calcula a partir de la fecha de nacimiento.",
       "2. Credenciales: definí User ID y contraseña. El rol visible debe ser Ciudadano y el sistema valida que exista el rol base antes de continuar.",
-      "3. Domicilio: cargá dirección, localidad, provincia y código postal. Si Google Maps está configurado se ofrecen sugerencias y validación; de lo contrario la carga continúa manualmente.",
+      "3. Domicilio: cargá calle, altura y, si corresponde, piso o departamento; completá localidad, provincia y código postal y luego buscá la ubicación en el mapa. El punto seleccionado complementa la dirección exacta escrita y no reemplaza la altura ni el complemento.",
       "4. Contacto: cargá email, celular, persona de referencia y teléfono de emergencia.",
       "5. Cobertura: seleccioná una obra social o prepaga activa y, cuando corresponda, indicá el número de afiliado. El selector muestra un estado de carga mientras consulta el catálogo.",
       "6. Imágenes: cargá por selección o arrastre el avatar del portal y la foto de identidad. El avatar se muestra en la interfaz; la foto de identidad se usa para la comprobación visual en ingresos.",
@@ -239,6 +319,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "admin-personnel-workflow", category: "administration", order: 55,
+    prerequisites: ["Tené disponibles DNI, datos personales, domicilio exacto, contacto, cobertura e imágenes del personal.", "Definí previamente el rol que necesita; si será profesor, luego deberás crear o vincular su perfil profesional."],
     title: "Dar de alta o editar personal", description: "Workflow para administradores, profesores, recepción y demás personal asociado.",
     requiredPermissions: [permission("usuarios", "crear")],
     keywords: ["personal", "profesor", "administrador", "recepción", "alta", "editar", "workflow", "rol"],
@@ -246,7 +327,7 @@ export const HELP_GUIDES: HelpGuide[] = [
       "Entrá en Personal y elegí Nuevo personal. Esta sección está separada de Ciudadanos y se utiliza para las cuentas que cumplen funciones internas.",
       "1. Datos personales: completá identidad, DNI, fecha de nacimiento, nacionalidad y sexo o género.",
       "2. Credenciales: definí User ID, contraseña y el rol de acceso correspondiente, por ejemplo Administrador, Profesor o Recepción. A diferencia del alta de ciudadano, acá el administrador sí selecciona el rol.",
-      "3. Domicilio: registrá dirección, localidad, provincia y código postal.",
+      "3. Domicilio: registrá calle, altura y, si corresponde, piso o departamento; completá localidad, provincia y código postal y luego buscá la ubicación en el mapa. El punto seleccionado complementa la dirección exacta escrita.",
       "4. Contacto: cargá email, celular y datos de contacto de emergencia.",
       "5. Cobertura: asociá una obra social o prepaga y número de afiliado cuando corresponda.",
       "6. Imágenes: cargá el avatar de uso cotidiano y la foto de identidad mediante selección o arrastre.",
@@ -260,6 +341,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "admin-access-requests-roles", category: "administration", order: 58,
+    prerequisites: ["La persona debe haber enviado una solicitud pendiente.", "Los roles y permisos que se asignarán deben existir y corresponder a su función real."],
     title: "Revisar solicitudes, roles y permisos", description: "Aprobación del acceso y configuración de las funciones habilitadas.",
     requiredPermissions: [permission("usuarios", "ver"), permission("roles", "ver")], permissionMode: "any",
     keywords: ["solicitud", "aprobar", "rechazar", "rol", "permiso", "acceso"],
@@ -268,6 +350,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "admin-documents", category: "administration", order: 60,
+    prerequisites: ["El ciudadano y el tipo de requisito documental deben existir.", "Para documentos ligados a una actividad, la inscripción correspondiente debe estar creada."],
     title: "Revisar documentos ciudadanos", description: "Carga administrativa, aprobación, rechazo y seguimiento de vigencia.",
     requiredPermissions: [permission("enrollment_documents", "ver")],
     keywords: ["documentos", "ciudadano", "aprobar", "rechazar", "vencimiento"],
@@ -276,6 +359,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "admin-personnel-resources", category: "administration", order: 70,
+    prerequisites: ["Definí la función del personal y la capacidad operativa que necesitás representar.", "Creá primero el establecimiento antes de asociarle jornadas o recursos físicos."],
     title: "Gestionar personal, sedes y recursos", description: "Datos necesarios para asignar responsables y capacidad operativa.",
     requiredPermissions: [permission("usuarios", "ver")],
     keywords: ["personal", "profesor", "establecimiento", "recurso", "obra social"],
@@ -284,6 +368,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "admin-notifications", category: "administration", order: 80,
+    prerequisites: ["Ingresá con una cuenta administrativa activa."],
     title: "Gestionar notificaciones", description: "Bandejas personales, avisos al rol administrador y comunicaciones emitidas.",
     keywords: ["notificaciones", "recibidas", "enviadas", "archivar", "leídas"],
     steps: ["Abrí Notificaciones para consultar primero las comunicaciones no leídas.", "Usá las bandejas Recibidas y Enviadas para separar lo destinado a tu usuario o rol de lo que emitiste.", "Marcá o archivá notificaciones individualmente o en conjunto; las acciones personales no alteran la lectura de otros administradores.", "Abrí una notificación para revisar su detalle y la acción asociada cuando corresponda."],
@@ -291,6 +376,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "admin-control-reports", category: "administration", order: 90,
+    prerequisites: ["Contá con permiso para Auditoría o Reportes según la consulta.", "Definí el período, módulo o entidad que querés analizar para aplicar filtros precisos."],
     title: "Auditar y consultar reportes", description: "Trazabilidad de cambios e indicadores para control administrativo.",
     requiredPermissions: [permission("audit_log", "ver"), permission("reports", "ver")], permissionMode: "any",
     keywords: ["auditoría", "reportes", "registro", "indicadores", "control"],
@@ -299,6 +385,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "admin-general-settings", category: "administration", order: 95,
+    prerequisites: ["Contá con permiso de consulta y, para guardar, con permiso de edición de parámetros generales.", "Prepará cuatro imágenes institucionales si vas a reemplazar el collage del acceso."],
     title: "Configurar parámetros generales", description: "Administración del paginado compartido y las imágenes institucionales del inicio de sesión.",
     requiredPermissions: [permission("general_settings", "ver")],
     keywords: ["parámetros", "configuración", "general", "paginado", "registros", "login", "collage", "imágenes"],
@@ -318,6 +405,7 @@ export const HELP_GUIDES: HelpGuide[] = [
   },
   {
     id: "admin-test-data", category: "administration", order: 100,
+    prerequisites: ["Confirmá que estás en un entorno de desarrollo sin datos reales.", "Asegurate de conservar las credenciales del administrador que se reconstruirá."],
     title: "Reiniciar datos de prueba", description: "Limpieza controlada del entorno de desarrollo conservando el acceso administrador.",
     requiredPermissions: [permission("system", "reset_database")],
     keywords: ["datos", "prueba", "reiniciar", "limpiar", "base"],

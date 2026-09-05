@@ -57,26 +57,29 @@ async function main() {
   const access = await registerManualAccess({ establishmentId: establishment.id, userId: citizen.id, decision: "ALLOW", observation: "QA ingreso autorizado" }, operator.id);
   ids.access = access.accessRecordId!;
   const automatic = await prisma.asistencia.findMany({ where: { claseActividadId: { in: ids.sessions }, inscripcionId: { in: ids.enrollments } }, orderBy: { claseActividadId: "asc" } });
-  assert.equal(automatic.length, 0, "El control de acceso no debe registrar asistencia automáticamente.");
+  assert.equal(automatic.length, 2, "El ingreso no marcó todas las clases del día.");
+  assert.ok(automatic.every((row) => row.estado === "PRESENTE" && row.origen === "ACCESO"), "La presencia automática no conservó estado/origen.");
 
   const adminToken = await signJwt({ uid: admin.id, rid: adminRole.id, rname: adminRole.nombre });
   const adminResponse = await adminAttendanceBatch(new NextRequest("http://localhost/api/attendance/batch", { method: "POST", headers: { authorization: `Bearer ${adminToken}`, "content-type": "application/json" }, body: JSON.stringify({ activitySessionId: sessions[0].id, records: [{ enrollmentId: enrollments[0].id, status: "AUSENTE", observations: "QA ausencia cargada por administrador" }] }) }));
   assert.equal(adminResponse.status, 200, `Administrador no pudo marcar ausente: ${await adminResponse.text()}`);
   const adminRoster = await getAttendanceRoster(sessions[0].id);
   assert.equal(adminRoster.attendees[0]?.status, "AUSENTE", "La ausencia administrativa no se persistió.");
-  assert.equal(adminRoster.summary.absentCount, 1, "No se contabilizó la ausencia cargada por Administración.");
+  assert.equal(adminRoster.attendees[0]?.origin, "MANUAL", "La corrección administrativa no reemplazó el origen automático.");
+  assert.equal(adminRoster.summary.enteredButAbsentCount, 1, "No se midió el ingreso con ausencia cargada por Administración.");
 
   const teacherToken = await signJwt({ uid: teacherUser.id, rid: teacherRole.id, rname: teacherRole.nombre });
   const teacherResponse = await teacherAttendanceBatch(new NextRequest(`http://localhost/api/teacher/attendance/${sessions[1].id}`, { method: "POST", headers: { authorization: `Bearer ${teacherToken}`, "content-type": "application/json" }, body: JSON.stringify({ action: "batch", records: [{ enrollmentId: enrollments[1].id, status: "AUSENTE", observations: "QA ausencia cargada por profesor" }] }) }), { params: Promise.resolve({ sessionId: sessions[1].id }) });
   assert.equal(teacherResponse.status, 200, `Profesor no pudo marcar ausente: ${await teacherResponse.text()}`);
   const teacherRoster = await getAttendanceRoster(sessions[1].id);
   assert.equal(teacherRoster.attendees[0]?.status, "AUSENTE", "La ausencia del profesor no se persistió.");
-  assert.equal(teacherRoster.summary.absentCount, 1, "No se contabilizó la ausencia cargada por Profesor.");
+  assert.equal(teacherRoster.attendees[0]?.origin, "MANUAL", "La corrección del profesor no reemplazó el origen automático.");
+  assert.equal(teacherRoster.summary.enteredButAbsentCount, 1, "No se midió el ingreso con ausencia cargada por Profesor.");
 
   const audits = await prisma.registroAuditoria.findMany({ where: { actorId: { in: [admin.id, teacherUser.id] }, accion: "ASIGNAR", entidadTipo: "ASISTENCIA", entidadId: { in: ids.sessions } } });
   assert.ok(audits.some((row) => row.actorId === admin.id), "Falta auditoría de Administración.");
   assert.ok(audits.some((row) => row.actorId === teacherUser.id), "Falta auditoría de Profesor.");
-  console.log(JSON.stringify({ ok: true, automaticAttendances: automatic.length, adminAbsent: adminRoster.summary.absentCount, teacherAbsent: teacherRoster.summary.absentCount, audits: audits.length }));
+  console.log(JSON.stringify({ ok: true, automaticAttendances: automatic.length, adminAbsent: adminRoster.summary.enteredButAbsentCount, teacherAbsent: teacherRoster.summary.enteredButAbsentCount, audits: audits.length }));
 }
 
 main().finally(async () => { await cleanup(); await prisma.$disconnect(); });

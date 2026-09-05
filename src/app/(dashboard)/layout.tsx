@@ -51,7 +51,7 @@ export default function DashboardRootLayout({ children }: Props) {
 
   return (
     <RequireAuth>
-      <GeneralSettingsProvider>
+      <GeneralSettingsProvider experience="administration">
       <MustChangePasswordGate>
         <WorkspaceGuard workspace="administration">
         <div className="lg:hidden fixed bottom-4 right-4 z-50">

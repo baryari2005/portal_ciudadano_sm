@@ -61,18 +61,18 @@ export function EnrollmentSummary({ activityScheduleId, activityId, userId, comp
   if (loading) return <div className={embedded ? "" : "mt-5"}><CatalogLoadingState label="resumen de inscripciones" /></div>;
 
   return (
-    <section className={embedded ? "" : "mt-5 border-t border-[#C9D9C3] pt-5"}>
+    <section className={embedded ? "" : "mt-5 border-t border-[var(--brand-border)] pt-5"}>
       <div className={`flex flex-wrap items-center gap-2 ${embedded ? "justify-end" : "justify-between"}`}>
-        {!embedded ? <h3 className="flex items-center gap-2 font-extrabold text-[#1D4F36]"><CalendarCheck className="size-5" />Inscripciones</h3> : null}
+        {!embedded ? <h3 className="flex items-center gap-2 font-extrabold text-[var(--brand-primary)]"><CalendarCheck className="size-5" />Inscripciones</h3> : null}
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" size="sm"><Link href={`/enrollments?${query}`}>{userId ? "Ver todas" : "Ver inscripciones"}</Link></Button>
-          {canCreate ? <Button asChild size="sm" className="bg-[#1D4F36]"><Link href={`/enrollments/new?${query}`}><Plus />Nueva inscripción</Link></Button> : null}
+          {canCreate ? <Button asChild size="sm" className="bg-[var(--brand-primary)]"><Link href={`/enrollments/new?${query}`}><Plus />Nueva inscripción</Link></Button> : null}
         </div>
       </div>
       {error ? (
         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm"><span>No pudimos cargar el resumen.</span><Button variant="ghost" size="sm" onClick={() => void load()}>Reintentar</Button></div>
       ) : rows.length === 0 ? (
-        <p className="mt-3 text-sm text-[#5F6F68]">Todavía no hay inscripciones registradas.</p>
+        <p className="mt-3 text-sm text-[var(--brand-muted)]">Todavía no hay inscripciones registradas.</p>
       ) : (
         <>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -83,10 +83,10 @@ export function EnrollmentSummary({ activityScheduleId, activityId, userId, comp
           </div>
           <div className="mt-3 grid gap-2">
             {rows.slice(0, compact ? 3 : 4).map((item) => (
-              <div key={item.id} className="rounded-xl border border-[#DDE8D7] bg-white/70 p-3 text-sm">
-                <p className="font-bold text-[#173C2A]">{userId ? item.activitySchedule.activity.name : [item.user.firstName, item.user.lastName].filter(Boolean).join(" ")}</p>
-                <p className="text-[#5F6F68]">{item.activitySchedule.day} · {item.activitySchedule.startTime} a {item.activitySchedule.endTime} · {item.activitySchedule.establishment.name}</p>
-                <p className="font-medium text-[#1D4F36]">{enrollmentStatusLabel(item.status)}{item.waitlistPosition ? ` · Posición ${item.waitlistPosition}` : ""}</p>
+              <div key={item.id} className="rounded-xl border border-[var(--brand-border-soft)] bg-white/70 p-3 text-sm">
+                <p className="font-bold text-[var(--brand-ink)]">{userId ? item.activitySchedule.activity.name : [item.user.firstName, item.user.lastName].filter(Boolean).join(" ")}</p>
+                <p className="text-[var(--brand-muted)]">{item.activitySchedule.day} · {item.activitySchedule.startTime} a {item.activitySchedule.endTime} · {item.activitySchedule.establishment.name}</p>
+                <p className="font-medium text-[var(--brand-primary)]">{enrollmentStatusLabel(item.status)}{item.waitlistPosition ? ` · Posición ${item.waitlistPosition}` : ""}</p>
               </div>
             ))}
           </div>
@@ -97,5 +97,5 @@ export function EnrollmentSummary({ activityScheduleId, activityId, userId, comp
 }
 
 function Metric({ label, value }: { label: string; value: number }) {
-  return <div className="rounded-xl border border-[#DDE8D7] bg-white/70 px-3 py-2"><p className="text-xl font-extrabold text-[#1D4F36]">{value}</p><p className="text-xs font-medium text-[#5F6F68]">{label}</p></div>;
+  return <div className="rounded-xl border border-[var(--brand-border-soft)] bg-white/70 px-3 py-2"><p className="text-xl font-extrabold text-[var(--brand-primary)]">{value}</p><p className="text-xs font-medium text-[var(--brand-muted)]">{label}</p></div>;
 }

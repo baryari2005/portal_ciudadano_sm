@@ -4,11 +4,12 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { GoogleAddressInput } from "@/components/forms/GoogleAddressInput";
 import { useAuth } from "@/stores/auth";
 
 import {
@@ -34,6 +35,7 @@ export function CompleteProfileForm() {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
@@ -86,7 +88,7 @@ export function CompleteProfileForm() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1">
           <label
-            className="text-sm font-medium text-[#003A22]"
+            className="text-sm font-medium text-[var(--brand-heading)]"
             htmlFor="nombre"
           >
             Nombre
@@ -97,7 +99,7 @@ export function CompleteProfileForm() {
 
         <div className="space-y-1">
           <label
-            className="text-sm font-medium text-[#003A22]"
+            className="text-sm font-medium text-[var(--brand-heading)]"
             htmlFor="apellido"
           >
             Apellido
@@ -108,7 +110,7 @@ export function CompleteProfileForm() {
       </div>
 
       <div className="space-y-1">
-        <label className="text-sm font-medium text-[#003A22]" htmlFor="email">
+        <label className="text-sm font-medium text-[var(--brand-heading)]" htmlFor="email">
           Email
         </label>
         <Input id="email" value={user?.email ?? ""} disabled readOnly />
@@ -117,7 +119,7 @@ export function CompleteProfileForm() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1">
           <label
-            className="text-sm font-medium text-[#003A22]"
+            className="text-sm font-medium text-[var(--brand-heading)]"
             htmlFor="documento"
           >
             DNI
@@ -128,7 +130,7 @@ export function CompleteProfileForm() {
 
         <div className="space-y-1">
           <label
-            className="text-sm font-medium text-[#003A22]"
+            className="text-sm font-medium text-[var(--brand-heading)]"
             htmlFor="fechaNacimiento"
           >
             Fecha de nacimiento
@@ -144,17 +146,17 @@ export function CompleteProfileForm() {
 
       <div className="space-y-1">
         <label
-          className="text-sm font-medium text-[#003A22]"
+          className="text-sm font-medium text-[var(--brand-heading)]"
           htmlFor="domicilio"
         >
           Dirección
         </label>
-        <Input id="domicilio" {...register("domicilio")} />
+        <Controller control={control} name="domicilio" render={({ field }) => <GoogleAddressInput id="domicilio" value={field.value} onChange={(location) => field.onChange(location.address)} />} />
         <FieldError message={errors.domicilio?.message} />
       </div>
 
       <div className="space-y-1">
-        <label className="text-sm font-medium text-[#003A22]" htmlFor="celular">
+        <label className="text-sm font-medium text-[var(--brand-heading)]" htmlFor="celular">
           Teléfono
         </label>
         <Input id="celular" {...register("celular")} />
@@ -163,7 +165,7 @@ export function CompleteProfileForm() {
 
       <Button
         type="submit"
-        className="h-11 w-full rounded-md bg-[#003A22] hover:bg-[#003A22]/90"
+        className="h-11 w-full rounded-md bg-[var(--brand-heading)] hover:bg-[var(--brand-heading)]/90"
         disabled={isSubmitting}
       >
         {isSubmitting ? (

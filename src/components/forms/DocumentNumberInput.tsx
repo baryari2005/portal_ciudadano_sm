@@ -30,7 +30,7 @@ export function DocumentNumberInput({
   return (
     <IconInput
       id={id}
-      leftIcon={<IdCard className="h-4 w-4 text-[#1D4F36]" />}
+      leftIcon={<IdCard className="h-4 w-4 text-[var(--brand-primary)]" />}
       input={
         <Input
           id={id}

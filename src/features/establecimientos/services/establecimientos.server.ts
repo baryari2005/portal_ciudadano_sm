@@ -46,6 +46,10 @@ export async function createEstablecimiento(input: EstablecimientoInput) {
       direccion: input.direccion,
       localidad: input.localidad || null,
       provincia: input.provincia || null,
+      direccionPlaceId: input.direccionPlaceId || null,
+      direccionLat: input.direccionLat ?? null,
+      direccionLng: input.direccionLng ?? null,
+      codigoPostal: input.codigoPostal || null,
       imagenUrl: input.imagenUrl || null,
       email: input.email || null,
       telefono: input.telefono || null,
@@ -84,6 +88,10 @@ export async function updateEstablecimiento(
         direccion: input.direccion,
         localidad: input.localidad || null,
         provincia: input.provincia || null,
+        direccionPlaceId: input.direccionPlaceId || null,
+        direccionLat: input.direccionLat ?? null,
+        direccionLng: input.direccionLng ?? null,
+        codigoPostal: input.codigoPostal || null,
         imagenUrl: input.imagenUrl || null,
         email: input.email || null,
         telefono: input.telefono || null,
@@ -138,18 +146,13 @@ async function assertUniqueEstablecimiento(
   );
 }
 
-export async function deleteEstablecimiento(id: string) {
+export async function deactivateEstablecimiento(id: string) {
   const current = await prisma.establecimiento.findUnique({
     where: { id },
-    select: { id: true, _count: { select: { actividades: true } } },
+    select: { id: true },
   });
   if (!current)
     throw new EstablecimientoConflictError("El establecimiento no existe.");
-  if (current._count.actividades > 0) {
-    throw new EstablecimientoConflictError(
-      "No se puede dar de baja porque tiene actividades asociadas.",
-    );
-  }
   return prisma.establecimiento.update({
     where: { id },
     data: { activo: false, estado: "inactivo" },

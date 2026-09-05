@@ -1,10 +1,79 @@
-export const AUDIT_ACTIONS = ["CREAR","EDITAR","DESACTIVAR","REACTIVAR","ELIMINAR","CANCELAR","SUSPENDER","FINALIZAR","APROBAR","RECHAZAR","ASIGNAR","DESASIGNAR","CERRAR","REABRIR","EMITIR","REVOCAR","INSCRIBIR","PROMOVER","MARCAR_PRESENTE","MARCAR_AUSENTE","JUSTIFICAR"] as const;
-export const AUDIT_ENTITIES = ["USUARIO","ROL","PERMISO","ACTIVIDAD","ESTABLECIMIENTO","PROFESOR","HORARIO_ACTIVIDAD","INSCRIPCION","CLASE_ACTIVIDAD","ASISTENCIA","REQUISITO","DOCUMENTO_INSCRIPCION","CREDENCIAL_QR","NOTIFICACION","PARAMETROS_GENERALES"] as const;
-export const AUDIT_ORIGINS = ["ADMINISTRACION","PORTAL_CIUDADANO","QR","SISTEMA"] as const;
-export type AuditAction = typeof AUDIT_ACTIONS[number];
-export type AuditEntity = typeof AUDIT_ENTITIES[number];
-export type AuditOrigin = typeof AUDIT_ORIGINS[number];
+export const AUDIT_ACTIONS = [
+  "CREAR",
+  "EDITAR",
+  "DESACTIVAR",
+  "REACTIVAR",
+  "ELIMINAR",
+  "CANCELAR",
+  "SUSPENDER",
+  "FINALIZAR",
+  "APROBAR",
+  "RECHAZAR",
+  "ASIGNAR",
+  "DESASIGNAR",
+  "CERRAR",
+  "REABRIR",
+  "EMITIR",
+  "REVOCAR",
+  "INSCRIBIR",
+  "PROMOVER",
+  "MARCAR_PRESENTE",
+  "MARCAR_AUSENTE",
+  "JUSTIFICAR",
+] as const;
+export const AUDIT_ENTITIES = [
+  "USUARIO",
+  "ROL",
+  "PERMISO",
+  "ACTIVIDAD",
+  "ESTABLECIMIENTO",
+  "PROFESOR",
+  "HORARIO_ACTIVIDAD",
+  "INSCRIPCION",
+  "CLASE_ACTIVIDAD",
+  "ASISTENCIA",
+  "REQUISITO",
+  "DOCUMENTO_INSCRIPCION",
+  "CREDENCIAL_QR",
+  "NOTIFICACION",
+  "PARAMETROS_GENERALES",
+] as const;
+export const AUDIT_ORIGINS = [
+  "ADMINISTRACION",
+  "PORTAL_CIUDADANO",
+  "QR",
+  "SISTEMA",
+] as const;
+export type AuditAction = (typeof AUDIT_ACTIONS)[number];
+export type AuditEntity = (typeof AUDIT_ENTITIES)[number];
+export type AuditOrigin = (typeof AUDIT_ORIGINS)[number];
 export type AuditChange = { before: unknown; after: unknown };
 export type AuditChanges = Record<string, AuditChange>;
-export type AuditLog = {id:string;actorId:string|null;actorName:string|null;actorEmail:string|null;action:AuditAction;entityType:AuditEntity;entityId:string|null;entityName:string|null;changes:AuditChanges|null;metadata:Record<string,unknown>|null;origin:AuditOrigin;ipHash:string|null;userAgent:string|null;createdAt:string};
-export type AuditLogFilters = {search?:string;actorId?:string;action?:AuditAction;entityType?:AuditEntity;entityId?:string;origin?:AuditOrigin;dateFrom?:string;dateTo?:string;page?:number;pageSize?:number};
+export type AuditLog = {
+  id: string;
+  actorId: string | null;
+  actorName: string | null;
+  actorEmail: string | null;
+  action: AuditAction;
+  entityType: AuditEntity;
+  entityId: string | null;
+  entityName: string | null;
+  changes: AuditChanges | null;
+  metadata: Record<string, unknown> | null;
+  origin: AuditOrigin;
+  ipHash: string | null;
+  userAgent: string | null;
+  createdAt: string;
+};
+export type AuditLogFilters = {
+  search?: string;
+  actorId?: string;
+  action?: AuditAction;
+  entityType?: AuditEntity;
+  entityId?: string;
+  origin?: AuditOrigin;
+  dateFrom?: Date;
+  dateTo?: Date;
+  page?: number;
+  pageSize?: number;
+};

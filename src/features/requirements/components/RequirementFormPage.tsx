@@ -47,6 +47,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toSlug } from "@/lib/slug";
+import { ActivityImageUploader } from "@/features/actividades/components/ActivityImageUploader";
 
 import { requirementSchema } from "../schemas/requirement.schema";
 import {
@@ -64,6 +65,7 @@ type FormState = Omit<CreateRequirementInput, "slug"> & { slug?: string };
 const emptyForm: FormState = {
   nombre: "",
   descripcion: null,
+  imagenUrl: null,
   tipo: "INFORMACION",
   requiereDocumento: false,
   documentoPersonal: false,
@@ -102,6 +104,7 @@ export function RequirementFormPage({ id }: { id?: string }) {
           nombre: item.nombre,
           slug: item.slug,
           descripcion: item.descripcion,
+          imagenUrl: item.imagenUrl,
           tipo: item.tipo,
           requiereDocumento: item.requiereDocumento,
           documentoPersonal: item.documentoPersonal,
@@ -166,7 +169,8 @@ export function RequirementFormPage({ id }: { id?: string }) {
     setSaving(true);
     setFormError(null);
     try {
-      const { activo: _activeStatus, ...editableData } = parsed.data;
+      const { activo: activeStatus, ...editableData } = parsed.data;
+      void activeStatus;
       const saved = id
         ? await updateRequirementClient(id, editableData)
         : await createRequirementClient(parsed.data);
@@ -257,6 +261,10 @@ export function RequirementFormPage({ id }: { id?: string }) {
             <FormField label="Descripción" icon={Info} error={errors.descripcion} wide align="start">
               <Textarea value={form.descripcion ?? ""} onChange={(event) => update({ descripcion: event.target.value })} rows={3} placeholder="Explicá brevemente en qué consiste" className={cn(adminControlClass, "min-h-28 h-auto py-3")} />
             </FormField>
+
+            <div className="sm:col-span-2">
+              <ActivityImageUploader value={form.imagenUrl ?? null} onChange={(imagenUrl) => update({ imagenUrl })} endpoint="/requirements/images" subject="requisito" maxDimension={512} allowUrl={false} sidePreview />
+            </div>
 
             <FormField label="Instrucciones" icon={FileText} error={errors.instrucciones} wide align="start">
               <Textarea value={form.instrucciones ?? ""} onChange={(event) => update({ instrucciones: event.target.value })} rows={3} placeholder="Indicaciones que verá el ciudadano" className={cn(adminControlClass, "min-h-28 h-auto py-3")} />

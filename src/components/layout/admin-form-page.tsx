@@ -14,6 +14,7 @@ export function AdminFormPage({
   fullWidth = false,
   icon = FilePenLine,
   children,
+  mobileReception = false,
 }: {
   title: string;
   description: string;
@@ -21,14 +22,15 @@ export function AdminFormPage({
   fullWidth?: boolean;
   icon?: LucideIcon;
   children: ReactNode;
+  mobileReception?: boolean;
 }) {
   return (
-    <main className="min-h-[calc(100dvh-var(--topbar-h)-48px)] bg-[var(--brand-page)] p-4 sm:p-6 lg:p-8">
+    <main className={cn("min-h-[calc(100dvh-var(--topbar-h)-48px)] bg-[var(--brand-page)] p-4 sm:p-6 lg:p-8", mobileReception && "min-h-full overflow-x-hidden pb-24 pt-5 md:min-h-[calc(100dvh-var(--topbar-h)-48px)] md:overflow-x-visible md:pb-6 md:pt-6 lg:pb-8 lg:pt-8")}>
       <div className={cn(!fullWidth && "mx-auto max-w-5xl")}>
         {breadcrumbs?.length ? (
           <nav
             aria-label="Breadcrumb"
-            className="mb-4 flex flex-wrap items-center gap-1 text-sm text-[#315644]/75"
+            className={cn("mb-4 flex flex-wrap items-center gap-1 text-sm text-[var(--brand-text)]/75", mobileReception && "hidden md:flex")}
           >
             {breadcrumbs.map((item, index) => (
               <span
@@ -38,7 +40,7 @@ export function AdminFormPage({
                 {index > 0 && <ChevronRight className="size-4" />}
                 {item.href ? (
                   <Link
-                    className="font-medium hover:text-[#1D4F36] hover:underline"
+                    className="font-medium hover:text-[var(--brand-primary)] hover:underline"
                     href={item.href}
                   >
                     {item.label}
@@ -50,7 +52,7 @@ export function AdminFormPage({
             ))}
           </nav>
         ) : null}
-        <AdminFormHeader title={title} description={description} icon={icon} />
+        <AdminFormHeader title={title} description={description} icon={icon} className={mobileReception ? "border-0 pb-0 md:border-b md:pb-5 [&_h1]:text-2xl md:[&_h1]:text-4xl" : undefined} />
         {children}
       </div>
     </main>
@@ -81,9 +83,9 @@ export function AdminFormLoading({
   label?: string;
 }) {
   return (
-    <div className="flex min-h-80 items-center justify-center rounded-3xl border border-[#819B56]/20 bg-white/80">
-      <Loader2 className="mr-3 size-6 animate-spin text-[#1D4F36]" />
-      <span className="font-semibold text-[#1D4F36]">{label}</span>
+    <div className="flex min-h-80 items-center justify-center rounded-3xl border border-[var(--brand-secondary)]/20 bg-white/80">
+      <Loader2 className="mr-3 size-6 animate-spin text-[var(--brand-primary)]" />
+      <span className="font-semibold text-[var(--brand-primary)]">{label}</span>
     </div>
   );
 }

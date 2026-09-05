@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Formulario legado compacto con respuestas Axios y Zod heterogéneas. */
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -11,6 +12,7 @@ import {
   FileText,
   Info,
   Loader2,
+  MapPin,
   Save,
   Search,
   UserRound,
@@ -34,7 +36,6 @@ import {
 } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { listActivitySchedulesClient } from "@/features/activity-schedules/services/activity-schedules.service";
 import type { ActivitySchedule } from "@/features/activity-schedules/types/activity-schedule.types";
-import { listActivitySessionsClient } from "@/features/activity-sessions/services/activity-sessions.service";
 import type { ActivitySession } from "@/features/activity-sessions/types/activity-session.types";
 import { listActividadesClient } from "@/features/actividades/services/actividades.service";
 import type { Actividad } from "@/features/actividades/types/actividad.types";
@@ -43,6 +44,7 @@ import { axiosInstance } from "@/lib/axios";
 import { createEnrollmentSchema } from "../schemas/enrollment.schema";
 import {
   createEnrollmentClient,
+  listEnrollmentSessionsClient,
   updateEnrollmentClient,
 } from "../services/enrollments.service";
 import type { Enrollment } from "../types/enrollment.types";
@@ -136,10 +138,12 @@ export function EnrollmentForm({
   initialValues,
   onLoadingChange,
   backHref = "/enrollments",
+  mobileReception = false,
 }: {
   initialValues?: Enrollment;
   onLoadingChange?: (loading: boolean) => void;
   backHref?: string;
+  mobileReception?: boolean;
 }) {
   const router = useRouter(),
     params = useSearchParams();
@@ -151,6 +155,8 @@ export function EnrollmentForm({
     [schedules, setSchedules] = useState<ActivitySchedule[]>([]),
     [sessions, setSessions] = useState<ActivitySession[]>([]);
   const [activityQuery, setActivityQuery] = useState(""),
+    [visibleRecurringDays, setVisibleRecurringDays] = useState<string[]>([]),
+    [activeRecurringDay, setActiveRecurringDay] = useState<string | null>(null),
     [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(
       initialValues
         ? {
@@ -194,6 +200,7 @@ export function EnrollmentForm({
       message: string;
     } | null>(null);
   const [checkingSlotKey, setCheckingSlotKey] = useState<string | null>(null);
+  const [sessionsError, setSessionsError] = useState<string | null>(null);
   const [form, setForm] = useState({
     actividadId: initialValues?.activitySchedule.activity.id ?? "",
     horarioActividadIds:
@@ -262,21 +269,28 @@ export function EnrollmentForm({
       )
     ) {
       setSessions([]);
+      setSessionsError(null);
       return;
     }
     setSessionsLoading(true);
-    void listActivitySessionsClient({
-      activityId: selectedActivity.id,
-      dateFrom: new Date().toISOString().slice(0, 10),
-      page: 1,
-      pageSize: 100,
-    })
-      .then((r) =>
-        setSessions(
-          r.data.filter((x) => ["PROGRAMADA", "EN_CURSO"].includes(x.status)),
-        ),
-      )
-      .catch(() => setSessions([]))
+    setSessionsError(null);
+    void listEnrollmentSessionsClient(selectedActivity.id)
+      .then((items) => {
+        setSessions(items);
+        if (items.length === 1) {
+          const session = items[0];
+          setForm((current) => ({ ...current, classId: session.id, horarioActividadIds: [session.activitySchedule.id] }));
+        } else if (items.length === 0) {
+          setSessionsError("El evento no tiene una fecha u horario válido para inscripciones.");
+        }
+      })
+      .catch((error: unknown) => {
+        setSessions([]);
+        const message = typeof error === "object" && error !== null && "response" in error
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+        setSessionsError(message ?? "No pudimos cargar las fechas disponibles para la inscripción.");
+      })
       .finally(() => setSessionsLoading(false));
   }, [selectedActivity, initialValues]);
 
@@ -286,6 +300,8 @@ export function EnrollmentForm({
       scoped = scopedSchedules.map((x) => x.id);
     setActivityConflict(null);
     setSlotConflict(null);
+    setVisibleRecurringDays([]);
+    setActiveRecurringDay(null);
     if (
       activity &&
       selectedCitizen &&
@@ -324,14 +340,6 @@ export function EnrollmentForm({
         ["HORARIO_FIJO", "CURSO_PERIODO"].includes(activity.modalidadOperacion)
           ? scoped
           : [],
-    }));
-  }
-  function toggleSchedule(id: string) {
-    setForm((current) => ({
-      ...current,
-      horarioActividadIds: current.horarioActividadIds.includes(id)
-        ? current.horarioActividadIds.filter((x) => x !== id)
-        : [...current.horarioActividadIds, id],
     }));
   }
   async function toggleSlot(slot: {
@@ -444,6 +452,7 @@ export function EnrollmentForm({
   if (initialValues)
     return (
       <form onSubmit={submit} className="space-y-6">
+        <div>
         <AdminFormCard
           title="Inscripción"
           description="La actividad y su alcance se conservan; podés actualizar la observación administrativa."
@@ -466,7 +475,8 @@ export function EnrollmentForm({
             />
           </AdminFormField>
         </AdminFormCard>
-        <Actions saving={saving} backHref={backHref} />
+        </div>
+        <Actions saving={saving} backHref={backHref} editing mobileReception={mobileReception} />
       </form>
     );
 
@@ -492,6 +502,7 @@ export function EnrollmentForm({
       : [];
   return (
     <form onSubmit={submit} className="space-y-6">
+      <div className={mobileReception ? "space-y-4 md:space-y-6" : "space-y-6"}>
       <AdminFormCard
         title="Ciudadano"
         description="Buscá por nombre, apellido o DNI; también podés identificar su credencial QR."
@@ -506,6 +517,7 @@ export function EnrollmentForm({
           search={searchCitizens}
           identifyQr={identifyCitizenQr}
           title="Buscar ciudadano"
+          compactMobileSelected={mobileReception}
         />
       </AdminFormCard>
       <AdminFormCard
@@ -520,8 +532,9 @@ export function EnrollmentForm({
             placeholder="Nombre o categoría de la actividad"
           />
         </AdminFormField>
-        {selectedActivity ? (
-          <div className="mt-4 flex items-start gap-4 rounded-2xl border border-[var(--brand-primary)] bg-[var(--brand-control)] p-4">
+        {selectedActivity ? (<>
+          {mobileReception?<div className="mt-4 flex min-w-0 items-center gap-3 rounded-2xl border border-[var(--brand-primary)] bg-[var(--brand-control)] p-3 md:hidden"><ActivityImagePreview source={selectedActivity.imagenUrl} alt={`Imagen de ${selectedActivity.nombre}`} className="size-14 shrink-0 rounded-xl"/><div className="min-w-0 flex-1"><div className="flex min-w-0 items-center gap-2"><strong className="min-w-0 flex-1 truncate text-[var(--brand-primary)]">{selectedActivity.nombre}</strong><span className="shrink-0 rounded-full border border-[var(--brand-secondary)]/35 bg-white px-2 py-0.5 text-[9px] font-bold text-[var(--brand-primary)]">{MODES[selectedActivity.modalidadOperacion]?.label}</span></div><p className="mt-1 truncate text-[11px] text-[var(--brand-muted)]">{selectedActivity.categoriaActividad?.nombre??selectedActivity.categoria} · {selectedActivity.establecimiento.nombre}</p><p className="mt-1.5 flex min-w-0 items-start gap-1 text-[11px] font-bold text-[var(--brand-primary)]"><CalendarClock className="mt-px size-3.5 shrink-0 text-[var(--brand-secondary)]"/><span className="min-w-0 line-clamp-2">{formatCompactScheduleSummary(activitySchedules)}</span></p></div><Check className="size-5 shrink-0 text-[var(--brand-secondary)]"/></div>:null}
+          <div className={`mt-4 items-start gap-4 rounded-2xl border border-[var(--brand-primary)] bg-[var(--brand-control)] p-4 ${mobileReception?"hidden md:flex":"flex"}`}>
             <ActivityImagePreview
               source={selectedActivity.imagenUrl}
               alt={`Imagen de ${selectedActivity.nombre}`}
@@ -551,11 +564,13 @@ export function EnrollmentForm({
                 <span>{selectedScheduleSummary}</span>
               </p>
             </div>
-          </div>
-        ) : null}
+          </div></>) : null}
         <div className="mt-4 grid gap-2 md:grid-cols-2">
           {filteredActivities.map((a) => {
             const summary = formatScheduleSummary(
+                schedules.filter((schedule) => schedule.activityId === a.id),
+              ),
+              compactSummary = formatCompactScheduleSummary(
                 schedules.filter((schedule) => schedule.activityId === a.id),
               ),
               checking = checkingActivityId === a.id,
@@ -574,6 +589,8 @@ export function EnrollmentForm({
                   className="size-14 shrink-0 rounded-xl"
                 />
                 <span className="min-w-0 flex-1">
+                  {mobileReception ? <span className="block min-w-0 md:hidden"><span className="flex min-w-0 items-center gap-2"><strong className={`min-w-0 flex-1 truncate ${conflict ? "text-red-800" : "text-[var(--brand-primary)]"}`}>{a.nombre}</strong><span className="shrink-0 rounded-full border border-[var(--brand-secondary)]/35 bg-[var(--brand-control)] px-2 py-0.5 text-[9px] font-bold text-[var(--brand-primary)]">{MODES[a.modalidadOperacion]?.label}</span></span><span className="mt-1 block truncate text-[11px] text-[var(--brand-muted)]">{a.categoriaActividad?.nombre??a.categoria} · {a.establecimiento.nombre}</span><span className="mt-1.5 flex min-w-0 items-start gap-1 text-[11px] font-bold text-[var(--brand-primary)]"><CalendarClock className="mt-px size-3.5 shrink-0 text-[var(--brand-secondary)]"/><span className="min-w-0 line-clamp-2">{checking?"Verificando disponibilidad...":compactSummary}</span></span></span> : null}
+                  <span className={mobileReception ? "hidden md:block" : "block"}>
                   <strong
                     className={`block truncate ${conflict ? "text-red-800" : "text-[var(--brand-primary)]"}`}
                   >
@@ -595,6 +612,7 @@ export function EnrollmentForm({
                       {activityConflict.message}
                     </span>
                   ) : null}
+                  </span>
                 </span>
                 {checking ? (
                   <Loader2 className="ml-auto size-5 shrink-0 animate-spin text-[var(--brand-secondary)]" />
@@ -646,40 +664,42 @@ export function EnrollmentForm({
           ) : null}
           {mode === "TURNO_RECURRENTE" ? (
             <div className="grid gap-5">
-              <div className="rounded-2xl border border-[var(--brand-border)] bg-[var(--brand-control)] p-4">
-                <div className="mb-4 flex items-start gap-3">
-                  <span className="grid size-10 place-items-center rounded-xl bg-[var(--brand-border-soft)] text-[var(--brand-primary)]">
-                    <CalendarClock className="size-5" />
+              <div className={`rounded-2xl border border-[var(--brand-border)] bg-[var(--brand-control)] ${mobileReception?"p-4 md:p-4":"p-4"}`}>
+                <div className={`flex items-start gap-3 ${mobileReception?"mb-3 md:mb-4":"mb-4"}`}>
+                  <span className={`grid place-items-center bg-[var(--brand-border-soft)] text-[var(--brand-primary)] ${mobileReception?"size-9 rounded-full md:size-10 md:rounded-xl":"size-10 rounded-xl"}`}>
+                    <CalendarClock className={mobileReception?"size-[18px] md:size-5":"size-5"} />
                   </span>
                   <div>
                     <h3 className="font-extrabold text-[var(--brand-primary)]">
                       Días de la actividad
                     </h3>
-                    <p className="text-sm text-[var(--brand-muted)]">
+                    <p className={mobileReception?"hidden text-sm text-[var(--brand-muted)] md:block":"text-sm text-[var(--brand-muted)]"}>
                       Elegí los días y horarios semanales que reservará la
                       persona.
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+                <div className={mobileReception?"flex max-w-full flex-wrap gap-2 pb-1 md:grid md:grid-cols-4 lg:grid-cols-7":"grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7"}>
                   {dayOrder.map((day) => {
                     const available = activitySchedules.some(
                       (schedule) => schedule.day === day,
                     );
-                    const selected = form.horariosSeleccionados.some((slot) =>
+                    const selected = visibleRecurringDays.includes(day);
+                    const scheduleSelected = form.horariosSeleccionados.some((slot) =>
                       activitySchedules.some(
-                        (schedule) =>
-                          schedule.id === slot.horarioActividadId &&
-                          schedule.day === day,
+                        (schedule) => schedule.id === slot.horarioActividadId && schedule.day === day,
                       ),
                     );
                     const labels = dayLabels[day];
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={day}
-                        className={`grid min-h-16 place-items-center rounded-xl border text-center ${selected ? "border-[var(--brand-primary)] bg-[#DDEF8F]" : "border-[var(--brand-border)] bg-white"} ${available ? "" : "opacity-40"}`}
+                        disabled={!available}
+                        onClick={() => setVisibleRecurringDays((current) => { const next=current.includes(day)?current.filter((item)=>item!==day):[...current,day]; setActiveRecurringDay((active)=>current.includes(day)?active===day?next[0]??null:active:day); return next; })}
+                        className={`place-items-center rounded-xl border text-center md:pointer-events-none ${mobileReception?"flex min-h-0 shrink-0 items-center gap-1.5 px-4 py-2.5 text-sm md:grid md:min-h-16 md:px-0 md:py-0 md:text-base":"grid min-h-16"} ${selected ? mobileReception?"border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white md:bg-[#DDEF8F] md:text-inherit":"border-[var(--brand-primary)] bg-[#DDEF8F]" : "border-[var(--brand-border)] bg-white"} ${scheduleSelected ? "md:border-[var(--brand-primary)] md:bg-[#DDEF8F]" : "md:border-[var(--brand-border)] md:bg-white"} ${available ? "" : "opacity-40"}`}
                       >
-                        <span>
+                        {mobileReception?<><CalendarClock className="size-3 md:hidden"/><span className="font-bold md:hidden">{labels.label}</span></>:null}<span className={mobileReception?"hidden md:block":undefined}>
                           <strong className="block text-[var(--brand-primary)]">
                             {labels.short}
                           </strong>
@@ -687,26 +707,29 @@ export function EnrollmentForm({
                             {labels.label}
                           </small>
                         </span>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
               </div>
+              {!visibleRecurringDays.length ? <div className="flex items-start gap-2 rounded-xl border border-[var(--brand-border)] bg-white p-3 text-sm text-[var(--brand-muted)] md:hidden"><Info className="mt-0.5 size-4 shrink-0 text-[var(--brand-secondary)]"/><span>Seleccioná uno o más días para ver los horarios disponibles.</span></div> : null}
+              <div className={mobileReception ? `${visibleRecurringDays.length ? "block" : "hidden"} min-w-0 max-w-full rounded-2xl border border-[var(--brand-border-soft)] bg-[var(--brand-control)] p-4 md:contents` : "contents"}>
+                <div className={mobileReception ? "mb-4 min-w-0 md:hidden" : "hidden"}><h3 className="flex items-center gap-2 font-extrabold text-[var(--brand-primary)]"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-white"><CalendarClock className="size-4"/></span>Días y horarios disponibles</h3><p className="mt-1 text-xs text-[var(--brand-muted)]">Elegí uno o más horarios disponibles.</p><div className="mt-3 flex max-w-full flex-wrap gap-2 pb-1">{dayOrder.filter((day)=>visibleRecurringDays.includes(day)).map((day)=><button type="button" key={day} onClick={()=>setActiveRecurringDay(day)} className={`flex shrink-0 items-center gap-1 rounded-xl border px-3 py-2 text-xs font-bold ${activeRecurringDay===day?"border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white":"border-[var(--brand-border)] bg-white text-[var(--brand-primary)]"}`}><CalendarClock className="size-3"/>{dayLabels[day].label}</button>)}</div></div>
               {dayOrder.map((day) => {
                 const slots = recurringSlots.filter((slot) => slot.day === day);
-                if (!slots.length) return null;
+                if (!slots.length && !visibleRecurringDays.includes(day)) return null;
                 return (
                   <section
                     key={day}
-                    className="rounded-2xl border border-[var(--brand-border-soft)] bg-white p-4"
+                    className={`${(mobileReception?activeRecurringDay===day:visibleRecurringDays.includes(day)) ? "block" : "hidden"} min-w-0 max-w-full rounded-2xl border border-[var(--brand-border-soft)] bg-white p-3 md:block md:p-4`}
                   >
-                    <div className="mb-3 flex items-center gap-2">
+                    <div className="mb-3 hidden items-center gap-2 md:flex">
                       <Clock3 className="size-5 text-[var(--brand-secondary)]" />
                       <h4 className="font-extrabold text-[var(--brand-primary)]">
                         {dayLabels[day].label}
                       </h4>
                     </div>
-                    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                    {!slots.length ? <p className="text-sm text-[var(--brand-muted)] md:hidden">No hay horarios disponibles para este día.</p> : <div className="grid min-w-0 max-w-full gap-2 sm:grid-cols-2 xl:grid-cols-3">
                       {slots.map((slot) => {
                         const key = `${slot.horarioActividadId}-${slot.horaInicio}`,
                           checked = form.horariosSeleccionados.some(
@@ -726,21 +749,22 @@ export function EnrollmentForm({
                         return (
                           <label
                             key={key}
-                            className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${conflict ? "border-red-500 bg-red-50 ring-1 ring-red-200" : checked ? "border-[var(--brand-primary)] bg-[var(--brand-control)]" : "border-[var(--brand-border-soft)] hover:border-[var(--brand-secondary)]"}`}
+                            className={`flex min-w-0 max-w-full cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${mobileReception?"flex-row-reverse items-center justify-between md:flex-row md:items-start md:justify-start":""} ${conflict ? "border-red-500 bg-red-50 ring-1 ring-red-200" : checked ? "border-[var(--brand-primary)] bg-[var(--brand-control)]" : "border-[var(--brand-border-soft)] hover:border-[var(--brand-secondary)]"}`}
                           >
                             <Checkbox
                               checked={checked}
                               disabled={checkingSlotKey !== null}
                               onCheckedChange={() => void toggleSlot(slot)}
-                              className="mt-1"
+                              className={mobileReception?"size-4 shrink-0 rounded-full md:mt-1 md:rounded-[4px]":"mt-1"}
                             />
-                            <span>
+                            <span className="min-w-0 flex-1">
                               <strong
                                 className={`block ${conflict ? "text-red-800" : "text-[var(--brand-primary)]"}`}
                               >
-                                {slot.horaInicio} a {slot.horaFin}
+                                {mobileReception?<span className="md:hidden">{dayLabels[day].label} </span>:null}{slot.horaInicio} a {slot.horaFin}
                               </strong>
-                              <small className="block text-[var(--brand-muted)]">
+                              {mobileReception?<span className="mt-2 grid gap-1 text-[11px] text-[var(--brand-muted)] md:hidden"><small className="flex items-center gap-1"><Clock3 className="size-3.5 shrink-0 text-[var(--brand-secondary)]"/>Duración {toMinutes(slot.horaFin)-toMinutes(slot.horaInicio)} min</small><small className="flex items-center gap-1"><MapPin className="size-3.5 shrink-0 text-[var(--brand-secondary)]"/>{slot.establishment}</small></span>:null}
+                              <small className={mobileReception?"hidden text-[var(--brand-muted)] md:block":"block text-[var(--brand-muted)]"}>
                                 Duración{" "}
                                 {toMinutes(slot.horaFin) -
                                   toMinutes(slot.horaInicio)}{" "}
@@ -758,7 +782,7 @@ export function EnrollmentForm({
                                 </small>
                               ) : (
                                 <small
-                                  className={`mt-1 block font-bold ${cap?.status === "SIN_CUPO" ? "text-red-700" : "text-[var(--brand-secondary)]"}`}
+                                  className={`mt-2 block font-bold ${mobileReception?"whitespace-nowrap text-[10px] md:mt-1 md:whitespace-normal md:text-xs":"mt-1"} ${cap?.status === "SIN_CUPO" ? "text-red-700" : "text-[var(--brand-secondary)]"}`}
                                 >
                                   {cap
                                     ? cap.status === "DISPONIBLE"
@@ -773,10 +797,11 @@ export function EnrollmentForm({
                           </label>
                         );
                       })}
-                    </div>
+                    </div>}
                   </section>
                 );
               })}
+              </div>
               <div
                 style={{
                   marginTop: "20px",
@@ -804,6 +829,11 @@ export function EnrollmentForm({
             <div className="grid gap-2 md:grid-cols-2">
               {sessionsLoading ? (
                 <CatalogLoadingState label="clases disponibles" />
+              ) : sessionsError ? (
+                <div className="col-span-full flex gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-medium text-amber-900">
+                  <AlertCircle className="size-5 shrink-0" />
+                  {sessionsError}
+                </div>
               ) : (
                 sessions.map((s) => (
                   <button
@@ -857,7 +887,8 @@ export function EnrollmentForm({
           no reservará cupo hasta regularizarla.
         </p>
       </AdminFormCard>
-      <Actions saving={saving} disabled={!validScope} backHref={backHref} />
+      </div>
+      <Actions saving={saving} disabled={!validScope} backHref={backHref} mobileReception={mobileReception} />
     </form>
   );
 }
@@ -866,19 +897,23 @@ function Actions({
   saving,
   disabled = false,
   backHref = "/enrollments",
+  editing = false,
+  mobileReception = false,
 }: {
   saving: boolean;
   disabled?: boolean;
   backHref?: string;
+  editing?: boolean;
+  mobileReception?: boolean;
 }) {
   const router = useRouter();
   return (
-    <div className="flex flex-col-reverse gap-3 border-t border-[var(--brand-border)] pt-6 sm:flex-row sm:justify-end">
+    <div className={mobileReception ? "fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom))] z-30 grid grid-cols-[.8fr_1.2fr] gap-3 border-t border-[var(--brand-border)] bg-white px-4 py-3 shadow-[0_-8px_24px_rgba(29,79,54,0.08)] md:static md:z-auto md:flex md:justify-end md:bg-transparent md:px-0 md:py-0 md:pt-6 md:shadow-none" : "flex flex-col-reverse gap-3 border-t border-[var(--brand-border)] pt-6 sm:flex-row sm:justify-end"}>
       <Button
         type="button"
         variant="outline"
         onClick={() => router.push(backHref)}
-        className={adminSecondaryButtonClass}
+        className={`${adminSecondaryButtonClass} ${mobileReception ? "w-full md:w-auto" : ""}`}
       >
         <ArrowLeft />
         Volver
@@ -886,10 +921,10 @@ function Actions({
       <Button
         type="submit"
         disabled={saving || disabled}
-        className={adminPrimaryButtonClass}
+        className={`${adminPrimaryButtonClass} ${mobileReception ? "w-full px-3 md:w-auto md:px-7" : ""}`}
       >
         {saving ? <Loader2 className="animate-spin" /> : <Save />}
-        {saving ? "Guardando..." : "Inscribir ciudadano"}
+        {saving ? "Guardando..." : editing ? "Guardar cambios" : "Inscribir ciudadano"}
       </Button>
     </div>
   );
@@ -942,6 +977,24 @@ function formatScheduleSummary(items: ActivitySchedule[]) {
   return [...groups.entries()]
     .map(([time, days]) => `${days.join(", ")} · ${time}`)
     .join(" | ");
+}
+function formatCompactScheduleSummary(items: ActivitySchedule[]) {
+  if (!items.length) return "Sin días ni horarios configurados";
+  const groups = new Map<string, string[]>();
+  items.forEach((item) => {
+    const time = `${item.startTime} a ${item.endTime}`;
+    const days = groups.get(time) ?? [];
+    if (!days.includes(item.day)) groups.set(time, [...days, item.day]);
+  });
+  return [...groups.entries()].map(([time, days]) => {
+    const ordered = days.slice().sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+    const indexes = ordered.map((day) => dayOrder.indexOf(day));
+    const consecutive = indexes.length > 1 && indexes.every((value, index) => index === 0 || value === indexes[index - 1] + 1);
+    const dayText = consecutive
+      ? `${dayLabels[ordered[0]]?.label.slice(0, 3)}–${dayLabels[ordered[ordered.length - 1]]?.label.slice(0, 3)}`
+      : ordered.map((day) => dayLabels[day]?.label.slice(0, 3) ?? day).join(" · ");
+    return `${dayText} · ${time}`;
+  }).join(" | ");
 }
 function toMinutes(value: string) {
   const [hour, minute] = value.split(":").map(Number);

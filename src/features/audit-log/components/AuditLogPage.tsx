@@ -21,7 +21,7 @@ import {
 } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { cn } from "@/lib/utils";
 import { useAuditLog } from "../hooks/useAuditLog";
-import { AUDIT_ACTIONS, AUDIT_ENTITIES, AUDIT_ORIGINS } from "../types/audit-log.types";
+import { AUDIT_ACTIONS, AUDIT_ENTITIES, AUDIT_ORIGINS, type AuditAction, type AuditEntity, type AuditOrigin } from "../types/audit-log.types";
 import { AuditLogDetail } from "./AuditLogDetail";
 
 const readable = (value: string) => value.replaceAll("_", " ").toLocaleLowerCase("es-AR").replace(/^./, (letter) => letter.toUpperCase());
@@ -34,7 +34,7 @@ export function AuditLogPage() {
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState("");
   const [initialized, setInitialized] = useState(false);
-  const filters = useMemo(() => ({ search: query || undefined, action: action === "all" ? undefined : action as any, entityType: entity === "all" ? undefined : entity as any, origin: origin === "all" ? undefined : origin as any, page, pageSize: CATALOG_PAGE_SIZE }), [query, action, entity, origin, page]);
+  const filters = useMemo(() => ({ search: query || undefined, action: action === "all" ? undefined : action as AuditAction, entityType: entity === "all" ? undefined : entity as AuditEntity, origin: origin === "all" ? undefined : origin as AuditOrigin, page, pageSize: CATALOG_PAGE_SIZE }), [query, action, entity, origin, page]);
   const { items, meta, loading } = useAuditLog(filters);
   const selected = items.find((item) => item.id === selectedId) ?? items[0] ?? null;
   const filtered = Boolean(query || action !== "all" || entity !== "all" || origin !== "all");

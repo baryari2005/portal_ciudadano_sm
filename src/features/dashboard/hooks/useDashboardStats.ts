@@ -54,7 +54,7 @@ export function useDashboardStats() {
         nextHoliday: null,
       },
     });
-  }, [canViewDocuments, loadingDocs, pendingDocs, pathname]);
+  }, [canViewDocuments, loadingDocs, pendingDocs, pathname, router]);
 
   return { stats };
 }

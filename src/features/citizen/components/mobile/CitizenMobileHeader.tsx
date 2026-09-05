@@ -12,14 +12,14 @@ export function CitizenMobileHeader({
   return (
     <header className="col-[1/2] row-[1/2] z-30 bg-[var(--brand-primary)] pt-[env(safe-area-inset-top)] text-white lg:hidden">
       <div className="flex h-20 items-center justify-between gap-3 px-4">
-        <Link href="/citizen" className="flex min-w-0 items-center gap-2.5" aria-label="MÁS San Miguel - Inicio">
+        <Link href="/citizen" className="flex min-w-0 items-center gap-3" aria-label="MÁS San Miguel - Inicio">
           <Image
-            src="/mobile/logo.png"
+            src="/logoentero.png"
             alt=""
-            width={52}
-            height={52}
-            className="size-11 object-contain"
+            width={595}
+            height={364}
             priority
+            className="h-10 w-14 shrink-0 object-contain brightness-0 invert"
           />
           <span className="min-w-0 leading-tight">
             <strong className="block truncate text-sm tracking-wide">MÁS SAN MIGUEL</strong>

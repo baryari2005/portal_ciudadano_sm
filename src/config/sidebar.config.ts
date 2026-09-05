@@ -6,7 +6,6 @@ import {
   School,
   Shapes,
   UsersRound,
-  GraduationCap,
   ClipboardCheck,
   CalendarDays,
   ListChecks,
@@ -179,13 +178,13 @@ export const SIDEBAR_CONFIG: SidebarItemConfig[] = [
     icon: ListChecks,
     permission: { modulo: "attendance", accion: "ver" },
   },
-  {
-    section: "Personal",
-    title: "Profesores",
-    href: "/teachers",
-    icon: GraduationCap,
-    permission: { modulo: "profesores", accion: "ver" },
-  },
+  // {
+  //   section: "Personal",
+  //   title: "Profesores",
+  //   href: "/teachers",
+  //   icon: GraduationCap,
+  //   permission: { modulo: "profesores", accion: "ver" },
+  // },
   
   // {
     //     section: "Gestion Recibos y Vacaciones",

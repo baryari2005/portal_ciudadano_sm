@@ -275,8 +275,8 @@ function CoverageStatusBadge({ active }: { active: boolean }) {
       className={cn(
         "rounded-full px-2.5 py-1 text-xs font-bold",
         active
-          ? "bg-[#DDEBCF] text-[#1D4F36]"
-          : "bg-[#E4E7E5] text-[#5F6F68]",
+          ? "bg-[#DDEBCF] text-[var(--brand-primary)]"
+          : "bg-[#E4E7E5] text-[var(--brand-muted)]",
       )}
     >
       {active ? "Activa" : "Inactiva"}

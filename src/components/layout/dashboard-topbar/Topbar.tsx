@@ -1,6 +1,7 @@
 "use client";
 
 import type { Dispatch, SetStateAction } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Bell, CalendarClock, Menu } from "lucide-react";
 
@@ -41,7 +42,7 @@ export function Topbar({ collapsed, setCollapsed, experience = "administration" 
           type="button"
           variant="ghost"
           size="icon"
-          className="h-[60px] w-[60px] rounded-lg text-white hover:bg-[#ddef8f] hover:text-primary"
+          className="h-[60px] w-[60px] rounded-lg text-white hover:bg-[var(--brand-accent)] hover:text-primary"
           onClick={() => setCollapsed((value) => !value)}
           aria-label={
             collapsed ? "Mostrar iconos y texto" : "Mostrar solo iconos"
@@ -51,11 +52,20 @@ export function Topbar({ collapsed, setCollapsed, experience = "administration" 
           <Menu className="!h-8 !w-8" />
         </Button>
 
+        <Image
+          src="/logoentero.png"
+          alt=""
+          width={595}
+          height={364}
+          priority
+          className="h-10 w-14 shrink-0 object-contain brightness-0 invert md:hidden"
+        />
+
         <div className="min-w-0 py-1">
           <h1 className="truncate text-xl font-bold leading-6 text-white">
             {experience === "reception" ? "Portal de Recepción" : experience === "teacher" ? "Portal del Profesor" : "Portal ciudadano"}
           </h1>
-          <div className="text-base  leading-5 text-[#ddef8f]">
+          <div className="text-base  leading-5 text-[var(--brand-accent)]">
             <p className="truncate">Sistema de Ayuda</p>
             <p className="truncate">y Actividades</p>
           </div>
@@ -68,8 +78,8 @@ export function Topbar({ collapsed, setCollapsed, experience = "administration" 
           <p className="truncate text-sm font-bold text-white">
             Hola, {displayName}
           </p>
-          <div className="mt-0.5 flex items-center justify-end gap-2 text-xs font-semibold text-[#ddef8f]">
-            <CalendarClock className="h-4 w-4 shrink-0 text-[#ddef8f]" />
+          <div className="mt-0.5 flex items-center justify-end gap-2 text-xs font-semibold text-[var(--brand-accent)]">
+            <CalendarClock className="h-4 w-4 shrink-0 text-[var(--brand-accent)]" />
             <span className="whitespace-nowrap">{serverClock.label}</span>
           </div>
         </div>
@@ -81,7 +91,7 @@ export function Topbar({ collapsed, setCollapsed, experience = "administration" 
                 asChild
                 variant="ghost"
                 size="icon"
-                className="relative h-11 w-11 rounded-lg bg-[#e9f3d8] text-primary hover:bg-[#ddef8f] hover:text-primary"
+                className="relative h-11 w-11 rounded-lg bg-[#e9f3d8] text-primary hover:bg-[var(--brand-accent)] hover:text-primary"
               >
                 <Link
                   href={experience === "reception" ? "/reception/notifications" : experience === "teacher" ? "/teacher/notifications" : "/notifications"}
@@ -93,7 +103,7 @@ export function Topbar({ collapsed, setCollapsed, experience = "administration" 
                 >
                   <Bell className="h-5 w-5" />
                   {totalActions > 0 ? (
-                    <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-primary bg-[#DDEF8F] px-1 text-[11px] font-extrabold leading-none text-primary">
+                    <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-primary bg-[var(--brand-accent)] px-1 text-[11px] font-extrabold leading-none text-primary">
                       {totalActions > 9 ? "9+" : totalActions}
                     </span>
                   ) : null}
@@ -102,10 +112,10 @@ export function Topbar({ collapsed, setCollapsed, experience = "administration" 
             </TooltipTrigger>
             <TooltipContent
               align="end"
-              className="rounded-lg border border-[#C9D9C3] bg-white px-3 py-2 text-[#173C2A] shadow-lg"
+              className="rounded-lg border border-[var(--brand-border)] bg-white px-3 py-2 text-[var(--brand-ink)] shadow-lg"
             >
               <div className="grid gap-1">
-                <p className="text-xs font-extrabold uppercase tracking-normal text-[#003A22]">
+                <p className="text-xs font-extrabold uppercase tracking-normal text-[var(--brand-heading)]">
                   Notificaciones
                 </p>
                 {notificationItems.length > 0 ? (

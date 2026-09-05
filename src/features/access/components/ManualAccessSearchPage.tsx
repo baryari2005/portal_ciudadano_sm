@@ -31,7 +31,7 @@ export function ManualAccessSearchPage() {
     trimmedQuery.length >= 2 && !loading && results.length === 0;
 
   return (
-    <div className="grid h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_auto_minmax(0,1fr)] gap-6 overflow-hidden bg-[#F7FBF5] p-8">
+    <div className="grid h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_auto_minmax(0,1fr)] gap-6 overflow-hidden bg-[var(--brand-page)] p-8">
       <AccessPageHeader
         title="Busqueda manual"
         description="Busca una persona por DNI, nombre o apellido para verificar su identidad."
@@ -40,13 +40,13 @@ export function ManualAccessSearchPage() {
       <ManualUserSearchInput value={query} onChange={setQuery} />
 
       <section className="grid min-h-0 gap-8 overflow-hidden xl:grid-cols-[1.35fr_1fr]">
-        <div className="min-h-0 overflow-y-auto rounded-[24px] border border-[#DDE8D7] bg-white p-5 shadow-sm">
+        <div className="min-h-0 overflow-y-auto rounded-[24px] border border-[var(--brand-border-soft)] bg-white p-5 shadow-sm">
           {loading ? (
             <div className="grid gap-4">
               {Array.from({ length: 4 }).map((_, index) => (
                 <div
                   key={index}
-                  className="h-[104px] animate-pulse rounded-[20px] bg-[#EEF6E9]"
+                  className="h-[104px] animate-pulse rounded-[20px] bg-[var(--brand-panel)]"
                 />
               ))}
             </div>
@@ -59,7 +59,7 @@ export function ManualAccessSearchPage() {
           ) : null}
 
           {!loading && showEmpty ? (
-            <div className="flex min-h-[280px] items-center justify-center rounded-[20px] bg-[#EEF6E9] p-8 text-center font-semibold text-[#5F6F68]">
+            <div className="flex min-h-[280px] items-center justify-center rounded-[20px] bg-[var(--brand-panel)] p-8 text-center font-semibold text-[var(--brand-muted)]">
               No se encontraron personas con ese criterio.
             </div>
           ) : null}
@@ -78,7 +78,7 @@ export function ManualAccessSearchPage() {
           ) : null}
 
           {!loading && !error && trimmedQuery.length < 2 ? (
-            <div className="flex min-h-[280px] items-center justify-center rounded-[20px] bg-[#EEF6E9] p-8 text-center font-semibold text-[#5F6F68]">
+            <div className="flex min-h-[280px] items-center justify-center rounded-[20px] bg-[var(--brand-panel)] p-8 text-center font-semibold text-[var(--brand-muted)]">
               Ingresa al menos dos caracteres para iniciar la busqueda.
             </div>
           ) : null}

@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { listEstablecimientosClient } from "@/features/establecimientos/services/establecimientos.service";
+import { listActiveEstablecimientosClient } from "@/features/establecimientos/services/establecimientos.service";
 import type { Establecimiento } from "@/features/establecimientos/types/establecimiento.types";
 
 import { actividadSchema } from "../schemas/actividad.schema";
@@ -134,7 +134,7 @@ export function ActividadForm({ onLoadingChange, mode = "create", initialValues 
     async function loadControls() {
       setLoadingControls(true);
       try {
-        const data = await listEstablecimientosClient();
+        const data = await listActiveEstablecimientosClient();
         if (!active) return;
         setEstablishments(data);
         setForm((current) => ({
@@ -247,27 +247,27 @@ export function ActividadForm({ onLoadingChange, mode = "create", initialValues 
   );
 
   return (
-    <form onSubmit={submit} className="w-full text-[#173C2A]" noValidate>
-      <div className="rounded-3xl border border-[#819B56]/20 bg-white/80 p-5 shadow-sm sm:p-6 lg:p-8">
-        <div className="mb-6 border-b border-[#C9D9C3] pb-5">
-          <h2 className="text-lg font-extrabold text-[#003A22]">Datos de la actividad</h2>
-          <p className="mt-1 text-sm font-medium text-[#5F6F68]">Información general de la propuesta municipal.</p>
+    <form onSubmit={submit} className="w-full text-[var(--brand-ink)]" noValidate>
+      <div className="rounded-3xl border border-[var(--brand-secondary)]/20 bg-white/80 p-5 shadow-sm sm:p-6 lg:p-8">
+        <div className="mb-6 border-b border-[var(--brand-border)] pb-5">
+          <h2 className="text-lg font-extrabold text-[var(--brand-heading)]">Datos de la actividad</h2>
+          <p className="mt-1 text-sm font-medium text-[var(--brand-muted)]">Información general de la propuesta municipal.</p>
         </div>
         <div className="space-y-6">
-          <Field label="Nombre" error={errors.nombre} required><Input value={form.nombre} onChange={(event) => update({ nombre: event.target.value })} placeholder="Ej. Yoga" className="h-11 rounded-xl border-[#C9D9C3] bg-[#F7FBF5]" /></Field>
+          <Field label="Nombre" error={errors.nombre} required><Input value={form.nombre} onChange={(event) => update({ nombre: event.target.value })} placeholder="Ej. Yoga" className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)]" /></Field>
           <ActivityGeneralDetailsFields value={form} onChange={update} />
           <ActivityClassificationFields categories={categoryOptions} publics={publicOptions} selectedCategoryId={form.categoriaActividadId ?? null} selectedPublicIds={form.publicosObjetivoIds} selectedPublicsError={errors.publicosObjetivoIds} selectedLevel={form.nivel ?? null} loading={catalogs.loading} error={catalogs.error} onRetry={() => void catalogs.refresh()} onCategoryChange={(categoriaActividadId) => update({ categoriaActividadId })} onPublicsChange={(publicosObjetivoIds) => update({ publicosObjetivoIds })} onLevelChange={(nivel) => update({ nivel })} />
           <ActivityRequirementsFields value={form.requirements} onChange={(requirements) => update({ requirements })} />
           <ActivityEnrollmentModeFields value={form} onChange={update} />
-          <div className="space-y-2"><Label className="font-extrabold">Estado</Label><Select value={form.estado} onValueChange={(estado) => update({ estado: estado as ActividadPayload["estado"] })}><SelectTrigger className="h-11 rounded-xl border-[#C9D9C3] bg-[#F7FBF5]"><SelectValue /></SelectTrigger><SelectContent>{stateOptions.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select></div>
-          <div className="rounded-2xl border border-dashed border-[#C9D9C3] bg-[#F7FBF5] p-4">
-            <div className="flex items-start gap-3"><Building2 className="mt-0.5 size-5 text-[#819B56]" /><div className="flex-1"><p className="font-extrabold text-[#1D4F36]">Compatibilidad heredada</p><p className="mt-1 text-xs text-[#315644]/75">El establecimiento se conserva temporalmente hasta implementar HorarioActividad. No representa la sede definitiva de la propuesta.</p><Select value={form.establecimientoId} onValueChange={(establecimientoId) => update({ establecimientoId })}><SelectTrigger className="mt-3 h-11 rounded-xl border-[#C9D9C3] bg-white"><SelectValue placeholder="Seleccionar establecimiento" /></SelectTrigger><SelectContent>{establishments.map((item) => <SelectItem key={item.id} value={item.id}>{item.nombre}</SelectItem>)}</SelectContent></Select>{errors.establecimientoId ? <p className="mt-1 text-xs text-red-700">{errors.establecimientoId}</p> : null}</div></div>
+          <div className="space-y-2"><Label className="font-extrabold">Estado</Label><Select value={form.estado} onValueChange={(estado) => update({ estado: estado as ActividadPayload["estado"] })}><SelectTrigger className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)]"><SelectValue /></SelectTrigger><SelectContent>{stateOptions.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select></div>
+          <div className="rounded-2xl border border-dashed border-[var(--brand-border)] bg-[var(--brand-page)] p-4">
+            <div className="flex items-start gap-3"><Building2 className="mt-0.5 size-5 text-[var(--brand-secondary)]" /><div className="flex-1"><p className="font-extrabold text-[var(--brand-primary)]">Compatibilidad heredada</p><p className="mt-1 text-xs text-[var(--brand-text)]/75">El establecimiento se conserva temporalmente hasta implementar HorarioActividad. No representa la sede definitiva de la propuesta.</p><Select value={form.establecimientoId} onValueChange={(establecimientoId) => update({ establecimientoId })}><SelectTrigger className="mt-3 h-11 rounded-xl border-[var(--brand-border)] bg-white"><SelectValue placeholder="Seleccionar establecimiento" /></SelectTrigger><SelectContent>{establishments.map((item) => <SelectItem key={item.id} value={item.id}>{item.nombre}</SelectItem>)}</SelectContent></Select>{errors.establecimientoId ? <p className="mt-1 text-xs text-red-700">{errors.establecimientoId}</p> : null}</div></div>
           </div>
         </div>
       </div>
       <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button type="button" variant="outline" disabled={submitting} onClick={() => router.push("/activities")} className="h-12 w-full rounded-xl border-[#C9D9C3] bg-[#F7FBF5] px-8 font-bold sm:w-auto"><ArrowLeft /> Volver</Button>
-        <Button type="submit" disabled={submitting} className="h-12 w-full rounded-xl bg-[#1D4F36] px-8 font-bold text-white hover:bg-[#143A27] sm:w-auto">{submitting ? <Loader2 className="animate-spin" /> : <Save />}{submitting ? "Guardando..." : mode === "edit" ? "Guardar cambios" : "Crear actividad"}</Button>
+        <Button type="button" variant="outline" disabled={submitting} onClick={() => router.push("/activities")} className="h-12 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] px-8 font-bold sm:w-auto"><ArrowLeft /> Volver</Button>
+        <Button type="submit" disabled={submitting} className="h-12 w-full rounded-xl bg-[var(--brand-primary)] px-8 font-bold text-white hover:bg-[var(--brand-primary-hover)] sm:w-auto">{submitting ? <Loader2 className="animate-spin" /> : <Save />}{submitting ? "Guardando..." : mode === "edit" ? "Guardar cambios" : "Crear actividad"}</Button>
       </div>
     </form>
   );

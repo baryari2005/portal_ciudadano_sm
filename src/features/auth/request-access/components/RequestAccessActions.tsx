@@ -18,7 +18,7 @@ export function RequestAccessActions({
         asChild
         type="button"
         variant="outline"
-        className="h-12 w-full justify-center gap-3 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] px-8 text-base font-bold text-[#173C2A] shadow-sm hover:bg-[#EEF6E9] sm:w-auto"
+        className="h-12 w-full justify-center gap-3 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] px-8 text-base font-bold text-[var(--brand-ink)] shadow-sm hover:bg-[var(--brand-panel)] sm:w-auto"
       >
         <Link href="/login">
           <ArrowLeft className="size-5" aria-hidden="true" />
@@ -29,7 +29,7 @@ export function RequestAccessActions({
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="h-12 w-full justify-center gap-3 rounded-xl bg-[#014D31] px-8 text-base font-bold text-white shadow-sm hover:bg-[#003A22] sm:w-auto"
+        className="h-12 w-full justify-center gap-3 rounded-xl bg-[#014D31] px-8 text-base font-bold text-white shadow-sm hover:bg-[var(--brand-heading)] sm:w-auto"
       >
         {isSubmitting ? (
           <>

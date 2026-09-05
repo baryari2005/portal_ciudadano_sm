@@ -2,7 +2,7 @@
 
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarDays, HeartPulse, IdCard, KeyRound, Mail, MapPin, Pencil, Phone, ShieldPlus, UserRound } from "lucide-react";
+import { CakeSlice, CalendarDays, HeartPulse, IdCard, KeyRound, Mail, MapPin, Pencil, Phone, ShieldPlus, UserRound } from "lucide-react";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
@@ -29,13 +29,16 @@ export type CitizenMobileProfileData = {
   coberturaMedica?: { nombre: string; tipo: string } | null;
 };
 
-export function CitizenMobileProfile({ data, onEdit, onChangePassword }: { data: CitizenMobileProfileData; onEdit: () => void; onChangePassword: () => void }) {
+export function CitizenMobileProfile({ data, onEdit, onChangePassword, experience = "citizen" }: { data: CitizenMobileProfileData; onEdit: () => void; onChangePassword: () => void; experience?: "citizen" | "teacher" }) {
   const fullName = [data.nombre, data.apellido].filter(Boolean).join(" ") || "Ciudadano";
   const address = [data.domicilio, data.localidad, data.provincia, data.codigoPostal].filter(Boolean).join(", ");
   const birthDate = data.fechaNacimiento ? format(new Date(`${String(data.fechaNacimiento).slice(0, 10)}T12:00:00`), "d 'de' MMMM 'de' yyyy", { locale: es }) : null;
+  const age = data.fechaNacimiento ? Math.max(0, new Date(Date.now() - new Date(`${String(data.fechaNacimiento).slice(0, 10)}T12:00:00`).getTime()).getUTCFullYear() - 1970) : null;
   const avatar = data.avatarUrl || data.fotoPerfilUrl;
+  const mobileOnlyClass = experience === "teacher" ? "md:hidden" : "lg:hidden";
+  const navigationHeight = experience === "teacher" ? "calc(72px + env(safe-area-inset-bottom))" : "var(--citizen-mobile-nav-h)";
 
-  return <main className="min-h-[calc(100dvh-var(--topbar-h)-48px)] bg-[var(--brand-page)] pb-[calc(var(--citizen-mobile-nav-h)+104px)] lg:hidden">
+  return <main className={`min-h-full bg-[var(--brand-page)] pb-[calc(var(--mobile-profile-nav-h)+104px)] ${mobileOnlyClass}`} style={{ "--mobile-profile-nav-h": navigationHeight } as React.CSSProperties}>
     <header className="relative overflow-hidden bg-gradient-to-br from-[#1D4F36] via-[#0D6541] to-[#073E2C] px-5 pb-20 pt-7 text-white">
       <div className="absolute -right-14 top-3 size-48 rounded-full bg-[#819B56]/20" />
       <div className="absolute -right-2 bottom-[-74px] h-40 w-72 rotate-[-12deg] rounded-[50%] bg-emerald-300/10" />
@@ -57,6 +60,7 @@ export function CitizenMobileProfile({ data, onEdit, onChangePassword }: { data:
           <ProfileValue icon={UserRound} label="Apellidos" value={data.apellido} />
           <ProfileValue icon={IdCard} label="DNI" value={data.documento} />
           <ProfileValue icon={CalendarDays} label="Fecha de nacimiento" value={birthDate} />
+          {experience === "teacher" ? <ProfileValue icon={CakeSlice} label="Edad" value={age === null ? null : `${age} años`} /> : null}
           <ProfileValue icon={UserRound} label="Género" value={formatEnum(data.genero)} />
           <ProfileValue icon={IdCard} label="Nacionalidad" value={formatEnum(data.nacionalidad)} />
         </div>
@@ -69,7 +73,7 @@ export function CitizenMobileProfile({ data, onEdit, onChangePassword }: { data:
       <ProfileRow icon={HeartPulse} title="Cobertura médica" lines={[data.coberturaMedica?.nombre || "Sin informar", data.numeroAfiliado ? `Afiliado N.º ${data.numeroAfiliado}` : ""]} />
     </div>
 
-    <footer className="fixed inset-x-0 bottom-[var(--citizen-mobile-nav-h)] z-30 grid grid-cols-2 gap-2 border-t border-[var(--brand-border-soft)] bg-[#F9FAF5]/95 p-3 shadow-[0_-8px_24px_rgba(29,79,54,0.10)] backdrop-blur">
+    <footer className="fixed inset-x-0 bottom-[var(--mobile-profile-nav-h)] z-30 grid grid-cols-2 gap-2 border-t border-[var(--brand-border-soft)] bg-[#F9FAF5]/95 p-3 shadow-[0_-8px_24px_rgba(29,79,54,0.10)] backdrop-blur">
       <Button type="button" variant="outline" onClick={onChangePassword} className="h-8 rounded-lg border-[var(--brand-primary)] bg-transparent px-2 text-xs font-bold text-[var(--brand-primary)]"><KeyRound className="size-3" />Contraseña</Button>
       <Button type="button" onClick={onEdit} className="h-8 rounded-lg bg-[var(--brand-primary)] px-2 text-xs font-bold hover:bg-[var(--brand-primary-hover)]"><Pencil className="size-3" />Editar perfil</Button>
     </footer>

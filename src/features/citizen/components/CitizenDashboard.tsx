@@ -20,11 +20,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { CatalogErrorState, CatalogLoadingState } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { useCitizenData } from "./CitizenPrimitives";
+import { CitizenMobileDashboard } from "./mobile/CitizenMobileDashboard";
 
 export type DashboardData = {
   user: { firstName: string | null };
   counts: { confirmedEnrollments: number; waitlistEnrollments: number; upcomingSessions: number; attendedSessions: number };
-  nextSession: { id: string; date: string; startTime: string; activity: { name: string; imageUrl: string | null }; establishment: { name: string } } | null;
+  nextSession: { id: string; date: string; startTime: string; activity: { name: string; imageUrl?: string | null }; establishment: { name: string } } | null;
   documentation: { pendingEnrollments: number; observedEnrollments: number; underReviewEnrollments: number; completedEnrollments: number; priorityEnrollmentId: string | null };
   notifications: { unreadCount: number; latest: Array<{ id: string; type: string; title: string; message: string; actionUrl: string | null; actionLabel: string | null }> };
 };
@@ -40,7 +41,9 @@ export function CitizenDashboard() {
   const news = data.notifications.latest.filter((item) => !["DOCUMENTO_APROBADO", "DOCUMENTO_RECHAZADO"].includes(item.type) || !attentionCount).slice(0, 3);
 
   return (
-    <main className="min-h-full bg-[#F7FBF5] p-4 sm:p-6 lg:p-8">
+    <main className="min-h-full bg-[var(--brand-page)] lg:p-8">
+      <CitizenMobileDashboard data={data} />
+      <div className="hidden lg:block">
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Metric icon={ClipboardCheck} label="Inscripciones confirmadas" value={data.counts.confirmedEnrollments} href="/citizen/enrollments" />
         <Metric icon={UsersRound} label="Lista de espera" value={data.counts.waitlistEnrollments} href="/citizen/enrollments" />
@@ -52,9 +55,9 @@ export function CitizenDashboard() {
         <Panel title="Próxima clase" icon={CalendarCheck2}>
           {data.nextSession ? (
             <Link href="/citizen/schedule" className="group grid gap-4 rounded-2xl bg-[#F1F5EC] p-4 transition hover:bg-[#E7EFE1] sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
-              <div className="grid size-12 place-items-center rounded-xl bg-[#1D4F36] text-white"><CalendarClock className="size-6" /></div>
-              <div><p className="font-extrabold text-[#173C2A]">{data.nextSession.activity.name}</p><p className="mt-1 text-sm text-[#5F6F68]">{data.nextSession.date} · {data.nextSession.startTime}</p><p className="text-sm text-[#315644]">{data.nextSession.establishment.name}</p></div>
-              <ChevronRight className="size-5 text-[#819B56] transition group-hover:translate-x-1" />
+              <div className="grid size-12 place-items-center rounded-xl bg-[var(--brand-primary)] text-white"><CalendarClock className="size-6" /></div>
+              <div><p className="font-extrabold text-[var(--brand-ink)]">{data.nextSession.activity.name}</p><p className="mt-1 text-sm text-[var(--brand-muted)]">{data.nextSession.date} · {data.nextSession.startTime}</p><p className="text-sm text-[var(--brand-text)]">{data.nextSession.establishment.name}</p></div>
+              <ChevronRight className="size-5 text-[var(--brand-secondary)] transition group-hover:translate-x-1" />
             </Link>
           ) : (
             <EmptyMessage title="No tenés clases próximas" description="Explorá las actividades disponibles para encontrar una propuesta." action="Explorar actividades" href="/citizen/activities" />
@@ -66,17 +69,17 @@ export function CitizenDashboard() {
             <div className="grid gap-3">
               {observed ? <AttentionItem icon={AlertTriangle} label="Documentación observada" value={observed} tone="danger" /> : null}
               {pending ? <AttentionItem icon={CircleDashed} label="Documentación pendiente" value={pending} tone="warning" /> : null}
-              <Button asChild className="mt-1 h-11 rounded-xl bg-[#1D4F36] font-bold hover:bg-[#143A27]"><Link href="/citizen/documents">Revisar mis documentos</Link></Button>
+              <Button asChild className="mt-1 h-11 rounded-xl bg-[var(--brand-primary)] font-bold hover:bg-[var(--brand-primary-hover)]"><Link href="/citizen/documents">Revisar mis documentos</Link></Button>
             </div>
           ) : (
-            <div className="rounded-2xl bg-[#EEF6E9] p-5 text-center"><CheckCircle2 className="mx-auto size-9 text-[#1D4F36]" /><p className="mt-2 font-extrabold text-[#1D4F36]">Todo al día</p><p className="mt-1 text-sm text-[#5F6F68]">No tenés acciones pendientes.</p></div>
+            <div className="rounded-2xl bg-[var(--brand-panel)] p-5 text-center"><CheckCircle2 className="mx-auto size-9 text-[var(--brand-primary)]" /><p className="mt-2 font-extrabold text-[var(--brand-primary)]">Todo al día</p><p className="mt-1 text-sm text-[var(--brand-muted)]">No tenés acciones pendientes.</p></div>
           )}
         </Panel>
       </section>
 
       <section className="mt-6 grid gap-5 xl:grid-cols-[1fr_.8fr]">
-        <Panel title="Novedades" icon={Bell} action={<Button asChild variant="link" className="h-auto p-0 font-bold text-[#1D4F36]"><Link href="/citizen/notifications">Ver todas</Link></Button>}>
-          {news.length ? <div className="grid gap-2">{news.map((item) => <Link key={item.id} href={item.actionUrl || "/citizen/notifications"} className="group flex items-center justify-between gap-3 rounded-xl border border-[#DDE8D7] p-3 transition hover:bg-[#F1F5EC]"><span className="min-w-0"><span className="block truncate font-bold text-[#173C2A]">{item.title}</span><span className="line-clamp-1 text-sm text-[#5F6F68]">{item.message}</span></span><ChevronRight className="size-5 shrink-0 text-[#819B56]" /></Link>)}</div> : <p className="rounded-xl bg-[#F1F5EC] p-4 text-sm text-[#5F6F68]">No tenés novedades recientes.</p>}
+        <Panel title="Novedades" icon={Bell} action={<Button asChild variant="link" className="h-auto p-0 font-bold text-[var(--brand-primary)]"><Link href="/citizen/notifications">Ver todas</Link></Button>}>
+          {news.length ? <div className="grid gap-2">{news.map((item) => <Link key={item.id} href={item.actionUrl || "/citizen/notifications"} className="group flex items-center justify-between gap-3 rounded-xl border border-[var(--brand-border-soft)] p-3 transition hover:bg-[#F1F5EC]"><span className="min-w-0"><span className="block truncate font-bold text-[var(--brand-ink)]">{item.title}</span><span className="line-clamp-1 text-sm text-[var(--brand-muted)]">{item.message}</span></span><ChevronRight className="size-5 shrink-0 text-[var(--brand-secondary)]" /></Link>)}</div> : <p className="rounded-xl bg-[#F1F5EC] p-4 text-sm text-[var(--brand-muted)]">No tenés novedades recientes.</p>}
         </Panel>
 
         <Panel title="Accesos rápidos" icon={QrCode}>
@@ -87,16 +90,17 @@ export function CitizenDashboard() {
           </div>
         </Panel>
       </section>
+      </div>
     </main>
   );
 }
 
 function Metric({ icon: Icon, label, value, href }: { icon: LucideIcon; label: string; value: number; href: string }) {
-  return <Link href={href} className="group rounded-2xl border border-[#DDE8D7] bg-white p-5 transition hover:border-[#819B56] hover:shadow-sm"><div className="flex items-start justify-between gap-4"><div><p className="text-3xl font-extrabold text-[#1D4F36]">{value}</p><p className="mt-1 font-bold text-[#315644]">{label}</p><p className="mt-1 text-xs text-[#819B56]">Estado actual</p></div><span className="grid size-11 place-items-center rounded-xl bg-[#EEF6E9] text-[#1D4F36] transition group-hover:bg-[#DDEED2]"><Icon className="size-5" /></span></div></Link>;
+  return <Link href={href} className="group rounded-2xl border border-[var(--brand-border-soft)] bg-white p-5 transition hover:border-[var(--brand-secondary)] hover:shadow-sm"><div className="flex items-start justify-between gap-4"><div><p className="text-3xl font-extrabold text-[var(--brand-primary)]">{value}</p><p className="mt-1 font-bold text-[var(--brand-text)]">{label}</p><p className="mt-1 text-xs text-[var(--brand-secondary)]">Estado actual</p></div><span className="grid size-11 place-items-center rounded-xl bg-[var(--brand-panel)] text-[var(--brand-primary)] transition group-hover:bg-[var(--brand-highlight)]"><Icon className="size-5" /></span></div></Link>;
 }
 
 function Panel({ title, icon: Icon, action, accent, children }: { title: string; icon: LucideIcon; action?: React.ReactNode; accent?: boolean; children: React.ReactNode }) {
-  return <section className={`rounded-3xl border p-6 ${accent ? "border-amber-200 bg-amber-50/40" : "border-[#DDE8D7] bg-white"}`}><div className="mb-4 flex items-center justify-between gap-3"><h2 className="flex items-center gap-2 font-extrabold text-[#1D4F36]"><Icon className="size-5" />{title}</h2>{action}</div>{children}</section>;
+  return <section className={`rounded-3xl border p-6 ${accent ? "border-amber-200 bg-amber-50/40" : "border-[var(--brand-border-soft)] bg-white"}`}><div className="mb-4 flex items-center justify-between gap-3"><h2 className="flex items-center gap-2 font-extrabold text-[var(--brand-primary)]"><Icon className="size-5" />{title}</h2>{action}</div>{children}</section>;
 }
 
 function AttentionItem({ icon: Icon, label, value, tone }: { icon: LucideIcon; label: string; value: number; tone: "danger" | "warning" }) {
@@ -104,9 +108,9 @@ function AttentionItem({ icon: Icon, label, value, tone }: { icon: LucideIcon; l
 }
 
 function QuickLink({ icon: Icon, label, href }: { icon: LucideIcon; label: string; href: string }) {
-  return <Link href={href} className="flex items-center justify-between rounded-xl border border-[#DDE8D7] p-3 font-bold text-[#173C2A] transition hover:bg-[#F1F5EC]"><span className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-lg bg-[#EEF6E9] text-[#1D4F36]"><Icon className="size-4" /></span>{label}</span><ChevronRight className="size-4 text-[#819B56]" /></Link>;
+  return <Link href={href} className="flex items-center justify-between rounded-xl border border-[var(--brand-border-soft)] p-3 font-bold text-[var(--brand-ink)] transition hover:bg-[#F1F5EC]"><span className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-lg bg-[var(--brand-panel)] text-[var(--brand-primary)]"><Icon className="size-4" /></span>{label}</span><ChevronRight className="size-4 text-[var(--brand-secondary)]" /></Link>;
 }
 
 function EmptyMessage({ title, description, action, href }: { title: string; description: string; action: string; href: string }) {
-  return <div className="rounded-2xl bg-[#F1F5EC] p-5 text-center"><p className="font-extrabold text-[#1D4F36]">{title}</p><p className="mt-1 text-sm text-[#5F6F68]">{description}</p><Button asChild variant="outline" className="mt-4 rounded-xl border-[#819B56] bg-white font-bold text-[#1D4F36]"><Link href={href}>{action}</Link></Button></div>;
+  return <div className="rounded-2xl bg-[#F1F5EC] p-5 text-center"><p className="font-extrabold text-[var(--brand-primary)]">{title}</p><p className="mt-1 text-sm text-[var(--brand-muted)]">{description}</p><Button asChild variant="outline" className="mt-4 rounded-xl border-[var(--brand-secondary)] bg-white font-bold text-[var(--brand-primary)]"><Link href={href}>{action}</Link></Button></div>;
 }

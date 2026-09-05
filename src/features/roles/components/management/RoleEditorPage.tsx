@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axios from "axios";
-import { Code2, FileText, KeyRound, ShieldCheck, Type, Users } from "lucide-react";
+import { Code2, FileText, KeyRound, ShieldCheck, Type } from "lucide-react";
 import { toast } from "sonner";
 
 import { AdminRecordLayout, AdminRecordSectionContent } from "@/components/shared/admin-record-layout";

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     const enrollment = await getEnrollment((await params).id);
     if (!enrollment) return NextResponse.json({ message: "Inscripción no encontrada." }, { status: 404 });
     const selections = parsed.data.selections.map((item) => ({ horarioActividadId: item.activityScheduleId, horaInicio: item.startTime, horaFin: item.endTime }));
-    const data = await getEnrollmentSlotAvailability(selections, enrollment.user.id, enrollment.activitySchedule.activity.id);
+    const data = await getEnrollmentSlotAvailability(selections, enrollment.user.id, enrollment.activitySchedule.activity.id, enrollment.id);
     return NextResponse.json({ data });
   } catch (error) {
     return mapApiRouteError(error, "No pudimos verificar la disponibilidad del ciudadano.");

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { AdminDetailActions, AdminDetailHeader, AdminDetailPanel, AdminListCard } from "@/components/shared/admin-patterns";
+import { AdminDetailActions } from "@/components/shared/admin-patterns";
 import {
   CatalogEmptyState,
   CatalogErrorState,
@@ -81,7 +81,7 @@ export function ProfesoresPage() {
     setPendingStatus(null);
   }
   return (
-    <div className="min-h-[calc(100dvh-var(--topbar-h)-48px)] bg-[#F7FBF5] p-4 sm:p-6 lg:p-8">
+    <div className="min-h-[calc(100dvh-var(--topbar-h)-48px)] bg-[var(--brand-page)] p-4 sm:p-6 lg:p-8">
       <CatalogPageHeader
         icon={GraduationCap}
         title="Profesores y responsables"
@@ -160,7 +160,7 @@ export function ProfesoresPage() {
             <aside className="h-fit overflow-hidden rounded-3xl border border-[var(--brand-border-soft)] bg-[var(--brand-panel)] p-5 text-[var(--brand-ink)] shadow-sm sm:p-7">
               <Button
                 variant="ghost"
-                className="mb-4 -ml-2 text-[#1D4F36] lg:hidden"
+                className="mb-4 -ml-2 text-[var(--brand-primary)] lg:hidden"
                 onClick={() => list.setSelectedId(null)}
               >
                 <ArrowLeft /> Volver al listado
@@ -212,7 +212,7 @@ export function ProfesoresPage() {
                 <AdminDetailActions>
                   {canEdit && (
                     <Button
-                      className="bg-[#1D4F36] hover:bg-[#143A27]"
+                      className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]"
                       onClick={() => router.push(`/teachers/${selected.id}/edit`)}
                     >
                       <Edit3 /> Editar
@@ -238,7 +238,7 @@ export function ProfesoresPage() {
                 </AdminDetailActions>
             </aside>
           ) : (
-            <aside className="hidden h-full min-h-72 items-center justify-center rounded-3xl border border-[#DDE8D7] bg-[#EEF6E9] p-8 text-center text-sm font-semibold text-[#315644]/70 lg:flex">
+            <aside className="hidden h-full min-h-72 items-center justify-center rounded-3xl border border-[var(--brand-border-soft)] bg-[var(--brand-panel)] p-8 text-center text-sm font-semibold text-[var(--brand-text)]/70 lg:flex">
               Seleccioná un profesor para consultar su detalle.
             </aside>
           )}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Normalización diferencial entre borradores y relaciones Prisma legadas. */
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { actividadSchema } from "@/features/actividades/schemas/actividad.schema";

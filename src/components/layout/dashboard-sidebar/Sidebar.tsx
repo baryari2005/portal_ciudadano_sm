@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { HelpCircle } from "lucide-react";
 
 import { Separator } from "@/components/ui/separator";
@@ -40,6 +40,8 @@ const SIDEBAR_SECTION_ORDER = [
 
 export function Sidebar({ collapsed, experience = "administration" }: Props) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const personnelUserRoute = pathname.startsWith("/users/") && searchParams.get("source") === "personnel";
   const user = useAuth((state) => state.user);
   const permissions = useAuth((state) => state.user?.permisos ?? []);
   const { unreadNotificationCount } = usePendingUsersAlert(experience === "administration");
@@ -92,11 +94,14 @@ export function Sidebar({ collapsed, experience = "administration" }: Props) {
   const activeSection = useMemo(
     () =>
       visibleItems.find((item) =>
+        personnelUserRoute
+          ? item.href === "/personnel"
+          :
         item.href === "/" || item.href === "/reception" || item.href === "/teacher"
           ? pathname === item.href
           : pathname === item.href || pathname.startsWith(`${item.href}/`),
       )?.section,
-    [pathname, visibleItems],
+    [pathname, personnelUserRoute, visibleItems],
   );
 
   useEffect(() => {
@@ -105,6 +110,7 @@ export function Sidebar({ collapsed, experience = "administration" }: Props) {
   }, [activeSection]);
 
   function isItemActive(href: string) {
+    if (personnelUserRoute) return href === "/personnel";
     return href === "/" || href === "/reception" || href === "/teacher"
       ? pathname === href
       : pathname === href || pathname.startsWith(`${href}/`);
@@ -122,8 +128,8 @@ export function Sidebar({ collapsed, experience = "administration" }: Props) {
       <div
         className={
           collapsed
-            ? "sticky top-0 z-10 flex h-28 shrink-0 items-center justify-center px-4"
-            : "sticky top-0 z-10 flex h-36 shrink-0 items-center px-7"
+            ? "sticky top-0 z-10 flex h-[var(--topbar-h)] shrink-0 items-center justify-center px-4"
+            : "sticky top-0 z-10 flex h-[var(--topbar-h)] shrink-0 items-center px-7"
         }
       >
         {collapsed ? (
@@ -144,7 +150,7 @@ export function Sidebar({ collapsed, experience = "administration" }: Props) {
               alt="Más San Miguel"
               width={573}
               height={363}
-              className="h-auto w-44 object-contain brightness-0 invert"
+              className="h-auto w-36 object-contain brightness-0 invert"
               priority
             />
           </div>
@@ -214,7 +220,7 @@ export function Sidebar({ collapsed, experience = "administration" }: Props) {
             name={fullName}
             className="h-11 w-11 rounded-lg"
             imageClassName="size-full scale-125 object-cover object-center"
-            fallbackBgClass="rounded-lg bg-[#ddef8f]"
+            fallbackBgClass="rounded-lg bg-[var(--brand-accent)]"
             textClass="font-bold text-primary"
           />
 

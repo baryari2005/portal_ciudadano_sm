@@ -26,7 +26,7 @@ export function MedicalCoverageSelect({ value, onChange, disabled, publicAccess 
 
   return (
     <Select value={value ?? "none"} onValueChange={(item) => onChange(item === "none" ? null : item)} disabled={disabled || loading}>
-      <SelectTrigger className={cn("h-11 w-full rounded-xl border-[#C9D9C3] bg-[#F7FBF5]", triggerClassName)}>
+      <SelectTrigger className={cn("h-11 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)]", triggerClassName)}>
         {loading ? (
           <span className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />

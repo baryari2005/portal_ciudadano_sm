@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Mapeos polimórficos de entregas y filtros Prisma legados. */
 import {
   NotificacionAudiencia,
   NotificacionEstado,

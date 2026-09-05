@@ -25,4 +25,5 @@ export type ExperiencePalettes = Record<ExperienceKey, ExperiencePalette>;
 export type GeneralSettings = {
   pageSize: number;
   loginCollageImages: [string, string, string, string];
+  experiencePalettes: ExperiencePalettes;
 };

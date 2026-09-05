@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/stores/auth";
 
@@ -9,6 +9,14 @@ type Props = {
 };
 
 export function MustChangePasswordGate({ children }: Props) {
+  return (
+    <Suspense fallback={null}>
+      <MustChangePasswordGateContent>{children}</MustChangePasswordGateContent>
+    </Suspense>
+  );
+}
+
+function MustChangePasswordGateContent({ children }: Props) {
   const user = useAuth((state) => state.user);
   const loading = useAuth((state) => state.loading);
   const hasHydrated = useAuth((state) => state.hasHydrated);

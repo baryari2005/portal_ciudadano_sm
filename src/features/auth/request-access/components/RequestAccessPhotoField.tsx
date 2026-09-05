@@ -285,8 +285,8 @@ export function RequestAccessPhotoField({
     <div
       className={`rounded-[18px] border-2 border-dashed p-4 transition-colors ${
         dragging
-          ? "border-[#1D4F36] bg-[#DDEED2]"
-          : "border-[#C9D9C3] bg-[#F7FBF5]"
+          ? "border-[var(--brand-primary)] bg-[var(--brand-highlight)]"
+          : "border-[var(--brand-border)] bg-[var(--brand-page)]"
       }`}
       onDragEnter={(event) => {
         event.preventDefault();
@@ -315,18 +315,18 @@ export function RequestAccessPhotoField({
         }
       >
         <ImageUploadColumns enabled={sidePreview}>
-          <Avatar className={sidePreview ? "order-2 h-24 w-24 justify-self-center rounded-2xl border border-[#DDE8D7] bg-white shadow-sm" : "h-16 w-16 rounded-2xl border border-[#DDE8D7] bg-[#F7FBF5]"}>
+          <Avatar className={sidePreview ? "order-2 h-24 w-24 justify-self-center rounded-2xl border border-[var(--brand-border-soft)] bg-white shadow-sm" : "h-16 w-16 rounded-2xl border border-[var(--brand-border-soft)] bg-[var(--brand-page)]"}>
             <AvatarImage src={previewUrl ?? undefined} alt={title} />
-            <AvatarFallback className="rounded-2xl bg-[#DDEED2] text-lg font-bold text-[#003A22]">
+            <AvatarFallback className="rounded-2xl bg-[var(--brand-highlight)] text-lg font-bold text-[var(--brand-heading)]">
               <Camera className="size-6" aria-hidden="true" />
             </AvatarFallback>
           </Avatar>
 
           <div className={sidePreview ? "order-1 min-w-0" : "min-w-0 flex-1"}>
-            <p className="text-sm font-bold uppercase tracking-normal text-[#1D4F36]">
+            <p className="text-sm font-bold uppercase tracking-normal text-[var(--brand-primary)]">
               {title}
             </p>
-            <p className="mt-1 text-sm text-[#5F6F68]">
+            <p className="mt-1 text-sm text-[var(--brand-muted)]">
               {description}
             </p>
 
@@ -350,7 +350,7 @@ export function RequestAccessPhotoField({
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-bold text-[#173C2A] hover:bg-[#EEF6E9]"
+                className="h-10 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-bold text-[var(--brand-ink)] hover:bg-[var(--brand-panel)]"
                 disabled={disabled || uploading}
                 onClick={() => inputRef.current?.click()}
               >
@@ -367,7 +367,7 @@ export function RequestAccessPhotoField({
               {allowCamera ? <Button
                 type="button"
                 variant="outline"
-                className="h-10 rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-bold text-[#173C2A] hover:bg-[#EEF6E9]"
+                className="h-10 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-bold text-[var(--brand-ink)] hover:bg-[var(--brand-panel)]"
                 disabled={disabled || uploading || cameraOpen}
                 onClick={openCamera}
               >
@@ -378,7 +378,7 @@ export function RequestAccessPhotoField({
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-10 rounded-xl font-bold text-[#5F6F68] hover:bg-red-50 hover:text-red-700"
+                  className="h-10 rounded-xl font-bold text-[var(--brand-muted)] hover:bg-red-50 hover:text-red-700"
                   disabled={disabled || uploading}
                   onClick={clearPhoto}
                 >
@@ -388,10 +388,10 @@ export function RequestAccessPhotoField({
               ) : null}
             </div>
 
-            <p className="mt-3 text-xs font-medium text-[#5F6F68]">
+            <p className="mt-3 text-xs font-medium text-[var(--brand-muted)]">
               JPG/PNG, máximo {MAX_KB}KB. Dimensiones entre {MIN_SIZE}x{MIN_SIZE}px y {MAX_SIDE}x{MAX_SIDE}px; las imágenes más grandes se ajustan automáticamente.
             </p>
-            <p className="mt-1 text-xs font-bold text-[#1D4F36]">
+            <p className="mt-1 text-xs font-bold text-[var(--brand-primary)]">
               {dragging
                 ? "Soltá la imagen para cargarla"
                 : "También podés arrastrar y soltar una imagen en esta tarjeta."}
@@ -404,14 +404,14 @@ export function RequestAccessPhotoField({
             <Button
               type="button"
               variant="outline"
-              className="h-10 rounded-xl border-[#C9D9C3] font-bold text-[#173C2A]"
+              className="h-10 rounded-xl border-[var(--brand-border)] font-bold text-[var(--brand-ink)]"
               onClick={closeCamera}
             >
               Cancelar
             </Button>
             <Button
               type="button"
-              className="h-10 rounded-xl bg-[#003A22] font-bold text-white hover:bg-[#1D4F36]"
+              className="h-10 rounded-xl bg-[var(--brand-heading)] font-bold text-white hover:bg-[var(--brand-primary)]"
               disabled={uploading || !cameraReady}
               onClick={capturePhoto}
             >

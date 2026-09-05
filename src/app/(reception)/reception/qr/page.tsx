@@ -1,5 +1,6 @@
-import { CitizenQrPage } from "@/features/citizen/components/CitizenQrPage";
+import { ReceptionQrPage } from "@/features/reception/components/ReceptionQrPage";
+import { ReceptionMobileHeader } from "@/features/reception/components/mobile/ReceptionMobileHeader";
 
 export default function Page() {
-  return <CitizenQrPage />;
+  return <><ReceptionMobileHeader/><ReceptionQrPage /></>;
 }

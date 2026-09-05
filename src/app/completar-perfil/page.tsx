@@ -5,7 +5,7 @@ export default function CompletarPerfilPage() {
     <main className="min-h-screen bg-[#F5F5F5] px-4 py-10">
       <section className="mx-auto max-w-2xl rounded-lg border bg-white p-6 shadow-sm">
         <div className="mb-6 space-y-2">
-          <h1 className="text-2xl font-bold text-[#003A22]">
+          <h1 className="text-2xl font-bold text-[var(--brand-heading)]">
             Completar perfil
           </h1>
           <p className="text-sm text-muted-foreground">

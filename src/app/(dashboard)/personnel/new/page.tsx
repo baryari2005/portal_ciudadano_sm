@@ -13,7 +13,7 @@ export default function NewPersonnelPage() {
   if (!canCreate) return <AccessDenied403Page />;
 
   return (
-    <div className="min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full overflow-y-auto bg-[#F7FBF5] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:p-8">
+    <div className="min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full overflow-y-auto bg-[var(--brand-page)] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:p-8">
       <UserForm
         mode="create"
         title="Alta de personal"

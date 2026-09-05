@@ -112,7 +112,7 @@ function mapActividad(record: ActivityRecord) {
     estado: record.estado === ActividadEstado.SIN_CUPO || record.estado === ActividadEstado.COMPLETA ? ActividadEstado.ACTIVA : record.estado,
     precio: record.precio?.toFixed(2) ?? null,
     publicosObjetivo: publicosObjetivo.map((link) => link.publicoObjetivo),
-    requirements: requisitos.map((link) => ({ id: link.requisito.id, name: link.requisito.nombre, slug: link.requisito.slug, type: link.requisito.tipo, requiresDocument: link.requisito.requiereDocumento, mandatory: link.obligatorio, obligatoriness: link.requisito.obligatoriedad, suppliedByInstitution: link.requisito.provistoPorInstitucion, requiresConfirmation: link.requisito.requiereConfirmacion, checkAtEntry: link.requisito.controlarAlIngreso, appliesEveryClass: link.requisito.aplicaEnCadaClase, observations: link.observaciones, instructions: link.requisito.instrucciones, order: link.orden, active: link.requisito.activo })),
+    requirements: requisitos.map((link) => ({ id: link.requisito.id, name: link.requisito.nombre, slug: link.requisito.slug, imageUrl: link.requisito.imagenUrl, type: link.requisito.tipo, requiresDocument: link.requisito.requiereDocumento, mandatory: link.obligatorio, obligatoriness: link.requisito.obligatoriedad, suppliedByInstitution: link.requisito.provistoPorInstitucion, requiresConfirmation: link.requisito.requiereConfirmacion, checkAtEntry: link.requisito.controlarAlIngreso, appliesEveryClass: link.requisito.aplicaEnCadaClase, observations: link.observaciones, instructions: link.requisito.instrucciones, order: link.orden, active: link.requisito.activo })),
   };
 }
 

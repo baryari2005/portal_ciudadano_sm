@@ -1,10 +1,5 @@
-import { CitizenNotificationsPage } from "@/features/notifications/components/CitizenNotificationsPage";
+import { ReceptionNotificationsPage } from "@/features/reception/components/ReceptionNotificationsPage";
 
 export default function Page() {
-  return (
-    <CitizenNotificationsPage
-      title="Notificaciones"
-      workspace="reception"
-    />
-  );
+  return <ReceptionNotificationsPage/>;
 }

@@ -33,6 +33,7 @@ export function useUsersManagement(scope: "citizen" | "personnel" = "citizen", c
   const [roles, setRoles] = useState<ManagedRole[]>([]);
   const [rolesLoading, setRolesLoading] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshIndex, setRefreshIndex] = useState(0);
 
@@ -79,10 +80,10 @@ export function useUsersManagement(scope: "citizen" | "personnel" = "citizen", c
 
   useEffect(() => {
     let active = true;
-    const timeout = window.setTimeout(async () => {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
+    const timeout = window.setTimeout(async () => {
       try {
         const response = await listManagedUsers({
           q: query,
@@ -115,6 +116,7 @@ export function useUsersManagement(scope: "citizen" | "personnel" = "citizen", c
       } finally {
         if (active) {
           setLoading(false);
+          setInitialized(true);
         }
       }
     }, 250);
@@ -148,6 +150,7 @@ export function useUsersManagement(scope: "citizen" | "personnel" = "citizen", c
     page,
     setPage,
     loading,
+    initialized,
     error,
     pageSize: CATALOG_PAGE_SIZE,
   };

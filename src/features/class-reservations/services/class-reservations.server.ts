@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { CatalogConflictError, CatalogNotFoundError, CatalogValidationError } from "@/lib/errors/catalog-errors";
-import { createNotification, createNotifications, notifyAdministrators } from "@/features/notifications/services/notifications.server";
+import { createNotifications, notifyAdministrators } from "@/features/notifications/services/notifications.server";
 import { releaseReservationResources, reserveAutomaticResources } from "@/features/resources/services/resource-booking.server";
 
 async function lockedClass(tx: Prisma.TransactionClient, classId: string) {

@@ -20,7 +20,7 @@ export const UserMenuTriggerButton = forwardRef<HTMLButtonElement, Props>(
         size="icon"
         aria-label="Abrir menú de usuario"
         className={cn(
-          "h-11 w-11 rounded-lg bg-[#e9f3d8] p-0 text-primary hover:bg-[#ddef8f] data-[state=open]:bg-[#ddef8f] focus-visible:ring-0 focus-visible:ring-offset-0 cursor-pointer disabled:cursor-not-allowed",
+          "h-11 w-11 rounded-lg bg-[#e9f3d8] p-0 text-primary hover:bg-[var(--brand-accent)] data-[state=open]:bg-[var(--brand-accent)] focus-visible:ring-0 focus-visible:ring-offset-0 cursor-pointer disabled:cursor-not-allowed",
           className,
         )}
         {...props}
@@ -30,7 +30,7 @@ export const UserMenuTriggerButton = forwardRef<HTMLButtonElement, Props>(
           name={fullName}
           className="h-11 w-11 rounded-lg"
           imageClassName="size-full scale-125 object-cover object-center"
-          fallbackBgClass="rounded-lg bg-[#ddef8f]"
+          fallbackBgClass="rounded-lg bg-[var(--brand-accent)]"
           textClass="font-bold text-primary"
         />
       </Button>

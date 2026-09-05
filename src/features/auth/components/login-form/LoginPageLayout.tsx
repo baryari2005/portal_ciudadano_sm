@@ -21,12 +21,28 @@ export function LoginPageLayout({ children, imageSources }: LoginPageLayoutProps
 
   return (
     <div
-      className="grid min-h-screen bg-[var(--auth-background)] lg:grid-cols-2"
+      className="relative grid min-h-[100dvh] overflow-hidden bg-white lg:bg-[var(--auth-background)] lg:grid-cols-2"
       style={authStyle}
     >
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[190px] lg:hidden" aria-hidden="true">
+        <svg className="size-full" viewBox="0 0 440 190" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="mobile-login-header" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#1D4F36" />
+              <stop offset="72%" stopColor="#14543A" />
+              <stop offset="100%" stopColor="#0B6843" />
+            </linearGradient>
+          </defs>
+          <path d="M0 0H440V154C354 130 300 174 197 170C111 168 48 154 0 135V0Z" fill="url(#mobile-login-header)" />
+        </svg>
+      </div>
+      <div className="pointer-events-none absolute left-[-12px] top-[92px] z-[1] h-16 w-12 rotate-[-22deg] rounded-[80%_15%_80%_15%] bg-[var(--brand-secondary)]/12 lg:hidden" aria-hidden="true" />
+      <div className="pointer-events-none absolute left-7 top-[110px] z-[1] h-12 w-8 rotate-[30deg] rounded-[80%_15%_80%_15%] bg-white/[0.045] lg:hidden" aria-hidden="true" />
       <LoginImagePanel imageSources={imageSources} />
-      <main className="flex min-h-screen items-center justify-center px-6 py-10 sm:px-10 lg:px-16 xl:px-24">
-        <div className="w-full max-w-[420px]">{children}</div>
+      <main className="relative z-10 flex min-h-[100dvh] items-start justify-center px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-10 lg:min-h-screen lg:items-center lg:px-16 lg:py-10 xl:px-24">
+        <div className="w-full max-w-[440px] lg:max-w-[420px]">
+          {children}
+        </div>
       </main>
     </div>
   );

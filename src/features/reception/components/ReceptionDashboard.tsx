@@ -8,21 +8,24 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CatalogEmptyState, CatalogErrorState, CatalogLoadingState, CatalogPageHeader } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { useAccessEstablishment } from "@/features/access/hooks/useAccessEstablishment";
+import { usePendingUsersAlert } from "@/components/layout/dashboard-topbar/usePendingUsersAlert";
 import { useReceptionDashboard } from "../hooks/useReceptionDashboard";
+import { ReceptionMobileDashboard } from "./mobile/ReceptionMobileDashboard";
 
 const originLabels: Record<string, string> = { QR: "QR", QR_DIGITAL: "QR digital", CARNET_FISICO: "Carnet físico", MANUAL: "Búsqueda manual" };
 
 export function ReceptionDashboard() {
   const establishment = useAccessEstablishment();
   const dashboard = useReceptionDashboard(establishment.establishmentId);
+  const alerts = usePendingUsersAlert(true);
   if (establishment.loading) return <CatalogLoadingState label="experiencia de recepción" fullPage />;
 
-  return <AdminPageShell>
+  return <><div className="md:hidden">{dashboard.loading||alerts.loading?<CatalogLoadingState label="Dashboard de Recepción" fullPage/>:<ReceptionMobileDashboard data={dashboard.data} loading={false} establishment={establishment.selected} pendingRequests={alerts.pendingCount} unreadNotifications={alerts.unreadNotificationCount}/>}</div><div className="hidden md:block"><AdminPageShell>
     <CatalogPageHeader icon={ShieldCheck} title="Dashboard de Recepción" description="Resumen operativo del establecimiento y las tareas de atención del día." total={dashboard.data?.metrics.totalEntries ?? 0} />
     <Card className="mt-6 rounded-2xl border-[var(--brand-border-soft)] bg-white shadow-sm"><CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-end sm:justify-between"><div className="flex min-w-0 items-start gap-3"><span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[var(--brand-border-soft)] text-[var(--brand-primary)]"><Building2 className="size-5" /></span><div><h2 className="font-extrabold text-[var(--brand-primary)]">Establecimiento de trabajo</h2><p className="mt-1 text-sm text-[var(--brand-muted)]">Seleccioná dónde estás realizando la atención.</p></div></div><Select value={establishment.establishmentId} onValueChange={establishment.setEstablishmentId}><SelectTrigger className="h-11 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-control)] sm:w-80"><SelectValue placeholder="Seleccionar establecimiento" /></SelectTrigger><SelectContent>{establishment.options.map((item) => <SelectItem key={item.id} value={item.id}>{item.nombre}</SelectItem>)}</SelectContent></Select></CardContent></Card>
 
     {!establishment.establishmentId ? <div className="mt-6"><CatalogEmptyState title="Seleccioná un establecimiento para comenzar." description="Los indicadores y movimientos se mostrarán para el establecimiento activo." filtered={false} /></div> : dashboard.loading ? <CatalogLoadingState label="resumen operativo" /> : dashboard.error || !dashboard.data ? <div className="mt-6"><CatalogErrorState message={dashboard.error ?? "No pudimos cargar el resumen operativo."} onRetry={dashboard.retry} /></div> : <DashboardContent data={dashboard.data} />}
-  </AdminPageShell>;
+  </AdminPageShell></div></>;
 }
 
 function DashboardContent({ data }: { data: NonNullable<ReturnType<typeof useReceptionDashboard>["data"]> }) {

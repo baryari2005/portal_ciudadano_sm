@@ -1,8 +1,10 @@
+import Image from "next/image";
+
 export function SecureNotice() {
   return (
     <div className="flex items-center gap-4 rounded-sm border border-[#E5E2D8] bg-[#ECEEE6] px-5 py-4">
       <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[var(--auth-primary)] text-white">
-        <img
+        <Image
           src="/icons/cerrar.svg"
           alt=""
           className="size-6 invert"

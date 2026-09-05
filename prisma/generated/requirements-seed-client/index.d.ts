@@ -768,7 +768,8 @@ export type AsistenciaEstado = (typeof AsistenciaEstado)[keyof typeof Asistencia
 
 export const AsistenciaOrigen: {
   MANUAL: 'MANUAL',
-  QR: 'QR'
+  QR: 'QR',
+  ACCESO: 'ACCESO'
 };
 
 export type AsistenciaOrigen = (typeof AsistenciaOrigen)[keyof typeof AsistenciaOrigen]
@@ -14636,6 +14637,7 @@ export namespace Prisma {
     imagenLoginCollage2: number
     imagenLoginCollage3: number
     imagenLoginCollage4: number
+    paletasExperiencia: number
     updatedById: number
     createdAt: number
     updatedAt: number
@@ -14684,6 +14686,7 @@ export namespace Prisma {
     imagenLoginCollage2?: true
     imagenLoginCollage3?: true
     imagenLoginCollage4?: true
+    paletasExperiencia?: true
     updatedById?: true
     createdAt?: true
     updatedAt?: true
@@ -14783,6 +14786,7 @@ export namespace Prisma {
     imagenLoginCollage2: string | null
     imagenLoginCollage3: string | null
     imagenLoginCollage4: string | null
+    paletasExperiencia: JsonValue | null
     updatedById: string | null
     createdAt: Date
     updatedAt: Date
@@ -14814,6 +14818,7 @@ export namespace Prisma {
     imagenLoginCollage2?: boolean
     imagenLoginCollage3?: boolean
     imagenLoginCollage4?: boolean
+    paletasExperiencia?: boolean
     updatedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -14826,6 +14831,7 @@ export namespace Prisma {
     imagenLoginCollage2?: boolean
     imagenLoginCollage3?: boolean
     imagenLoginCollage4?: boolean
+    paletasExperiencia?: boolean
     updatedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -14838,6 +14844,7 @@ export namespace Prisma {
     imagenLoginCollage2?: boolean
     imagenLoginCollage3?: boolean
     imagenLoginCollage4?: boolean
+    paletasExperiencia?: boolean
     updatedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -14850,12 +14857,13 @@ export namespace Prisma {
     imagenLoginCollage2?: boolean
     imagenLoginCollage3?: boolean
     imagenLoginCollage4?: boolean
+    paletasExperiencia?: boolean
     updatedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ParametrosGeneralesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "registrosPorPagina" | "imagenLoginCollage1" | "imagenLoginCollage2" | "imagenLoginCollage3" | "imagenLoginCollage4" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["parametrosGenerales"]>
+  export type ParametrosGeneralesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "registrosPorPagina" | "imagenLoginCollage1" | "imagenLoginCollage2" | "imagenLoginCollage3" | "imagenLoginCollage4" | "paletasExperiencia" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["parametrosGenerales"]>
 
   export type $ParametrosGeneralesPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ParametrosGenerales"
@@ -14867,6 +14875,7 @@ export namespace Prisma {
       imagenLoginCollage2: string | null
       imagenLoginCollage3: string | null
       imagenLoginCollage4: string | null
+      paletasExperiencia: Prisma.JsonValue | null
       updatedById: string | null
       createdAt: Date
       updatedAt: Date
@@ -15299,6 +15308,7 @@ export namespace Prisma {
     readonly imagenLoginCollage2: FieldRef<"ParametrosGenerales", 'String'>
     readonly imagenLoginCollage3: FieldRef<"ParametrosGenerales", 'String'>
     readonly imagenLoginCollage4: FieldRef<"ParametrosGenerales", 'String'>
+    readonly paletasExperiencia: FieldRef<"ParametrosGenerales", 'Json'>
     readonly updatedById: FieldRef<"ParametrosGenerales", 'String'>
     readonly createdAt: FieldRef<"ParametrosGenerales", 'DateTime'>
     readonly updatedAt: FieldRef<"ParametrosGenerales", 'DateTime'>
@@ -17941,8 +17951,20 @@ export namespace Prisma {
 
   export type AggregateEstablecimiento = {
     _count: EstablecimientoCountAggregateOutputType | null
+    _avg: EstablecimientoAvgAggregateOutputType | null
+    _sum: EstablecimientoSumAggregateOutputType | null
     _min: EstablecimientoMinAggregateOutputType | null
     _max: EstablecimientoMaxAggregateOutputType | null
+  }
+
+  export type EstablecimientoAvgAggregateOutputType = {
+    direccionLat: number | null
+    direccionLng: number | null
+  }
+
+  export type EstablecimientoSumAggregateOutputType = {
+    direccionLat: number | null
+    direccionLng: number | null
   }
 
   export type EstablecimientoMinAggregateOutputType = {
@@ -17952,6 +17974,10 @@ export namespace Prisma {
     barrio: string | null
     localidad: string | null
     provincia: string | null
+    direccionPlaceId: string | null
+    direccionLat: number | null
+    direccionLng: number | null
+    codigoPostal: string | null
     imagenUrl: string | null
     tipo: $Enums.EstablecimientoTipo | null
     activo: boolean | null
@@ -17971,6 +17997,10 @@ export namespace Prisma {
     barrio: string | null
     localidad: string | null
     provincia: string | null
+    direccionPlaceId: string | null
+    direccionLat: number | null
+    direccionLng: number | null
+    codigoPostal: string | null
     imagenUrl: string | null
     tipo: $Enums.EstablecimientoTipo | null
     activo: boolean | null
@@ -17990,6 +18020,10 @@ export namespace Prisma {
     barrio: number
     localidad: number
     provincia: number
+    direccionPlaceId: number
+    direccionLat: number
+    direccionLng: number
+    codigoPostal: number
     imagenUrl: number
     tipo: number
     activo: number
@@ -18004,6 +18038,16 @@ export namespace Prisma {
   }
 
 
+  export type EstablecimientoAvgAggregateInputType = {
+    direccionLat?: true
+    direccionLng?: true
+  }
+
+  export type EstablecimientoSumAggregateInputType = {
+    direccionLat?: true
+    direccionLng?: true
+  }
+
   export type EstablecimientoMinAggregateInputType = {
     id?: true
     nombre?: true
@@ -18011,6 +18055,10 @@ export namespace Prisma {
     barrio?: true
     localidad?: true
     provincia?: true
+    direccionPlaceId?: true
+    direccionLat?: true
+    direccionLng?: true
+    codigoPostal?: true
     imagenUrl?: true
     tipo?: true
     activo?: true
@@ -18030,6 +18078,10 @@ export namespace Prisma {
     barrio?: true
     localidad?: true
     provincia?: true
+    direccionPlaceId?: true
+    direccionLat?: true
+    direccionLng?: true
+    codigoPostal?: true
     imagenUrl?: true
     tipo?: true
     activo?: true
@@ -18049,6 +18101,10 @@ export namespace Prisma {
     barrio?: true
     localidad?: true
     provincia?: true
+    direccionPlaceId?: true
+    direccionLat?: true
+    direccionLng?: true
+    codigoPostal?: true
     imagenUrl?: true
     tipo?: true
     activo?: true
@@ -18100,6 +18156,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: EstablecimientoAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: EstablecimientoSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: EstablecimientoMinAggregateInputType
@@ -18130,6 +18198,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: EstablecimientoCountAggregateInputType | true
+    _avg?: EstablecimientoAvgAggregateInputType
+    _sum?: EstablecimientoSumAggregateInputType
     _min?: EstablecimientoMinAggregateInputType
     _max?: EstablecimientoMaxAggregateInputType
   }
@@ -18141,6 +18211,10 @@ export namespace Prisma {
     barrio: string | null
     localidad: string | null
     provincia: string | null
+    direccionPlaceId: string | null
+    direccionLat: number | null
+    direccionLng: number | null
+    codigoPostal: string | null
     imagenUrl: string | null
     tipo: $Enums.EstablecimientoTipo
     activo: boolean
@@ -18152,6 +18226,8 @@ export namespace Prisma {
     createdAt: Date
     updatedAt: Date
     _count: EstablecimientoCountAggregateOutputType | null
+    _avg: EstablecimientoAvgAggregateOutputType | null
+    _sum: EstablecimientoSumAggregateOutputType | null
     _min: EstablecimientoMinAggregateOutputType | null
     _max: EstablecimientoMaxAggregateOutputType | null
   }
@@ -18177,6 +18253,10 @@ export namespace Prisma {
     barrio?: boolean
     localidad?: boolean
     provincia?: boolean
+    direccionPlaceId?: boolean
+    direccionLat?: boolean
+    direccionLng?: boolean
+    codigoPostal?: boolean
     imagenUrl?: boolean
     tipo?: boolean
     activo?: boolean
@@ -18203,6 +18283,10 @@ export namespace Prisma {
     barrio?: boolean
     localidad?: boolean
     provincia?: boolean
+    direccionPlaceId?: boolean
+    direccionLat?: boolean
+    direccionLng?: boolean
+    codigoPostal?: boolean
     imagenUrl?: boolean
     tipo?: boolean
     activo?: boolean
@@ -18222,6 +18306,10 @@ export namespace Prisma {
     barrio?: boolean
     localidad?: boolean
     provincia?: boolean
+    direccionPlaceId?: boolean
+    direccionLat?: boolean
+    direccionLng?: boolean
+    codigoPostal?: boolean
     imagenUrl?: boolean
     tipo?: boolean
     activo?: boolean
@@ -18241,6 +18329,10 @@ export namespace Prisma {
     barrio?: boolean
     localidad?: boolean
     provincia?: boolean
+    direccionPlaceId?: boolean
+    direccionLat?: boolean
+    direccionLng?: boolean
+    codigoPostal?: boolean
     imagenUrl?: boolean
     tipo?: boolean
     activo?: boolean
@@ -18253,7 +18345,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type EstablecimientoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nombre" | "direccion" | "barrio" | "localidad" | "provincia" | "imagenUrl" | "tipo" | "activo" | "email" | "telefono" | "celular" | "estado" | "observacion" | "createdAt" | "updatedAt", ExtArgs["result"]["establecimiento"]>
+  export type EstablecimientoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nombre" | "direccion" | "barrio" | "localidad" | "provincia" | "direccionPlaceId" | "direccionLat" | "direccionLng" | "codigoPostal" | "imagenUrl" | "tipo" | "activo" | "email" | "telefono" | "celular" | "estado" | "observacion" | "createdAt" | "updatedAt", ExtArgs["result"]["establecimiento"]>
   export type EstablecimientoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     actividades?: boolean | Establecimiento$actividadesArgs<ExtArgs>
     horarios?: boolean | Establecimiento$horariosArgs<ExtArgs>
@@ -18283,6 +18375,10 @@ export namespace Prisma {
       barrio: string | null
       localidad: string | null
       provincia: string | null
+      direccionPlaceId: string | null
+      direccionLat: number | null
+      direccionLng: number | null
+      codigoPostal: string | null
       imagenUrl: string | null
       tipo: $Enums.EstablecimientoTipo
       activo: boolean
@@ -18728,6 +18824,10 @@ export namespace Prisma {
     readonly barrio: FieldRef<"Establecimiento", 'String'>
     readonly localidad: FieldRef<"Establecimiento", 'String'>
     readonly provincia: FieldRef<"Establecimiento", 'String'>
+    readonly direccionPlaceId: FieldRef<"Establecimiento", 'String'>
+    readonly direccionLat: FieldRef<"Establecimiento", 'Float'>
+    readonly direccionLng: FieldRef<"Establecimiento", 'Float'>
+    readonly codigoPostal: FieldRef<"Establecimiento", 'String'>
     readonly imagenUrl: FieldRef<"Establecimiento", 'String'>
     readonly tipo: FieldRef<"Establecimiento", 'EstablecimientoTipo'>
     readonly activo: FieldRef<"Establecimiento", 'Boolean'>
@@ -58330,6 +58430,7 @@ export namespace Prisma {
     imagenLoginCollage2: 'imagenLoginCollage2',
     imagenLoginCollage3: 'imagenLoginCollage3',
     imagenLoginCollage4: 'imagenLoginCollage4',
+    paletasExperiencia: 'paletasExperiencia',
     updatedById: 'updatedById',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -58377,6 +58478,10 @@ export namespace Prisma {
     barrio: 'barrio',
     localidad: 'localidad',
     provincia: 'provincia',
+    direccionPlaceId: 'direccionPlaceId',
+    direccionLat: 'direccionLat',
+    direccionLng: 'direccionLng',
+    codigoPostal: 'codigoPostal',
     imagenUrl: 'imagenUrl',
     tipo: 'tipo',
     activo: 'activo',
@@ -60571,6 +60676,7 @@ export namespace Prisma {
     imagenLoginCollage2?: StringNullableFilter<"ParametrosGenerales"> | string | null
     imagenLoginCollage3?: StringNullableFilter<"ParametrosGenerales"> | string | null
     imagenLoginCollage4?: StringNullableFilter<"ParametrosGenerales"> | string | null
+    paletasExperiencia?: JsonNullableFilter<"ParametrosGenerales">
     updatedById?: UuidNullableFilter<"ParametrosGenerales"> | string | null
     createdAt?: DateTimeFilter<"ParametrosGenerales"> | Date | string
     updatedAt?: DateTimeFilter<"ParametrosGenerales"> | Date | string
@@ -60583,6 +60689,7 @@ export namespace Prisma {
     imagenLoginCollage2?: SortOrderInput | SortOrder
     imagenLoginCollage3?: SortOrderInput | SortOrder
     imagenLoginCollage4?: SortOrderInput | SortOrder
+    paletasExperiencia?: SortOrderInput | SortOrder
     updatedById?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -60598,6 +60705,7 @@ export namespace Prisma {
     imagenLoginCollage2?: StringNullableFilter<"ParametrosGenerales"> | string | null
     imagenLoginCollage3?: StringNullableFilter<"ParametrosGenerales"> | string | null
     imagenLoginCollage4?: StringNullableFilter<"ParametrosGenerales"> | string | null
+    paletasExperiencia?: JsonNullableFilter<"ParametrosGenerales">
     updatedById?: UuidNullableFilter<"ParametrosGenerales"> | string | null
     createdAt?: DateTimeFilter<"ParametrosGenerales"> | Date | string
     updatedAt?: DateTimeFilter<"ParametrosGenerales"> | Date | string
@@ -60610,6 +60718,7 @@ export namespace Prisma {
     imagenLoginCollage2?: SortOrderInput | SortOrder
     imagenLoginCollage3?: SortOrderInput | SortOrder
     imagenLoginCollage4?: SortOrderInput | SortOrder
+    paletasExperiencia?: SortOrderInput | SortOrder
     updatedById?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -60630,6 +60739,7 @@ export namespace Prisma {
     imagenLoginCollage2?: StringNullableWithAggregatesFilter<"ParametrosGenerales"> | string | null
     imagenLoginCollage3?: StringNullableWithAggregatesFilter<"ParametrosGenerales"> | string | null
     imagenLoginCollage4?: StringNullableWithAggregatesFilter<"ParametrosGenerales"> | string | null
+    paletasExperiencia?: JsonNullableWithAggregatesFilter<"ParametrosGenerales">
     updatedById?: UuidNullableWithAggregatesFilter<"ParametrosGenerales"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"ParametrosGenerales"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ParametrosGenerales"> | Date | string
@@ -60810,6 +60920,10 @@ export namespace Prisma {
     barrio?: StringNullableFilter<"Establecimiento"> | string | null
     localidad?: StringNullableFilter<"Establecimiento"> | string | null
     provincia?: StringNullableFilter<"Establecimiento"> | string | null
+    direccionPlaceId?: StringNullableFilter<"Establecimiento"> | string | null
+    direccionLat?: FloatNullableFilter<"Establecimiento"> | number | null
+    direccionLng?: FloatNullableFilter<"Establecimiento"> | number | null
+    codigoPostal?: StringNullableFilter<"Establecimiento"> | string | null
     imagenUrl?: StringNullableFilter<"Establecimiento"> | string | null
     tipo?: EnumEstablecimientoTipoFilter<"Establecimiento"> | $Enums.EstablecimientoTipo
     activo?: BoolFilter<"Establecimiento"> | boolean
@@ -60835,6 +60949,10 @@ export namespace Prisma {
     barrio?: SortOrderInput | SortOrder
     localidad?: SortOrderInput | SortOrder
     provincia?: SortOrderInput | SortOrder
+    direccionPlaceId?: SortOrderInput | SortOrder
+    direccionLat?: SortOrderInput | SortOrder
+    direccionLng?: SortOrderInput | SortOrder
+    codigoPostal?: SortOrderInput | SortOrder
     imagenUrl?: SortOrderInput | SortOrder
     tipo?: SortOrder
     activo?: SortOrder
@@ -60863,6 +60981,10 @@ export namespace Prisma {
     barrio?: StringNullableFilter<"Establecimiento"> | string | null
     localidad?: StringNullableFilter<"Establecimiento"> | string | null
     provincia?: StringNullableFilter<"Establecimiento"> | string | null
+    direccionPlaceId?: StringNullableFilter<"Establecimiento"> | string | null
+    direccionLat?: FloatNullableFilter<"Establecimiento"> | number | null
+    direccionLng?: FloatNullableFilter<"Establecimiento"> | number | null
+    codigoPostal?: StringNullableFilter<"Establecimiento"> | string | null
     imagenUrl?: StringNullableFilter<"Establecimiento"> | string | null
     tipo?: EnumEstablecimientoTipoFilter<"Establecimiento"> | $Enums.EstablecimientoTipo
     activo?: BoolFilter<"Establecimiento"> | boolean
@@ -60888,6 +61010,10 @@ export namespace Prisma {
     barrio?: SortOrderInput | SortOrder
     localidad?: SortOrderInput | SortOrder
     provincia?: SortOrderInput | SortOrder
+    direccionPlaceId?: SortOrderInput | SortOrder
+    direccionLat?: SortOrderInput | SortOrder
+    direccionLng?: SortOrderInput | SortOrder
+    codigoPostal?: SortOrderInput | SortOrder
     imagenUrl?: SortOrderInput | SortOrder
     tipo?: SortOrder
     activo?: SortOrder
@@ -60899,8 +61025,10 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: EstablecimientoCountOrderByAggregateInput
+    _avg?: EstablecimientoAvgOrderByAggregateInput
     _max?: EstablecimientoMaxOrderByAggregateInput
     _min?: EstablecimientoMinOrderByAggregateInput
+    _sum?: EstablecimientoSumOrderByAggregateInput
   }
 
   export type EstablecimientoScalarWhereWithAggregatesInput = {
@@ -60913,6 +61041,10 @@ export namespace Prisma {
     barrio?: StringNullableWithAggregatesFilter<"Establecimiento"> | string | null
     localidad?: StringNullableWithAggregatesFilter<"Establecimiento"> | string | null
     provincia?: StringNullableWithAggregatesFilter<"Establecimiento"> | string | null
+    direccionPlaceId?: StringNullableWithAggregatesFilter<"Establecimiento"> | string | null
+    direccionLat?: FloatNullableWithAggregatesFilter<"Establecimiento"> | number | null
+    direccionLng?: FloatNullableWithAggregatesFilter<"Establecimiento"> | number | null
+    codigoPostal?: StringNullableWithAggregatesFilter<"Establecimiento"> | string | null
     imagenUrl?: StringNullableWithAggregatesFilter<"Establecimiento"> | string | null
     tipo?: EnumEstablecimientoTipoWithAggregatesFilter<"Establecimiento"> | $Enums.EstablecimientoTipo
     activo?: BoolWithAggregatesFilter<"Establecimiento"> | boolean
@@ -64951,6 +65083,7 @@ export namespace Prisma {
     imagenLoginCollage2?: string | null
     imagenLoginCollage3?: string | null
     imagenLoginCollage4?: string | null
+    paletasExperiencia?: NullableJsonNullValueInput | InputJsonValue
     updatedById?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -64963,6 +65096,7 @@ export namespace Prisma {
     imagenLoginCollage2?: string | null
     imagenLoginCollage3?: string | null
     imagenLoginCollage4?: string | null
+    paletasExperiencia?: NullableJsonNullValueInput | InputJsonValue
     updatedById?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -64975,6 +65109,7 @@ export namespace Prisma {
     imagenLoginCollage2?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage3?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage4?: NullableStringFieldUpdateOperationsInput | string | null
+    paletasExperiencia?: NullableJsonNullValueInput | InputJsonValue
     updatedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -64987,6 +65122,7 @@ export namespace Prisma {
     imagenLoginCollage2?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage3?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage4?: NullableStringFieldUpdateOperationsInput | string | null
+    paletasExperiencia?: NullableJsonNullValueInput | InputJsonValue
     updatedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -64999,6 +65135,7 @@ export namespace Prisma {
     imagenLoginCollage2?: string | null
     imagenLoginCollage3?: string | null
     imagenLoginCollage4?: string | null
+    paletasExperiencia?: NullableJsonNullValueInput | InputJsonValue
     updatedById?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -65011,6 +65148,7 @@ export namespace Prisma {
     imagenLoginCollage2?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage3?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage4?: NullableStringFieldUpdateOperationsInput | string | null
+    paletasExperiencia?: NullableJsonNullValueInput | InputJsonValue
     updatedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -65023,6 +65161,7 @@ export namespace Prisma {
     imagenLoginCollage2?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage3?: NullableStringFieldUpdateOperationsInput | string | null
     imagenLoginCollage4?: NullableStringFieldUpdateOperationsInput | string | null
+    paletasExperiencia?: NullableJsonNullValueInput | InputJsonValue
     updatedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -65224,6 +65363,10 @@ export namespace Prisma {
     barrio?: string | null
     localidad?: string | null
     provincia?: string | null
+    direccionPlaceId?: string | null
+    direccionLat?: number | null
+    direccionLng?: number | null
+    codigoPostal?: string | null
     imagenUrl?: string | null
     tipo?: $Enums.EstablecimientoTipo
     activo?: boolean
@@ -65249,6 +65392,10 @@ export namespace Prisma {
     barrio?: string | null
     localidad?: string | null
     provincia?: string | null
+    direccionPlaceId?: string | null
+    direccionLat?: number | null
+    direccionLng?: number | null
+    codigoPostal?: string | null
     imagenUrl?: string | null
     tipo?: $Enums.EstablecimientoTipo
     activo?: boolean
@@ -65274,6 +65421,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean
@@ -65299,6 +65450,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean
@@ -65324,6 +65479,10 @@ export namespace Prisma {
     barrio?: string | null
     localidad?: string | null
     provincia?: string | null
+    direccionPlaceId?: string | null
+    direccionLat?: number | null
+    direccionLng?: number | null
+    codigoPostal?: string | null
     imagenUrl?: string | null
     tipo?: $Enums.EstablecimientoTipo
     activo?: boolean
@@ -65343,6 +65502,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean
@@ -65362,6 +65525,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean
@@ -69970,6 +70137,7 @@ export namespace Prisma {
     imagenLoginCollage2?: SortOrder
     imagenLoginCollage3?: SortOrder
     imagenLoginCollage4?: SortOrder
+    paletasExperiencia?: SortOrder
     updatedById?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -70231,6 +70399,10 @@ export namespace Prisma {
     barrio?: SortOrder
     localidad?: SortOrder
     provincia?: SortOrder
+    direccionPlaceId?: SortOrder
+    direccionLat?: SortOrder
+    direccionLng?: SortOrder
+    codigoPostal?: SortOrder
     imagenUrl?: SortOrder
     tipo?: SortOrder
     activo?: SortOrder
@@ -70243,6 +70415,11 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type EstablecimientoAvgOrderByAggregateInput = {
+    direccionLat?: SortOrder
+    direccionLng?: SortOrder
+  }
+
   export type EstablecimientoMaxOrderByAggregateInput = {
     id?: SortOrder
     nombre?: SortOrder
@@ -70250,6 +70427,10 @@ export namespace Prisma {
     barrio?: SortOrder
     localidad?: SortOrder
     provincia?: SortOrder
+    direccionPlaceId?: SortOrder
+    direccionLat?: SortOrder
+    direccionLng?: SortOrder
+    codigoPostal?: SortOrder
     imagenUrl?: SortOrder
     tipo?: SortOrder
     activo?: SortOrder
@@ -70269,6 +70450,10 @@ export namespace Prisma {
     barrio?: SortOrder
     localidad?: SortOrder
     provincia?: SortOrder
+    direccionPlaceId?: SortOrder
+    direccionLat?: SortOrder
+    direccionLng?: SortOrder
+    codigoPostal?: SortOrder
     imagenUrl?: SortOrder
     tipo?: SortOrder
     activo?: SortOrder
@@ -70279,6 +70464,11 @@ export namespace Prisma {
     observacion?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type EstablecimientoSumOrderByAggregateInput = {
+    direccionLat?: SortOrder
+    direccionLng?: SortOrder
   }
 
   export type EnumEstablecimientoTipoWithAggregatesFilter<$PrismaModel = never> = {
@@ -83323,6 +83513,10 @@ export namespace Prisma {
     barrio?: string | null
     localidad?: string | null
     provincia?: string | null
+    direccionPlaceId?: string | null
+    direccionLat?: number | null
+    direccionLng?: number | null
+    codigoPostal?: string | null
     imagenUrl?: string | null
     tipo?: $Enums.EstablecimientoTipo
     activo?: boolean
@@ -83347,6 +83541,10 @@ export namespace Prisma {
     barrio?: string | null
     localidad?: string | null
     provincia?: string | null
+    direccionPlaceId?: string | null
+    direccionLat?: number | null
+    direccionLng?: number | null
+    codigoPostal?: string | null
     imagenUrl?: string | null
     tipo?: $Enums.EstablecimientoTipo
     activo?: boolean
@@ -83387,6 +83585,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean
@@ -83411,6 +83613,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean
@@ -83435,6 +83641,10 @@ export namespace Prisma {
     barrio?: string | null
     localidad?: string | null
     provincia?: string | null
+    direccionPlaceId?: string | null
+    direccionLat?: number | null
+    direccionLng?: number | null
+    codigoPostal?: string | null
     imagenUrl?: string | null
     tipo?: $Enums.EstablecimientoTipo
     activo?: boolean
@@ -83459,6 +83669,10 @@ export namespace Prisma {
     barrio?: string | null
     localidad?: string | null
     provincia?: string | null
+    direccionPlaceId?: string | null
+    direccionLat?: number | null
+    direccionLng?: number | null
+    codigoPostal?: string | null
     imagenUrl?: string | null
     tipo?: $Enums.EstablecimientoTipo
     activo?: boolean
@@ -83725,6 +83939,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean
@@ -83749,6 +83967,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean
@@ -86024,6 +86246,10 @@ export namespace Prisma {
     barrio?: string | null
     localidad?: string | null
     provincia?: string | null
+    direccionPlaceId?: string | null
+    direccionLat?: number | null
+    direccionLng?: number | null
+    codigoPostal?: string | null
     imagenUrl?: string | null
     tipo?: $Enums.EstablecimientoTipo
     activo?: boolean
@@ -86048,6 +86274,10 @@ export namespace Prisma {
     barrio?: string | null
     localidad?: string | null
     provincia?: string | null
+    direccionPlaceId?: string | null
+    direccionLat?: number | null
+    direccionLng?: number | null
+    codigoPostal?: string | null
     imagenUrl?: string | null
     tipo?: $Enums.EstablecimientoTipo
     activo?: boolean
@@ -86375,6 +86605,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean
@@ -86399,6 +86633,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean
@@ -86761,6 +86999,10 @@ export namespace Prisma {
     barrio?: string | null
     localidad?: string | null
     provincia?: string | null
+    direccionPlaceId?: string | null
+    direccionLat?: number | null
+    direccionLng?: number | null
+    codigoPostal?: string | null
     imagenUrl?: string | null
     tipo?: $Enums.EstablecimientoTipo
     activo?: boolean
@@ -86785,6 +87027,10 @@ export namespace Prisma {
     barrio?: string | null
     localidad?: string | null
     provincia?: string | null
+    direccionPlaceId?: string | null
+    direccionLat?: number | null
+    direccionLng?: number | null
+    codigoPostal?: string | null
     imagenUrl?: string | null
     tipo?: $Enums.EstablecimientoTipo
     activo?: boolean
@@ -87217,6 +87463,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean
@@ -87241,6 +87491,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean
@@ -89178,6 +89432,10 @@ export namespace Prisma {
     barrio?: string | null
     localidad?: string | null
     provincia?: string | null
+    direccionPlaceId?: string | null
+    direccionLat?: number | null
+    direccionLng?: number | null
+    codigoPostal?: string | null
     imagenUrl?: string | null
     tipo?: $Enums.EstablecimientoTipo
     activo?: boolean
@@ -89202,6 +89460,10 @@ export namespace Prisma {
     barrio?: string | null
     localidad?: string | null
     provincia?: string | null
+    direccionPlaceId?: string | null
+    direccionLat?: number | null
+    direccionLng?: number | null
+    codigoPostal?: string | null
     imagenUrl?: string | null
     tipo?: $Enums.EstablecimientoTipo
     activo?: boolean
@@ -89370,6 +89632,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean
@@ -89394,6 +89660,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean
@@ -92657,6 +92927,10 @@ export namespace Prisma {
     barrio?: string | null
     localidad?: string | null
     provincia?: string | null
+    direccionPlaceId?: string | null
+    direccionLat?: number | null
+    direccionLng?: number | null
+    codigoPostal?: string | null
     imagenUrl?: string | null
     tipo?: $Enums.EstablecimientoTipo
     activo?: boolean
@@ -92681,6 +92955,10 @@ export namespace Prisma {
     barrio?: string | null
     localidad?: string | null
     provincia?: string | null
+    direccionPlaceId?: string | null
+    direccionLat?: number | null
+    direccionLng?: number | null
+    codigoPostal?: string | null
     imagenUrl?: string | null
     tipo?: $Enums.EstablecimientoTipo
     activo?: boolean
@@ -93260,6 +93538,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean
@@ -93284,6 +93566,10 @@ export namespace Prisma {
     barrio?: NullableStringFieldUpdateOperationsInput | string | null
     localidad?: NullableStringFieldUpdateOperationsInput | string | null
     provincia?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    direccionLat?: NullableFloatFieldUpdateOperationsInput | number | null
+    direccionLng?: NullableFloatFieldUpdateOperationsInput | number | null
+    codigoPostal?: NullableStringFieldUpdateOperationsInput | string | null
     imagenUrl?: NullableStringFieldUpdateOperationsInput | string | null
     tipo?: EnumEstablecimientoTipoFieldUpdateOperationsInput | $Enums.EstablecimientoTipo
     activo?: BoolFieldUpdateOperationsInput | boolean

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -16,7 +17,6 @@ import {
   FileCheck2,
   FileText,
   GraduationCap,
-  Hourglass,
   ImageIcon,
   Loader2,
   PackageOpen,
@@ -24,7 +24,6 @@ import {
   Repeat2,
   Save,
   Sparkles,
-  TimerReset,
   Trash2,
   UsersRound,
 } from "lucide-react";
@@ -41,7 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { CatalogLoadingState } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { useActivityCatalogs } from "@/features/actividades/hooks/useActivityCatalogs";
 import { GeneralInformation } from "./GeneralInformation";
@@ -53,7 +51,7 @@ import {
   adminSecondaryButtonClass,
 } from "@/components/shared/admin-patterns";
 import { AdminWorkflowLayout } from "@/components/shared/admin-workflow-layout";
-import { listEstablecimientosClient } from "@/features/establecimientos/services/establecimientos.service";
+import { listActiveEstablecimientosClient } from "@/features/establecimientos/services/establecimientos.service";
 import { listarProfesoresClient } from "@/features/profesores/services/profesores.service";
 import { listRequirementsClient } from "@/features/requirements/services/requirements.service";
 import { listResourcesClient } from "@/features/resources/services/resources.service";
@@ -69,6 +67,20 @@ import type {
   ActivityDraftPayload,
   ActivityDraftPending,
 } from "../types/activity-draft.types";
+import type { Establecimiento } from "@/features/establecimientos/types/establecimiento.types";
+import type { Profesor } from "@/features/profesores/types/profesor.types";
+import type { Requirement } from "@/features/requirements/types/requirement.types";
+import type { Resource } from "@/features/resources/types/resource.types";
+import type { CategoriaActividad } from "@/features/categorias-actividades/types/categoria-actividad.types";
+import type { PublicoObjetivo } from "@/features/publicos-objetivo/types/publico-objetivo.types";
+
+type WorkflowOptions = {
+  establishments: Establecimiento[];
+  professors: Profesor[];
+  requirements: Requirement[];
+  resources: Resource[];
+};
+type WorkflowPublic = PublicoObjetivo & { genero?: string | null };
 
 const stepIcons = [
   Repeat2,
@@ -116,7 +128,7 @@ const modes = [
   ["CURSO_PERIODO", "Curso con período", "Ciclo con inicio y finalización."],
 ] as const;
 const inputClass =
-  "h-12 w-full rounded-xl border-[#C9D9C3] bg-[#F7FBF5] font-medium text-[#173C2A] placeholder:text-[#6D8D75]";
+  "h-12 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-medium text-[var(--brand-ink)] placeholder:text-[#6D8D75]";
 const modePresentation = {
   HORARIO_FIJO: {
     icon: CalendarRange,
@@ -175,7 +187,7 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
   );
   const [discardOpen, setDiscardOpen] = useState(false),
     [discarding, setDiscarding] = useState(false);
-  const [options, setOptions] = useState<any>({
+  const [options, setOptions] = useState<WorkflowOptions>({
     establishments: [],
     professors: [],
     requirements: [],
@@ -184,7 +196,7 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
   useEffect(() => {
     void Promise.all([
       getDraftClient(draftId),
-      listEstablecimientosClient(),
+      listActiveEstablecimientosClient(),
       listarProfesoresClient({ page: 1, pageSize: 100, estado: "ACTIVO" }),
       listRequirementsClient({ active: true }),
       listResourcesClient(),
@@ -220,7 +232,7 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
           ),
       ),
     );
-  }, [draft?.id]);
+  }, [draft]);
   useEffect(() => {
     if (step !== 6 || !payload) return;
     const professorIds = [
@@ -255,7 +267,7 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
     return () => {
       active = false;
     };
-  }, [step, draftId, payload?.schedules]);
+  }, [step, draftId, payload]);
   if (loading || catalogs.loading || !payload || !draft)
     return <CatalogLoadingState label="configuración de actividad" fullPage />;
   const patch = (changes: Partial<ActivityDraftPayload>) =>
@@ -324,25 +336,27 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
     }
   }
   return (
-    <main className="min-h-[calc(100dvh-var(--topbar-h)-48px)] bg-[#F7FBF5] p-4 sm:p-6 lg:p-8">
-      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[#C9D9C3] pb-6">
+    <main className="min-h-[calc(100dvh-var(--topbar-h)-48px)] bg-[var(--brand-page)] p-4 sm:p-6 lg:p-8">
+      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--brand-border)] pb-6">
         <div className="flex min-w-0 items-center gap-4">
-          <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-2xl border border-[#C9D9C3] bg-[#DDE8D7] text-[#1D4F36]">
+          <span className="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-2xl border border-[var(--brand-border)] bg-[var(--brand-border-soft)] text-[var(--brand-primary)]">
             {payload.imagenUrl ? (
-              <img
+              <Image
                 src={payload.imagenUrl}
                 alt=""
-                className="size-full object-cover"
+                fill
+                sizes="56px"
+                className="object-cover"
               />
             ) : (
               <ImageIcon className="size-7" />
             )}
           </span>
           <div className="min-w-0">
-            <h1 className="truncate text-3xl font-bold tracking-tight text-[#1D4F36] sm:text-4xl">
+            <h1 className="truncate text-3xl font-bold tracking-tight text-[var(--brand-primary)] sm:text-4xl">
               {payload.nombre || "Nueva actividad"}
             </h1>
-            <p className="mt-2 text-sm text-[#315644]/80 sm:text-base">
+            <p className="mt-2 text-sm text-[var(--brand-text)]/80 sm:text-base">
               Paso {step} de {steps.length} · completá la configuración para
               publicar la actividad.
             </p>
@@ -354,7 +368,7 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
               variant="outline"
               onClick={() => setDiscardOpen(true)}
               disabled={saving || discarding}
-              className="h-12 rounded-xl border-[#1D4F36]/30 bg-white px-6 font-bold text-[#1D4F36]"
+              className="h-12 rounded-xl border-[var(--brand-primary)]/30 bg-white px-6 font-bold text-[var(--brand-primary)]"
             >
               <ArrowLeft />
               Salir sin guardar
@@ -363,7 +377,7 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
           <Button
             onClick={() => void save(step, true)}
             disabled={saving}
-            className="h-12 rounded-xl bg-[#1D4F36] px-7 text-base font-bold text-white hover:bg-[#143A27]"
+            className="h-12 rounded-xl bg-[var(--brand-primary)] px-7 text-base font-bold text-white hover:bg-[var(--brand-primary-hover)]"
           >
             <Save />
             Guardar borrador y salir
@@ -389,10 +403,10 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
           onSectionChange={(target) => void save(target)}
           navigationLabel="Pasos de la actividad"
         >
-        <section className="relative min-h-[520px] overflow-hidden rounded-3xl border border-[#819B56]/20 bg-white/80 p-5 shadow-sm sm:p-8">
+        <section className="relative min-h-[520px] overflow-hidden rounded-3xl border border-[var(--brand-secondary)]/20 bg-white/80 p-5 shadow-sm sm:p-8">
           {stepLoading ? (
             <div className="absolute inset-0 z-20 grid place-items-center bg-white">
-              <div className="flex flex-col items-center gap-3 text-[#1D4F36]">
+              <div className="flex flex-col items-center gap-3 text-[var(--brand-primary)]">
                 <Loader2 className="size-8 animate-spin" />
                 <p className="text-sm font-bold">
                   Cargando información de la actividad...
@@ -400,11 +414,11 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
               </div>
             </div>
           ) : null}
-          <div className="mb-6 border-b border-[#C9D9C3] pb-5">
-            <h2 className="text-2xl font-extrabold text-[#1D4F36]">
+          <div className="mb-6 border-b border-[var(--brand-border)] pb-5">
+            <h2 className="text-2xl font-extrabold text-[var(--brand-primary)]">
               {steps[step - 1]}
             </h2>
-            <p className="mt-1 text-sm text-[#5F6F68]">
+            <p className="mt-1 text-sm text-[var(--brand-muted)]">
               {stepDescription(step)}
             </p>
           </div>
@@ -421,7 +435,7 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
             professorConflict={professorConflict}
             setProfessorConflict={setProfessorConflict}
           />
-          <div className="mt-8 flex flex-col-reverse gap-3 border-t border-[#C9D9C3] pt-5 sm:flex-row sm:justify-between">
+          <div className="mt-8 flex flex-col-reverse gap-3 border-t border-[var(--brand-border)] pt-5 sm:flex-row sm:justify-between">
             <Button
               type="button"
               size="lg"
@@ -493,9 +507,9 @@ function StepContent({
   pending: ActivityDraftPending[];
   onGoToStep: (step: number) => void;
   patch: (value: Partial<ActivityDraftPayload>) => void;
-  options: any;
-  categories: any[];
-  publics: any[];
+  options: WorkflowOptions;
+  categories: CategoriaActividad[];
+  publics: WorkflowPublic[];
   professorConflict: string | null;
   setProfessorConflict: (message: string | null) => void;
 }) {
@@ -522,19 +536,19 @@ function StepContent({
                   requiereReserva: value !== "ACCESO_LIBRE",
                 })
               }
-              className={`flex min-w-0 gap-3 rounded-2xl border p-4 text-left transition 2xl:gap-4 2xl:p-5 ${payload.modalidadOperacion === value ? "border-[#1D4F36] bg-[#EEF6E9] ring-2 ring-[#819B56]/30" : "border-[#DDE8D7] bg-white hover:border-[#819B56]"}`}
+              className={`flex min-w-0 gap-3 rounded-2xl border p-4 text-left transition 2xl:gap-4 2xl:p-5 ${payload.modalidadOperacion === value ? "border-[var(--brand-primary)] bg-[var(--brand-panel)] ring-2 ring-[var(--brand-secondary)]/30" : "border-[var(--brand-border-soft)] bg-white hover:border-[var(--brand-secondary)]"}`}
             >
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#DDE8D7] text-[#1D4F36]">
+              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[var(--brand-border-soft)] text-[var(--brand-primary)]">
                 <Icon className="size-5" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block break-words font-extrabold text-[#1D4F36]">
+                <span className="block break-words font-extrabold text-[var(--brand-primary)]">
                   {title}
                 </span>
-                <span className="mt-2 block break-words text-sm leading-relaxed text-[#5F6F68]">
+                <span className="mt-2 block break-words text-sm leading-relaxed text-[var(--brand-muted)]">
                   {presentation.text}
                 </span>
-                <span className="mt-3 block break-words rounded-xl bg-[#F7FBF5] p-3 text-xs font-bold leading-relaxed text-[#315644]">
+                <span className="mt-3 block break-words rounded-xl bg-[var(--brand-page)] p-3 text-xs font-bold leading-relaxed text-[var(--brand-text)]">
                   {modeExamples[value]}
                 </span>
               </span>
@@ -566,7 +580,7 @@ function StepContent({
                 })),
               })
             }
-            options={options.establishments.map((item: any) => [
+            options={options.establishments.map((item) => [
               item.id,
               `${item.nombre} · ${item.direccion}`,
             ])}
@@ -580,7 +594,7 @@ function StepContent({
   if (step === 4) return <WeeklySchedules payload={payload} patch={patch} />;
   if (step === 5) {
     const resources = options.resources.filter(
-      (item: any) =>
+      (item) =>
         item.establecimientoId === payload.establecimientoId &&
         item.estado === "ACTIVO",
     );
@@ -605,7 +619,7 @@ function StepContent({
           />
         </IconField>
         <div className="grid gap-3 sm:grid-cols-2">
-          {resources.map((resource: any) => (
+          {resources.map((resource) => (
             <CheckCard
               key={resource.id}
               checked={payload.schedules.some((schedule) =>
@@ -636,10 +650,10 @@ function StepContent({
       <div className="space-y-4">
         <WorkflowSelectionBrowser
           options={options.professors
-            .filter((professor: any) =>
+            .filter((professor) =>
               ["teacher", "profesor"].includes(professor.usuario.rol?.codigo),
             )
-            .map((professor: any) => ({
+            .map((professor) => ({
               id: professor.id,
               title:
                 `${professor.usuario.nombre ?? ""} ${professor.usuario.apellido ?? ""}`.trim(),
@@ -698,8 +712,8 @@ function StepContent({
             {professorConflict}
           </p>
         ) : (
-          <p className="flex items-start gap-3 rounded-xl border border-[#C9D9C3] bg-[#EEF6E9] p-4 text-sm text-[#315644]">
-            <Check className="mt-0.5 size-5 shrink-0 text-[#1D4F36]" />
+          <p className="flex items-start gap-3 rounded-xl border border-[var(--brand-border)] bg-[var(--brand-panel)] p-4 text-sm text-[var(--brand-text)]">
+            <Check className="mt-0.5 size-5 shrink-0 text-[var(--brand-primary)]" />
             Al seleccionar un profesor se verificará que no tenga otra actividad
             superpuesta.
           </p>
@@ -711,7 +725,7 @@ function StepContent({
       <div className="space-y-4">
         <Missing text="Este paso es opcional. Si no seleccionás ningún público, la actividad estará disponible para todas las personas." />
         <WorkflowSelectionBrowser
-          options={publics.map((item: any) => ({
+          options={publics.map((item) => ({
             id: item.id,
             title: item.nombre,
             subtitle: [
@@ -745,7 +759,7 @@ function StepContent({
       <div className="space-y-4">
         <Missing text="Este paso es opcional. Si no seleccionás ninguno, la actividad se publicará sin requisitos." />
         <WorkflowSelectionBrowser
-          options={options.requirements.map((item: any) => ({
+          options={options.requirements.map((item) => ({
             id: item.id,
             title: item.nombre,
             subtitle: `${item.tipo} · ${item.obligatoriedad === "RECOMENDADO" ? "Recomendado" : "Obligatorio"}`,
@@ -761,7 +775,7 @@ function StepContent({
           emptyTitle="No se encontraron requisitos."
           onToggle={(id, checked) => {
             const requirement = options.requirements.find(
-              (item: any) => item.id === id,
+              (item) => item.id === id,
             );
             patch({
               requirements: checked
@@ -788,6 +802,8 @@ function StepContent({
   return <Review payload={payload} pending={pending} onGoToStep={onGoToStep} />;
 }
 
+// Posible código legado: conservar hasta completar la migración a WeeklySchedules.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Schedules({
   payload,
   patch,
@@ -821,7 +837,7 @@ function Schedules({
       {payload.schedules.map((item, index) => (
         <div
           key={index}
-          className="grid gap-3 rounded-2xl border border-[#DDE8D7] bg-[#F7FBF5] p-4 md:grid-cols-[1fr_1fr_1fr_1.2fr_auto]"
+          className="grid gap-3 rounded-2xl border border-[var(--brand-border-soft)] bg-[var(--brand-page)] p-4 md:grid-cols-[1fr_1fr_1fr_1.2fr_auto]"
         >
           <Pick
             value={item.diaSemana}
@@ -829,7 +845,7 @@ function Schedules({
               patch({
                 schedules: payload.schedules.map((entry, i) =>
                   i === index
-                    ? { ...entry, diaSemana: diaSemana as any }
+                    ? { ...entry, diaSemana: diaSemana as ActivityDraftPayload["schedules"][number]["diaSemana"] }
                     : entry,
                 ),
               })
@@ -929,15 +945,15 @@ function Review({
                 className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-white p-4 sm:flex-row sm:items-center"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold uppercase text-[#819B56]">
+                  <p className="text-xs font-bold uppercase text-[var(--brand-secondary)]">
                     {steps[item.step - 1]}
                   </p>
-                  <p className="mt-1 font-bold text-[#173C2A]">{item.label}</p>
+                  <p className="mt-1 font-bold text-[var(--brand-ink)]">{item.label}</p>
                 </div>
                 <Button
                   type="button"
                   variant="outline"
-                  className="shrink-0 border-[#819B56] font-bold text-[#1D4F36]"
+                  className="shrink-0 border-[var(--brand-secondary)] font-bold text-[var(--brand-primary)]"
                   onClick={() => onGoToStep(item.step)}
                 >
                   Corregir
@@ -948,13 +964,13 @@ function Review({
           </div>
         </section>
       ) : (
-        <section className="flex items-start gap-3 rounded-2xl border border-[#819B56]/40 bg-[#EEF6E9] p-4 sm:p-5">
-          <Check className="mt-0.5 size-6 shrink-0 text-[#1D4F36]" />
+        <section className="flex items-start gap-3 rounded-2xl border border-[var(--brand-secondary)]/40 bg-[var(--brand-panel)] p-4 sm:p-5">
+          <Check className="mt-0.5 size-6 shrink-0 text-[var(--brand-primary)]" />
           <div>
-            <h3 className="font-extrabold text-[#173C2A]">
+            <h3 className="font-extrabold text-[var(--brand-ink)]">
               Actividad lista para crear
             </h3>
-            <p className="mt-1 text-sm text-[#315644]">
+            <p className="mt-1 text-sm text-[var(--brand-text)]">
               No quedan puntos obligatorios pendientes.
             </p>
           </div>
@@ -1012,9 +1028,12 @@ function Review({
     </div>
   );
 }
+// Posibles helpers legados: conservar hasta completar la separación del workflow.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Grid({ children }: { children: React.ReactNode }) {
   return <div className="grid gap-5 sm:grid-cols-2">{children}</div>;
 }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Field({
   label,
   wide,
@@ -1026,7 +1045,7 @@ function Field({
 }) {
   return (
     <div className={`space-y-2 ${wide ? "sm:col-span-2" : ""}`}>
-      <Label className="font-bold text-[#173C2A]">{label}</Label>
+      <Label className="font-bold text-[var(--brand-ink)]">{label}</Label>
       {children}
     </div>
   );
@@ -1042,9 +1061,9 @@ function IconField({
 }) {
   return (
     <div className="space-y-2">
-      <Label className="font-bold text-[#173C2A]">{label}</Label>
+      <Label className="font-bold text-[var(--brand-ink)]">{label}</Label>
       <div className="relative">
-        <span className="pointer-events-none absolute left-3.5 top-3.5 z-10 text-[#1D4F36] [&_svg]:size-5">
+        <span className="pointer-events-none absolute left-3.5 top-3.5 z-10 text-[var(--brand-primary)] [&_svg]:size-5">
           {icon}
         </span>
         <div className="[&_button]:pl-11">{children}</div>
@@ -1087,13 +1106,13 @@ function CheckCard({
 }) {
   return (
     <label
-      className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 ${checked ? "border-[#819B56] bg-[#EEF6E9]" : "border-[#DDE8D7] bg-white"}`}
+      className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 ${checked ? "border-[var(--brand-secondary)] bg-[var(--brand-panel)]" : "border-[var(--brand-border-soft)] bg-white"}`}
     >
       <Checkbox
         checked={checked}
         onCheckedChange={(value) => onChange(value === true)}
       />
-      <span className="font-bold text-[#173C2A]">{label}</span>
+      <span className="font-bold text-[var(--brand-ink)]">{label}</span>
     </label>
   );
 }
@@ -1106,9 +1125,9 @@ function Missing({ text }: { text: string }) {
 }
 function Summary({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-[#DDE8D7] bg-[#F7FBF5] p-4">
-      <p className="text-xs font-bold uppercase text-[#819B56]">{label}</p>
-      <p className="mt-1 font-extrabold text-[#1D4F36]">{value}</p>
+    <div className="rounded-2xl border border-[var(--brand-border-soft)] bg-[var(--brand-page)] p-4">
+      <p className="text-xs font-bold uppercase text-[var(--brand-secondary)]">{label}</p>
+      <p className="mt-1 font-extrabold text-[var(--brand-primary)]">{value}</p>
     </div>
   );
 }

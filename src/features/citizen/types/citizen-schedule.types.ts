@@ -17,7 +17,7 @@ export type CitizenScheduleItem = {
   enrollmentStatus: CitizenScheduleEnrollmentStatus;
   displayStatus: CitizenScheduleDisplayStatus;
   space: string | null;
-  activity: { id: string; name: string; enrollmentMode: "PERMANENTE" | "POR_PERIODO" | "POR_CLASE"; cancellationNoticeHours: number };
+  activity: { id: string; name: string; imageUrl?: string | null; enrollmentMode: "PERMANENTE" | "POR_PERIODO" | "POR_CLASE"; cancellationNoticeHours: number };
   establishment: { id: string; name: string };
   primaryProfessor: string | null;
   reservation: { id: string; status: "RESERVADA" | "LISTA_ESPERA" | "OFRECIDA" | "CANCELADA" | "AUSENCIA_INFORMADA"; justified: boolean | null; reason: string | null; offerExpiresAt: string | null } | null;

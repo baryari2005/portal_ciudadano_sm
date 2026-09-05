@@ -1,5 +1,8 @@
 import { AdminEmptyState } from "@/components/shared/admin-patterns";
-import { CatalogPagination } from "@/features/activity-catalogs/components/CatalogPrimitives";
+import {
+  CatalogLoadingState,
+  CatalogPagination,
+} from "@/features/activity-catalogs/components/CatalogPrimitives";
 
 import type {
   ManagedUser,
@@ -40,15 +43,11 @@ export function UsersList({
         ) : null}
 
         <div className="min-h-0 flex-1 overflow-y-auto pr-2">
-          <div className="grid gap-3">
-            {loading
-              ? Array.from({ length: 4 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="h-[120px] animate-pulse rounded-[20px] border border-[#DDE8D7] bg-[#EEF6E9]"
-                  />
-                ))
-              : users.map((user) => (
+          {loading ? (
+            <CatalogLoadingState label="usuarios" />
+          ) : (
+            <div className="grid gap-3">
+              {users.map((user) => (
                   <UserListItem
                     key={user.id}
                     user={user}
@@ -56,7 +55,8 @@ export function UsersList({
                     onSelect={onSelectUser}
                   />
                 ))}
-          </div>
+            </div>
+          )}
 
           {!loading && !error && users.length === 0 ? (
             <AdminEmptyState
@@ -67,7 +67,7 @@ export function UsersList({
           ) : null}
         </div>
 
-        {!loading ? <CatalogPagination page={page} total={meta.total} pageSize={meta.pageSize} onPageChange={onPageChange} /> : null}
+        <CatalogPagination page={page} total={meta.total} pageSize={meta.pageSize} onPageChange={onPageChange} />
       </div>
     </div>
   );
