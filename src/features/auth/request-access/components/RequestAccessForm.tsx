@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import type { FieldErrors } from "react-hook-form";
 import { Controller } from "react-hook-form";
@@ -23,7 +23,6 @@ import {
   HeartPulse,
   IdCard,
   Map,
-  MapPinned,
   LogIn,
   MapPin,
   Send,
@@ -56,10 +55,9 @@ import { adminControlClass, adminPrimaryButtonClass, adminSecondaryButtonClass }
 import { GENERO_OPCIONES } from "@/constants/genero";
 import { NACIONALIDAD_VALUES } from "@/constants/nacionalidad";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ARGENTINA_PROVINCES } from "@/constants/argentina-locations";
+import { GeorefTerritoryFields } from "@/features/georef/components/GeorefTerritoryFields";
 
 const inputClass = `${adminControlClass} pl-9`;
-const MOBILE_REQUEST_LOCALITY = "San Miguel";
 
 const titleCaseEs = (value: string) =>
   value
@@ -109,13 +107,13 @@ function getFirstError(errors: FieldErrors<RequestAccessFormValues>) {
 }
 
 const REQUEST_STEPS = [
-  { title: "Datos personales", description: "Completá tu identidad y fecha de nacimiento." },
-  { title: "Credenciales", description: "Definí el usuario y la contraseña con los que vas a ingresar." },
-  { title: "Domicilio", description: "Informá dirección, localidad, provincia y código postal." },
-  { title: "Contacto", description: "Completá tus datos de contacto y la referencia de emergencia." },
-  { title: "Cobertura médica", description: "Informá tu obra social o prepaga, si corresponde." },
-  { title: "Imágenes", description: "Cargá el avatar del portal y tu foto para validar la identidad." },
-  { title: "Revisión", description: "Revisá la información antes de enviar la solicitud de acceso." },
+  { title: "Datos personales", shortTitle: "Datos", description: "Completá tu identidad y fecha de nacimiento." },
+  { title: "Credenciales", shortTitle: "Acceso", description: "Definí el usuario y la contraseña con los que vas a ingresar." },
+  { title: "Domicilio", shortTitle: "Domic.", description: "Informá dirección, localidad, provincia y código postal." },
+  { title: "Contacto", shortTitle: "Contacto", description: "Completá tus datos de contacto y la referencia de emergencia." },
+  { title: "Cobertura médica", shortTitle: "Cobert.", description: "Informá tu obra social o prepaga, si corresponde." },
+  { title: "Imágenes", shortTitle: "Imágenes", description: "Cargá el avatar del portal y tu foto para validar la identidad." },
+  { title: "Revisión", shortTitle: "Revisión", description: "Revisá la información antes de enviar la solicitud de acceso." },
 ] as const;
 
 const STEP_ICONS = [UserRound, KeyRound, MapPin, User, ClipboardCheck, Images, CheckCircle2] as const;
@@ -144,13 +142,14 @@ function RequestAccessSteps({
               key={item.title}
               type="button"
               onClick={() => onSelect(number)}
+              aria-label={item.title}
               className={`flex min-h-10 min-w-[104px] snap-start items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-bold transition-colors lg:min-h-12 lg:min-w-0 lg:rounded-xl lg:px-3 lg:py-2 lg:text-sm ${active ? "bg-[var(--brand-primary)] text-white lg:bg-[#DDF28A] lg:text-[var(--brand-ink)]" : "border border-[var(--brand-border-soft)] bg-white text-[var(--brand-primary)] lg:border-0 lg:bg-transparent lg:text-white lg:hover:bg-white/10"}`}
               aria-current={active ? "step" : undefined}
             >
               <span className={`flex size-7 shrink-0 items-center justify-center rounded-full lg:size-8 lg:rounded-lg ${active ? "bg-white/20 lg:bg-white/55" : "bg-[var(--brand-panel)] lg:bg-white/10"}`}>
                 {completed[index] ? <CheckCircle2 className="size-5" /> : <Icon className="size-5" />}
               </span>
-              <span className="lg:hidden">Paso {number}</span>
+              <span className="lg:hidden" aria-hidden="true">{item.shortTitle}</span>
               <span className="hidden lg:block">{item.title}</span>
             </button>
           );
@@ -195,7 +194,6 @@ export function RequestAccessForm() {
     useRequestAccessForm();
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState(1);
-  const [isMobileRequest, setIsMobileRequest] = useState(false);
   const submitRequestedRef = useRef(false);
 
   const {
@@ -205,21 +203,6 @@ export function RequestAccessForm() {
     control,
     formState: { errors, isSubmitting },
   } = form;
-  useEffect(() => {
-    const query = window.matchMedia("(max-width: 639px)");
-    const update = () => setIsMobileRequest(query.matches);
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, []);
-  useEffect(() => {
-    if (!isMobileRequest) return;
-    setValue("localidad", MOBILE_REQUEST_LOCALITY, {
-      shouldDirty: false,
-      shouldTouch: false,
-      shouldValidate: true,
-    });
-  }, [isMobileRequest, setValue]);
   const invalidateAddressLocation = () => {
     setValue("direccionPlaceId", "");
     setValue("direccionLat", null);
@@ -308,12 +291,7 @@ export function RequestAccessForm() {
           }
           submitRequestedRef.current = false;
           void form.handleSubmit(
-            (values) =>
-              onSubmit(
-                isMobileRequest
-                  ? { ...values, localidad: MOBILE_REQUEST_LOCALITY }
-                  : values,
-              ),
+            onSubmit,
             onInvalid,
           )(event);
         }}
@@ -325,7 +303,7 @@ export function RequestAccessForm() {
             completed={[personalComplete, accessComplete, addressComplete, contactComplete, true, photosComplete, false]}
             onSelect={setStep}
           />
-          <div className="min-w-0 rounded-2xl border border-[var(--brand-border-soft)] bg-[#F9FAF5] p-3 pb-24 text-[var(--brand-ink)] shadow-sm sm:rounded-3xl sm:p-6 lg:border-[var(--brand-secondary)]/20 lg:bg-white/80 lg:p-8">
+          <div className="min-w-0 rounded-2xl border border-[var(--brand-border-soft)] bg-[#F9FAF5] p-3 text-[var(--brand-ink)] shadow-sm sm:rounded-3xl sm:p-6 lg:border-[var(--brand-secondary)]/20 lg:bg-white/80 lg:p-8">
           <div className="mb-6 flex items-center justify-between border-b border-[var(--brand-border)] pb-5">
             <div>
               <h2 className="flex items-center gap-2 text-base font-extrabold text-[var(--brand-heading)] sm:text-lg">
@@ -477,17 +455,16 @@ export function RequestAccessForm() {
               </div>
               </> : null}
 
-              {step === 3 ? <div className="col-span-2 grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] lg:items-stretch"><div className="grid grid-cols-2 content-start gap-3 sm:gap-4">
+              {step === 3 ? <div className="col-span-2 grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] lg:items-stretch"><div className="grid grid-cols-1 content-start gap-3 sm:grid-cols-2 sm:gap-4">
 
-              <div className="col-span-2">
-                <Controller control={control} name="direccion" render={({field})=><GoogleAddressInput display="input" id="direccion" value={field.value??""} placeId={form.watch("direccionPlaceId")} lat={form.watch("direccionLat")} lng={form.watch("direccionLng")} locality={form.watch("localidad")} province={form.watch("provincia")} postalCode={form.watch("codigoPostal")} onChange={(location)=>{field.onChange(location.address);setValue("direccionPlaceId",location.placeId??"");setValue("direccionLat",location.lat);setValue("direccionLng",location.lng);if(location.locality && !isMobileRequest)setValue("localidad",location.locality);if(location.province)setValue("provincia",location.province);if(location.postalCode)setValue("codigoPostal",location.postalCode)}} className={inputClass} placeholder="Ej: Av. Presidente Perón 1234"/>}/>
+              <div className="sm:col-span-2">
+                <Controller control={control} name="direccion" render={({field})=><GoogleAddressInput display="input" id="direccion" value={field.value??""} placeId={form.watch("direccionPlaceId")} lat={form.watch("direccionLat")} lng={form.watch("direccionLng")} locality={form.watch("localidad")} province={form.watch("provincia")} postalCode={form.watch("codigoPostal")} onChange={(location)=>{field.onChange(location.address);setValue("direccionPlaceId",location.placeId??"");setValue("direccionLat",location.lat);setValue("direccionLng",location.lng);if(location.locality)setValue("localidad",location.locality);if(location.province)setValue("provincia",location.province);if(location.postalCode)setValue("codigoPostal",location.postalCode)}} className={inputClass} placeholder="Ej: Av. Presidente Perón 1234"/>}/>
                 <FormError message={errors.direccion?.message} />
               </div>
 
-              <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Localidad *</Label><Controller control={control} name="localidad" render={({ field }) => <IconInput id="localidad" leftIcon={<MapPinned className="size-4 text-[var(--brand-primary)]" />} input={<Input {...field} value={isMobileRequest ? MOBILE_REQUEST_LOCALITY : field.value ?? ""} readOnly={isMobileRequest} aria-readonly={isMobileRequest} onChange={(event) => { field.onChange(event); invalidateAddressLocation(); }} className={`${adminControlClass} w-full pl-9 ${isMobileRequest ? "cursor-not-allowed bg-muted text-muted-foreground" : ""}`} />} />} /><FormError message={errors.localidad?.message} /></div>
-              <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Provincia *</Label><Controller control={control} name="provincia" render={({field})=><IconInput id="provincia" leftIcon={<Map className="size-4 text-[var(--brand-primary)]" />} input={<Select value={field.value} onValueChange={(value) => { field.onChange(value); invalidateAddressLocation(); }}><SelectTrigger className={`${adminControlClass} w-full pl-9`}><SelectValue placeholder="Seleccionar provincia"/></SelectTrigger><SelectContent>{ARGENTINA_PROVINCES.map(item=><SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>} />}/><FormError message={errors.provincia?.message} /></div>
+              <Controller control={control} name="provincia" render={({field:provinceField})=><Controller control={control} name="localidad" render={({field:localityField})=><GeorefTerritoryFields province={provinceField.value??""} locality={localityField.value??""} onProvinceChange={(value)=>{provinceField.onChange(value);setValue("provincia",value,{shouldDirty:true,shouldTouch:true,shouldValidate:true})}} onLocalityChange={(value)=>{localityField.onChange(value);setValue("localidad",value,{shouldDirty:true,shouldTouch:true,shouldValidate:true})}} onLocationInvalidated={invalidateAddressLocation} className={adminControlClass} provinceError={errors.provincia?.message} localityError={errors.localidad?.message}/>} />}/>
               <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Código postal *</Label><Controller control={control} name="codigoPostal" render={({ field }) => <IconInput id="codigoPostal" leftIcon={<IdCard className="size-4 text-[var(--brand-primary)]" />} input={<Input {...field} onChange={(event) => { field.onChange(event); invalidateAddressLocation(); }} className={`${adminControlClass} w-full pl-9`} />} />} /><FormError message={errors.codigoPostal?.message} /></div>
-              </div><div className="min-w-0"><Controller control={control} name="direccion" render={({field})=><GoogleAddressInput display="map" id="direccion-map" value={field.value??""} placeId={form.watch("direccionPlaceId")} lat={form.watch("direccionLat")} lng={form.watch("direccionLng")} locality={form.watch("localidad")} province={form.watch("provincia")} postalCode={form.watch("codigoPostal")} onChange={(location)=>{field.onChange(location.address);setValue("direccionPlaceId",location.placeId??"");setValue("direccionLat",location.lat);setValue("direccionLng",location.lng);if(location.locality && !isMobileRequest)setValue("localidad",location.locality);if(location.province)setValue("provincia",location.province);if(location.postalCode)setValue("codigoPostal",location.postalCode)}} />}/></div></div> : null}
+              </div><div className="min-w-0"><Controller control={control} name="direccion" render={({field})=><GoogleAddressInput display="map" id="direccion-map" value={field.value??""} placeId={form.watch("direccionPlaceId")} lat={form.watch("direccionLat")} lng={form.watch("direccionLng")} locality={form.watch("localidad")} province={form.watch("provincia")} postalCode={form.watch("codigoPostal")} onChange={(location)=>{field.onChange(location.address);setValue("direccionPlaceId",location.placeId??"");setValue("direccionLat",location.lat);setValue("direccionLng",location.lng);if(location.locality)setValue("localidad",location.locality);if(location.province)setValue("provincia",location.province);if(location.postalCode)setValue("codigoPostal",location.postalCode)}} />}/></div></div> : null}
 
               {step === 4 ? <>
 
@@ -636,32 +613,35 @@ export function RequestAccessForm() {
               </div>
             ) : null}
           </div>
-        <div className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-2 gap-2 border-t border-[var(--brand-border-soft)] bg-[#F9FAF5]/95 p-3 shadow-[0_-8px_24px_rgba(29,79,54,0.10)] backdrop-blur sm:static sm:mt-8 sm:flex sm:flex-row sm:justify-between sm:border-[var(--brand-border)] sm:bg-transparent sm:p-0 sm:pt-5 sm:shadow-none">
+        <div className="mt-5 flex items-center justify-between gap-2 border-t border-[var(--brand-border)] pt-4 sm:mt-8 sm:pt-5">
+          <div className="min-w-0">
           <Button
             type="button"
             variant="outline"
-            className={`${adminSecondaryButtonClass} h-8 w-full justify-center gap-2 rounded-lg px-2 text-xs sm:h-12 sm:w-auto sm:gap-3 sm:rounded-xl sm:px-6 sm:text-sm`}
+            className={`${adminSecondaryButtonClass} h-10 w-auto justify-center gap-1.5 rounded-lg px-3 text-xs sm:h-12 sm:gap-3 sm:rounded-xl sm:px-6 sm:text-sm`}
             onClick={() => step > 1 && setStep((current) => current - 1)}
             asChild={step === 1}
           >
             {step === 1 ? <Link href="/login">
-              <ArrowLeft className="size-3 sm:size-5" />
+              <ArrowLeft className="size-3 shrink-0 sm:size-5" />
               Volver
-            </Link> : <><ArrowLeft className="size-3 sm:size-5" />Anterior</>}
+            </Link> : <><ArrowLeft className="size-3 shrink-0 sm:size-5" />Anterior</>}
           </Button>
+          </div>
 
+          <div className="min-w-0">
           {step < 7 ? <Button
             type="button"
             size="lg"
-            className={`${adminPrimaryButtonClass} h-8 w-full justify-center gap-2 rounded-lg px-2 text-xs sm:h-12 sm:w-auto sm:gap-3 sm:rounded-xl sm:px-6 sm:text-sm`}
+            className={`${adminPrimaryButtonClass} h-10 w-auto justify-center gap-1.5 rounded-lg px-3 text-xs sm:h-12 sm:gap-3 sm:rounded-xl sm:px-6 sm:text-sm`}
             onClick={nextStep}
           >
             Guardar y continuar
-            <ChevronRight className="size-3 sm:size-5" />
+            <ChevronRight className="size-3 shrink-0 sm:size-5" />
           </Button> : <Button
             type="submit"
             size="lg"
-            className={`${adminPrimaryButtonClass} h-8 w-full justify-center gap-2 rounded-lg px-2 text-xs sm:h-12 sm:w-auto sm:gap-3 sm:rounded-xl sm:px-6 sm:text-sm`}
+            className={`${adminPrimaryButtonClass} h-10 w-auto justify-center gap-1.5 rounded-lg px-3 text-xs sm:h-12 sm:gap-3 sm:rounded-xl sm:px-6 sm:text-sm`}
             disabled={isSubmitting}
             aria-disabled={isSubmitting}
             onClick={() => {
@@ -680,6 +660,7 @@ export function RequestAccessForm() {
               </span>
             )}
           </Button>}
+          </div>
         </div>
           </div>
         </div>

@@ -6,13 +6,13 @@ import { Building2, CheckCircle2, Hash, Loader2, MapPin, Search } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { AddressLocation, GeocodingResult } from "@/features/geocoding/types/location.types";
-import { joinExactAddress, splitExactAddress } from "@/features/geocoding/helpers/exact-address";
+import { joinExactAddress, splitExactAddress, toAddressTitleCase } from "@/features/geocoding/helpers/exact-address";
 
 type Props = { id: string; value: string; placeId?: string | null; lat?: number | null; lng?: number | null; locality?: string | null; province?: string | null; postalCode?: string | null; display?: "full" | "input" | "map"; onChange: (value: AddressLocation) => void; className?: string; disabled?: boolean; placeholder?: string };
 const DEFAULT_CENTER: [number, number] = [-34.5431, -58.7119];
 type GeocodingResponse<T> = { data?: T; message?: string };
 
-export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, locality, province, postalCode, display = "full", onChange, className, disabled, placeholder }: Props) {
+export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, locality, province, display = "full", onChange, className, disabled, placeholder }: Props) {
   const mapHost = useRef<HTMLDivElement>(null), mapRef = useRef<LeafletMap | null>(null), markerRef = useRef<Marker | null>(null), callbackRef = useRef(onChange), exactAddressRef = useRef(value), coordinatesRef = useRef({ lat, lng });
   const [query, setQuery] = useState(value), [results, setResults] = useState<GeocodingResult[]>([]), [loading, setLoading] = useState(false), [message, setMessage] = useState("");
   const initialExact = splitExactAddress(value);
@@ -56,7 +56,7 @@ export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, local
       const selectPoint = async (point: { lat: number; lng: number }) => {
         markerRef.current?.setLatLng(point);
         setLoading(true); setMessage("");
-        try { const response = await fetch(`/api/geocoding?lat=${point.lat}&lng=${point.lng}`); const body = await response.json() as GeocodingResponse<AddressLocation>; if (!response.ok || !body.data) throw new Error(); callbackRef.current({ ...body.data, address: normalizedAddress(body.data, exactAddressRef.current) }); }
+        try { const response = await fetch(`/api/geocoding?lat=${point.lat}&lng=${point.lng}`); const body = await response.json() as GeocodingResponse<AddressLocation>; if (!response.ok || !body.data) throw new Error(); callbackRef.current({ ...body.data, address: normalizedAddress(body.data, exactAddressRef.current), postalCode: undefined }); }
         catch { callbackRef.current({ address: exactAddressRef.current, placeId: null, lat: point.lat, lng: point.lng, provider: "openstreetmap" }); setMessage("Punto seleccionado; completá la dirección manualmente."); }
         finally { setLoading(false); }
       };
@@ -74,12 +74,27 @@ export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, local
     setLoading(true); setMessage(""); setResults([]);
     const exact = splitExactAddress(query);
     const searchableAddress = [exact.street, exact.number].filter(Boolean).join(" ");
-    const contextualQuery = [searchableAddress, locality?.trim(), province?.trim(), postalCode?.trim(), "Argentina"].filter(Boolean).join(", ");
-    try { const response = await fetch(`/api/geocoding?q=${encodeURIComponent(contextualQuery)}`); const body = await response.json() as GeocodingResponse<GeocodingResult[]>; if (!response.ok) throw new Error(body.message); const items=body.data??[];setResults(items); if (!items.length) setMessage("No encontramos resultados. Podés marcar el punto en el mapa."); }
+    if (!province?.trim() || !locality?.trim()) { setLoading(false); setMessage("Seleccioná provincia, departamento y localidad antes de buscar la dirección."); return; }
+    const params = new URLSearchParams({ resource: "addresses", address: searchableAddress, province: province.trim(), locality: locality.trim() });
+    try { const response = await fetch(`/api/georef?${params}`); const body = await response.json() as GeocodingResponse<Array<{id:string;formattedAddress:string;street:string;streetNumber:string;province:{name:string};locality:{name:string}|null;location:{lat:number;lon:number}}>>; if (!response.ok) throw new Error(body.message); const items=(body.data??[]).map((item)=>({address:item.formattedAddress,placeId:item.id,lat:item.location.lat,lng:item.location.lon,locality:item.locality?.name,province:item.province.name,street:item.street,streetNumber:item.streetNumber,provider:"openstreetmap" as const}));setResults(items); if (!items.length) setMessage("No encontramos resultados oficiales. Podés marcar el punto en el mapa."); }
     catch (error) { setMessage(error instanceof Error ? error.message : "No pudimos buscar la dirección."); }
     finally { setLoading(false); }
   }
-  function select(result: GeocodingResult) { const exactAddress = normalizedAddress(result, query); setResults([]); setQuery(exactAddress); callbackRef.current({ ...result, address: exactAddress }); mapRef.current?.setView([result.lat, result.lng], 17); markerRef.current?.setLatLng([result.lat, result.lng]).setOpacity(1); }
+  async function select(result: GeocodingResult) {
+    const exactAddress = normalizedAddress(result, query);
+    setResults([]); setQuery(exactAddress);
+    mapRef.current?.setView([result.lat, result.lng], 17); markerRef.current?.setLatLng([result.lat, result.lng]).setOpacity(1);
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/geocoding?lat=${result.lat}&lng=${result.lng}`);
+      const body = await response.json() as GeocodingResponse<AddressLocation>;
+      callbackRef.current({ ...result, address: exactAddress, postalCode: response.ok ? body.data?.postalCode : undefined });
+    } catch {
+      callbackRef.current({ ...result, address: exactAddress });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function changeExact(nextStreet: string, nextNumber: string, nextComplement: string) {
     setStreet(nextStreet); setStreetNumber(nextNumber); setComplement(nextComplement);
@@ -87,16 +102,19 @@ export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, local
     setQuery(address); setResults([]); markerRef.current?.setOpacity(0);
     onChange({ address, placeId: null, lat: null, lng: null, provider: "manual" });
   }
+  function formatExactAddress() {
+    changeExact(toAddressTitleCase(street), streetNumber, toAddressTitleCase(complement));
+  }
   const addressInput = <div className="relative min-w-0 flex-1"><MapPin className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--brand-primary)]"/><Input id={id} value={query} disabled={disabled} onChange={(event) => { setQuery(event.target.value); setResults([]); onChange({ address: event.target.value, placeId: null, lat: null, lng: null, provider: "manual" }); }} onKeyDown={(event) => { if (event.key === "Enter" && display !== "input") { event.preventDefault(); void search(); } }} className={className} placeholder={placeholder}/></div>;
   if (display === "input") return <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_160px]">
-    <div className="space-y-1"><label htmlFor={`${id}-street`} className="text-sm font-extrabold text-[var(--brand-ink)]">Calle *</label><div className="relative"><MapPin className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--brand-primary)]"/><Input id={`${id}-street`} value={street} disabled={disabled} onChange={(event) => changeExact(event.target.value, streetNumber, complement)} className={`${className ?? ""} pl-9`} placeholder="Ej: San Pablo" /></div></div>
+    <div className="space-y-1"><label htmlFor={`${id}-street`} className="text-sm font-extrabold text-[var(--brand-ink)]">Calle *</label><div className="relative"><MapPin className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--brand-primary)]"/><Input id={`${id}-street`} value={street} disabled={disabled} onChange={(event) => changeExact(event.target.value, streetNumber, complement)} onBlur={formatExactAddress} className={`${className ?? ""} pl-9`} placeholder="Ej: San Pablo" /></div></div>
     <div className="space-y-1"><label htmlFor={`${id}-number`} className="text-sm font-extrabold text-[var(--brand-ink)]">Altura *</label><div className="relative"><Hash className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--brand-primary)]"/><Input id={`${id}-number`} value={streetNumber} disabled={disabled} inputMode="numeric" onChange={(event) => changeExact(street, event.target.value, complement)} className={`${className ?? ""} pl-9`} placeholder="Ej: 1660" /></div></div>
-    <div className="space-y-1 sm:col-span-2"><label htmlFor={`${id}-complement`} className="text-sm font-extrabold text-[var(--brand-ink)]">Piso, departamento, casa o referencia</label><div className="relative"><Building2 className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--brand-primary)]"/><Input id={`${id}-complement`} value={complement} disabled={disabled} onChange={(event) => changeExact(street, streetNumber, event.target.value)} className={`${className ?? ""} pl-9`} placeholder="Ej: Fondo, Casa A, Piso 2 Depto. B" /></div></div>
+    <div className="space-y-1 sm:col-span-2"><label htmlFor={`${id}-complement`} className="text-sm font-extrabold text-[var(--brand-ink)]">Piso, departamento, casa o referencia</label><div className="relative"><Building2 className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-[var(--brand-primary)]"/><Input id={`${id}-complement`} value={complement} disabled={disabled} onChange={(event) => changeExact(street, streetNumber, event.target.value)} onBlur={formatExactAddress} className={`${className ?? ""} pl-9`} placeholder="Ej: Fondo, Casa A, Piso 2 Depto. B" /></div></div>
   </div>;
   return <div className="space-y-3">
     <p className="text-sm font-medium text-[var(--brand-muted)]">Completá dirección, localidad, provincia y código postal para encontrar una ubicación más precisa.</p>
     <div className="flex gap-2">{display === "full" ? addressInput : null}<Button type="button" className="w-full sm:w-auto" disabled={disabled || loading || query.trim().length < 3} onClick={() => void search()} aria-label="Buscar ubicación en el mapa">{loading ? <Loader2 className="animate-spin"/> : <Search/>}<span>Buscar ubicación en el mapa</span></Button></div>
-    {results.length ? <div className="overflow-hidden rounded-xl border border-[var(--brand-border)] bg-white shadow-sm">{results.map((result) => <button key={result.placeId} type="button" className="block w-full border-b border-[var(--brand-border-soft)] px-4 py-3 text-left text-sm font-medium text-[var(--brand-ink)] last:border-0 hover:bg-[var(--brand-panel)]" onClick={() => select(result)}>{result.address}</button>)}</div> : null}
+    {results.length ? <div className="overflow-hidden rounded-xl border border-[var(--brand-border)] bg-white shadow-sm">{results.map((result) => <button key={result.placeId} type="button" className="block w-full border-b border-[var(--brand-border-soft)] px-4 py-3 text-left text-sm font-medium text-[var(--brand-ink)] last:border-0 hover:bg-[var(--brand-panel)]" onClick={() => void select(result)}>{result.address}</button>)}</div> : null}
     <div ref={mapHost} className="h-80 min-h-80 w-full overflow-hidden rounded-2xl border border-[var(--brand-border)] bg-[var(--brand-panel)] lg:h-full lg:min-h-[390px]" aria-label="Mapa para seleccionar el domicilio"/>
     {placeId ? <p className="flex items-center gap-1 text-xs font-bold text-[var(--brand-primary)]"><CheckCircle2 className="size-3.5"/>Ubicación validada en el mapa</p> : <p className="text-xs font-medium text-[var(--brand-muted)]">Buscá la dirección o hacé clic en el mapa para ubicarla. El ingreso manual sigue disponible.</p>}{message ? <p className="text-xs font-bold text-amber-700">{message}</p> : null}
   </div>;

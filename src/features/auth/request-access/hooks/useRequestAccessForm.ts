@@ -17,7 +17,7 @@ const defaultValues: RequestAccessFormValues = {
   nacionalidad: "ARGENTINA",
   dni: "",
   direccion: "",
-  localidad: "San Miguel",
+  localidad: "",
   provincia: "",
   codigoPostal: "",
   direccionPlaceId: "",
@@ -44,6 +44,7 @@ export function useRequestAccessForm() {
     resolver: zodResolver(requestAccessSchema),
     defaultValues,
     mode: "onBlur",
+    shouldUnregister: false,
   });
 
   const onSubmit = async (values: RequestAccessFormValues) => {

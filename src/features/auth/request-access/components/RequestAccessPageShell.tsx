@@ -6,14 +6,14 @@ import { RequestAccessForm } from "./RequestAccessForm";
 
 export function RequestAccessPageShell() {
   return (
-    <main className="min-h-screen bg-[var(--brand-page)]">
-      <header className="relative h-[174px] overflow-hidden sm:hidden">
+    <main className="min-h-screen overflow-x-hidden bg-[var(--brand-page)]">
+      <header className="relative h-[190px] overflow-hidden sm:hidden">
         <svg className="absolute inset-0 size-full" viewBox="0 0 440 190" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="mobile-request-header" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#1D4F36"/><stop offset="72%" stopColor="#14543A"/><stop offset="100%" stopColor="#0B6843"/></linearGradient></defs><path d="M0 0H440V154C354 130 300 174 197 170C111 168 48 154 0 135V0Z" fill="url(#mobile-request-header)"/></svg>
         <span className="pointer-events-none absolute -left-3 top-[92px] h-16 w-12 rotate-[-22deg] rounded-[80%_15%_80%_15%] bg-[var(--brand-secondary)]/12" aria-hidden="true" />
         <span className="pointer-events-none absolute left-7 top-[110px] h-12 w-8 rotate-[30deg] rounded-[80%_15%_80%_15%] bg-white/[0.045]" aria-hidden="true" />
-        <div className="relative z-10 flex items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))]">
-          <div className="drop-shadow-sm"><p className="text-base font-extrabold tracking-wide text-white">MÁS SAN MIGUEL</p><p className="mt-0.5 text-sm font-medium text-white/90">Portal ciudadano</p></div>
-          <Link href="/login" aria-label="Iniciar sesión" className="grid size-10 place-items-center rounded-xl bg-white/15 text-white backdrop-blur"><User className="size-5"/></Link>
+        <div className="relative z-10 flex min-h-[125px] items-center justify-center px-4 pt-[max(1rem,env(safe-area-inset-top))] text-center text-white">
+          <div className="text-left drop-shadow-sm"><p className="text-xl font-extrabold tracking-wide">MÁS SAN MIGUEL</p><p className="mt-0.5 text-base font-medium text-white/90">Portal ciudadano</p></div>
+          <Link href="/login" aria-label="Iniciar sesión" className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] grid size-10 place-items-center rounded-xl bg-white/15 text-white backdrop-blur"><User className="size-5"/></Link>
         </div>
       </header>
       <header className="relative hidden overflow-hidden border-b border-white/15 bg-primary sm:block">

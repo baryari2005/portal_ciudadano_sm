@@ -11,9 +11,7 @@ import {
   Clock,
   Loader2,
   Mail,
-  Map,
   MapPin,
-  MapPinned,
   NotebookText,
   Phone,
   Plus,
@@ -39,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { isValidPhone, PHONE_VALIDATION_MESSAGE } from "@/lib/validation/phone";
-import { ARGENTINA_PROVINCES } from "@/constants/argentina-locations";
+import { GeorefTerritoryFields } from "@/features/georef/components/GeorefTerritoryFields";
 import { ActivityImageUploader } from "@/features/actividades/components/ActivityImageUploader";
 
 import {
@@ -304,16 +302,14 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
               />
             </Field>
 
-            <Field label="Localidad" icon={MapPinned}>
-              <Input value={form.localidad ?? ""} onChange={(event) => setValue("localidad", event.target.value)} className={inputClass} placeholder="Ej: San Miguel" />
-            </Field>
-
-            <Field label="Provincia" icon={Map}>
-              <Select value={form.provincia ?? ""} onValueChange={(value) => setValue("provincia", value)}>
-                <SelectTrigger className={`${selectClass} w-full pl-9`}><SelectValue placeholder="Seleccionar provincia" /></SelectTrigger>
-                <SelectContent>{ARGENTINA_PROVINCES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent>
-              </Select>
-            </Field>
+            <GeorefTerritoryFields
+              province={form.provincia ?? ""}
+              locality={form.localidad ?? ""}
+              onProvinceChange={(provincia) => setForm((current) => ({ ...current, provincia }))}
+              onLocalityChange={(localidad) => setForm((current) => ({ ...current, localidad }))}
+              onLocationInvalidated={() => setForm((current) => ({ ...current, direccionPlaceId: null, direccionLat: null, direccionLng: null }))}
+              className={selectClass}
+            />
 
             <Field label="Código postal" icon={MapPin}>
               <Input value={form.codigoPostal ?? ""} onChange={(event) => setValue("codigoPostal", event.target.value)} className={inputClass} placeholder="Ej: 1625" />

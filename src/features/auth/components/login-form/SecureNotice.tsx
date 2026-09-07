@@ -7,6 +7,8 @@ export function SecureNotice() {
         <Image
           src="/icons/cerrar.svg"
           alt=""
+          width={24}
+          height={24}
           className="size-6 invert"
           aria-hidden="true"
         />

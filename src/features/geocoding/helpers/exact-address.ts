@@ -16,3 +16,12 @@ export function joinExactAddress(street: string, number: string, complement: str
   const main = [street.trim(), number.trim()].filter(Boolean).join(" ");
   return [main, complement.trim()].filter(Boolean).join(", ");
 }
+
+export function toAddressTitleCase(value: string) {
+  const lowercaseWords = new Set(["de", "del", "la", "las", "los", "y", "e"]);
+  return value.trim().toLocaleLowerCase("es-AR").split(/(\s+)/).map((word, index) => {
+    if (!word.trim()) return word;
+    if (index > 0 && lowercaseWords.has(word)) return word;
+    return word.replace(/^([a-záéíóúüñ])/, (letter) => letter.toLocaleUpperCase("es-AR"));
+  }).join("");
+}

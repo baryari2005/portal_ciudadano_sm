@@ -40,8 +40,6 @@ type Props = {
 
 type StepStatus = DraftStepStatus;
 
-const MOBILE_RECEPTION_LOCALITY = "San Miguel";
-
 const STEP_FIELDS: Record<number, Array<keyof UserFormValues>> = {
   1: ["nombre", "apellido", "documento", "fechaNacimiento", "nacionalidad", "genero", "estadoCivil"],
   2: ["userId", "password", "rolId", "profesorEspecialidad", "profesorMatricula", "profesorDescripcion"],
@@ -100,14 +98,6 @@ export function UserForm({ mode, defaultValues, onSuccess, fixedRoleCode, backHr
   const roleCode = fixedRoleCode ?? defaultValues?.rol?.codigo ?? defaultValues?.rol?.nombre ?? "";
   const draftScope: "citizen" | "personnel" = submissionMode === "reception-edit" || roleCode.toLowerCase().includes("citizen") || roleCode.toLowerCase().includes("ciudad") ? "citizen" : "personnel";
   useEffect(() => {
-    if (!isMobileRequest) return;
-    form.setValue("localidad", MOBILE_RECEPTION_LOCALITY, {
-      shouldDirty: false,
-      shouldTouch: false,
-      shouldValidate: true,
-    });
-  }, [form, isMobileRequest]);
-  useEffect(() => {
     if (!fixedRoleCode || loadingRoles) return;
     const normalizedCode = fixedRoleCode.toLowerCase();
     const role = roles.find((item) => item.codigo?.toLowerCase() === normalizedCode || item.nombre.toLowerCase() === normalizedCode);
@@ -132,7 +122,6 @@ export function UserForm({ mode, defaultValues, onSuccess, fixedRoleCode, backHr
       form.reset({
         ...form.getValues(),
         ...payload,
-        ...(isMobileRequest ? { localidad: MOBILE_RECEPTION_LOCALITY } : {}),
       } as UserFormValues);
       if (typeof __identityTmpPath === "string") setIdentityTmpPath(__identityTmpPath);
       if (typeof __avatarTmpPath === "string") setAvatarTmpPath(__avatarTmpPath);
@@ -282,7 +271,7 @@ export function UserForm({ mode, defaultValues, onSuccess, fixedRoleCode, backHr
     <form
       id="user-form"
       className="w-full"
-      onSubmit={(event) => { if ((workflow && step !== 7) || mediaUploading || !submitRequestedRef.current) { event.preventDefault(); return; } submitRequestedRef.current = false; void form.handleSubmit(async (values) => { setStepStatus({ 1: "valid", 2: "valid", 3: "valid", 4: "valid", 5: "valid", 6: "valid", 7: "valid" }); await onSubmit(isMobileRequest ? { ...values, localidad: MOBILE_RECEPTION_LOCALITY } : values); }, onInvalid)(event); }}
+      onSubmit={(event) => { if ((workflow && step !== 7) || mediaUploading || !submitRequestedRef.current) { event.preventDefault(); return; } submitRequestedRef.current = false; void form.handleSubmit(async (values) => { setStepStatus({ 1: "valid", 2: "valid", 3: "valid", 4: "valid", 5: "valid", 6: "valid", 7: "valid" }); await onSubmit(values); }, onInvalid)(event); }}
       noValidate
     >
       <AdminWorkflowLayout sections={steps.filter((_, index) => workflow || index < 6).map(([label, icon], index) => ({ id: index + 1, label, icon, status: stepStatus[index + 1] }))} activeSection={step} onSectionChange={setStep} navigationLabel={creating ? "Pasos del alta" : "Pasos de edición"} fullWidth={!workflow} mobileRequestAccess={mobileRequestAccess}>
@@ -303,7 +292,6 @@ export function UserForm({ mode, defaultValues, onSuccess, fixedRoleCode, backHr
         onMediaUploadingChange={setMediaUploading}
         showReview={workflow}
         mobileRequestAccess={mobileRequestAccess}
-        lockedLocality={isMobileRequest ? MOBILE_RECEPTION_LOCALITY : undefined}
       />
       </AdminWorkflowLayout>
 

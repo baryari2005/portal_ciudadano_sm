@@ -42,6 +42,7 @@ import { UserDocumentsAdminPage } from "@/features/user-documents/components/Use
 import { CatalogDetailField } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { axiosInstance } from "@/lib/axios";
 import { splitExactAddress } from "@/features/geocoding/helpers/exact-address";
+import { AddressMapView } from "@/features/geocoding/components/AddressMapView";
 
 import { getManagedUserRecord } from "../../services/users-management.service";
 import type { ManagedUser } from "../../types/management.types";
@@ -357,17 +358,20 @@ function CitizenRecordDataSection({
         description={group.description}
         icon={group.icon}
       >
-        <dl className="grid gap-3 md:grid-cols-2">
-          {group.rows.map((row) => (
-            <CatalogDetailField
-              key={row.label}
-              icon={row.icon}
-              label={row.label}
-            >
-              {row.value}
-            </CatalogDetailField>
-          ))}
-        </dl>
+        <div className={section === "address" ? "grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)] lg:items-stretch" : undefined}>
+          <dl className="grid content-start gap-3 md:grid-cols-2">
+            {group.rows.map((row) => (
+              <CatalogDetailField
+                key={row.label}
+                icon={row.icon}
+                label={row.label}
+              >
+                {row.value}
+              </CatalogDetailField>
+            ))}
+          </dl>
+          {section === "address" ? <div className="min-w-0"><p className="mb-2 text-sm font-extrabold text-[var(--brand-primary)]">Ubicación del domicilio</p><AddressMapView lat={user.addressLat} lng={user.addressLng} label={`Domicilio de ${user.fullName}`}/></div> : null}
+        </div>
       </AdminRecordSectionContent>
       {section === "personal-data" ? (
         <AdminRecordSectionContent

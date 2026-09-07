@@ -18,7 +18,6 @@ import {
   HeartPulse,
   IdCard,
   Map,
-  MapPinned,
   User,
   UserRound,
 } from "lucide-react";
@@ -43,7 +42,7 @@ import { MedicalCoverageSelect } from "@/features/medical-coverages/components/M
 import { GENERO_OPCIONES } from "@/constants/genero";
 import { NACIONALIDAD_VALUES } from "@/constants/nacionalidad";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ARGENTINA_PROVINCES } from "@/constants/argentina-locations";
+import { GeorefTerritoryFields } from "@/features/georef/components/GeorefTerritoryFields";
 import { isValidPhone, PHONE_VALIDATION_MESSAGE } from "@/lib/validation/phone";
 import {
   DOCUMENT_NUMBER_VALIDATION_MESSAGE,
@@ -105,7 +104,6 @@ export function UserFormFields({
   onMediaUploadingChange,
   showReview = true,
   mobileRequestAccess = false,
-  lockedLocality,
 }: {
   mode: Mode;
   form: UseFormReturn<UserFormValues>;
@@ -123,7 +121,6 @@ export function UserFormFields({
   onMediaUploadingChange?: (uploading: boolean) => void;
   showReview?: boolean;
   mobileRequestAccess?: boolean;
-  lockedLocality?: string;
 }) {
   const {
     register,
@@ -305,17 +302,18 @@ export function UserFormFields({
           <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Sexo / género *</Label><Controller control={control} name="genero" render={({field})=><IconInput id="genero" leftIcon={<UserRound className="size-4 text-[var(--brand-primary)]"/>} input={<Select value={field.value} onValueChange={field.onChange}><SelectTrigger className="h-11 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9"><SelectValue placeholder="Seleccionar"/></SelectTrigger><SelectContent>{GENERO_OPCIONES.map(item=><SelectItem key={item} value={item}>{item.replaceAll("_", " ")}</SelectItem>)}</SelectContent></Select>}/>} /></div>
           </> : null}
 
-          {show(3) ? <div className={`grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] lg:items-stretch ${mobileRequestAccess ? "col-span-2" : "sm:col-span-2"}`}><div className={`grid content-start ${mobileRequestAccess ? "grid-cols-2 gap-3 md:gap-4" : "gap-4 sm:grid-cols-2"}`}>
+          {show(3) ? <div className={`grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] lg:items-stretch ${mobileRequestAccess ? "col-span-2" : "sm:col-span-2"}`}><div className={`grid content-start ${mobileRequestAccess ? "grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4" : "gap-4 sm:grid-cols-2"}`}>
 
           <div className={mobileRequestAccess ? "col-span-2" : "sm:col-span-2"}>
-            <Controller control={control} name="domicilio" render={({field})=><GoogleAddressInput display="input" id="domicilio" value={field.value??""} placeId={watch("domicilioPlaceId")} lat={watch("domicilioLat")} lng={watch("domicilioLng")} locality={watch("localidad")} province={watch("provincia")} postalCode={watch("codigoPostal")} onChange={(location)=>{field.onChange(location.address);setValue("domicilioPlaceId",location.placeId);setValue("domicilioLat",location.lat);setValue("domicilioLng",location.lng);if(location.locality && !lockedLocality)setValue("localidad",location.locality);if(location.province)setValue("provincia",location.province);if(location.postalCode)setValue("codigoPostal",location.postalCode)}} className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9 font-medium text-[var(--brand-ink)]" placeholder="Ej: Av. Presidente Perón 1234"/>}/>
+            <Controller control={control} name="domicilio" render={({field})=><GoogleAddressInput display="input" id="domicilio" value={field.value??""} placeId={watch("domicilioPlaceId")} lat={watch("domicilioLat")} lng={watch("domicilioLng")} locality={watch("localidad")} province={watch("provincia")} postalCode={watch("codigoPostal")} onChange={(location)=>{field.onChange(location.address);setValue("domicilioPlaceId",location.placeId);setValue("domicilioLat",location.lat);setValue("domicilioLng",location.lng);if(location.locality)setValue("localidad",location.locality);if(location.province)setValue("provincia",location.province);if(location.postalCode)setValue("codigoPostal",location.postalCode)}} className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9 font-medium text-[var(--brand-ink)]" placeholder="Ej: Av. Presidente Perón 1234"/>}/>
             <FormErrorMessage message={errors.domicilio?.message} />
           </div>
 
-          <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Localidad *</Label><Controller control={control} name="localidad" render={({ field }) => <IconInput id="localidad" leftIcon={<MapPinned className="size-4 text-[var(--brand-primary)]"/>} input={<Input {...field} value={lockedLocality ?? field.value ?? ""} readOnly={Boolean(lockedLocality)} aria-readonly={Boolean(lockedLocality)} onChange={(event) => { field.onChange(event); invalidateAddressLocation(); }} className={`h-11 w-full rounded-xl border-[var(--brand-border)] pl-9 ${lockedLocality ? "cursor-not-allowed bg-muted text-muted-foreground" : "bg-[var(--brand-page)]"}`}/>} />} /></div>
-          <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Provincia *</Label><Controller control={control} name="provincia" render={({field}) => <IconInput id="provincia" leftIcon={<Map className="size-4 text-[var(--brand-primary)]"/>} input={<Select value={field.value} onValueChange={(value) => { field.onChange(value); invalidateAddressLocation(); }}><SelectTrigger className="h-11 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9"><SelectValue placeholder="Seleccionar provincia"/></SelectTrigger><SelectContent>{ARGENTINA_PROVINCES.map(item=><SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>} />} /></div>
+          <input type="hidden" {...register("provincia")} />
+          <input type="hidden" {...register("localidad")} />
+          <GeorefTerritoryFields province={watch("provincia") ?? ""} locality={watch("localidad") ?? ""} onProvinceChange={(value)=>setValue("provincia",value,{shouldDirty:true,shouldTouch:true,shouldValidate:true})} onLocalityChange={(value)=>setValue("localidad",value,{shouldDirty:true,shouldTouch:true,shouldValidate:true})} onLocationInvalidated={invalidateAddressLocation} provinceError={errors.provincia?.message} localityError={errors.localidad?.message}/>
           <div className="space-y-1"><Label className="font-extrabold text-[var(--brand-ink)]">Código postal *</Label><Controller control={control} name="codigoPostal" render={({ field }) => <IconInput id="codigoPostal" leftIcon={<IdCard className="size-4 text-[var(--brand-primary)]"/>} input={<Input {...field} onChange={(event) => { field.onChange(event); invalidateAddressLocation(); }} className="h-11 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9"/>} />} /></div>
-          </div><div className="min-w-0"><Controller control={control} name="domicilio" render={({field})=><GoogleAddressInput display="map" id="domicilio-map" value={field.value??""} placeId={watch("domicilioPlaceId")} lat={watch("domicilioLat")} lng={watch("domicilioLng")} locality={watch("localidad")} province={watch("provincia")} postalCode={watch("codigoPostal")} onChange={(location)=>{field.onChange(location.address);setValue("domicilioPlaceId",location.placeId);setValue("domicilioLat",location.lat);setValue("domicilioLng",location.lng);if(location.locality && !lockedLocality)setValue("localidad",location.locality);if(location.province)setValue("provincia",location.province);if(location.postalCode)setValue("codigoPostal",location.postalCode)}} />}/></div></div> : null}
+          </div><div className="min-w-0"><Controller control={control} name="domicilio" render={({field})=><GoogleAddressInput display="map" id="domicilio-map" value={field.value??""} placeId={watch("domicilioPlaceId")} lat={watch("domicilioLat")} lng={watch("domicilioLng")} locality={watch("localidad")} province={watch("provincia")} postalCode={watch("codigoPostal")} onChange={(location)=>{field.onChange(location.address);setValue("domicilioPlaceId",location.placeId);setValue("domicilioLat",location.lat);setValue("domicilioLng",location.lng);if(location.locality)setValue("localidad",location.locality);if(location.province)setValue("provincia",location.province);if(location.postalCode)setValue("codigoPostal",location.postalCode)}} />}/></div></div> : null}
 
           {show(4) ? <>
 

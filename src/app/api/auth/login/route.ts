@@ -11,18 +11,24 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { userId, password } = body || {};
-    const normalizedUserId =
+    const normalizedIdentifier =
       typeof userId === "string" ? userId.trim().toLowerCase() : "";
 
-    if (!normalizedUserId || !password) {
+    if (!normalizedIdentifier || !password) {
       return NextResponse.json(
-        { error: "User ID y password son requeridos" },
+        { error: "Usuario o email y contraseña son requeridos" },
         { status: 400 },
       );
     }
 
-    const user = await prisma.usuario.findUnique({
-      where: { userId: normalizedUserId },
+    const user = await prisma.usuario.findFirst({
+      where: {
+        deletedAt: null,
+        OR: [
+          { userId: { equals: normalizedIdentifier, mode: "insensitive" } },
+          { email: { equals: normalizedIdentifier, mode: "insensitive" } },
+        ],
+      },
       include: {
         rol: {
           include: {
