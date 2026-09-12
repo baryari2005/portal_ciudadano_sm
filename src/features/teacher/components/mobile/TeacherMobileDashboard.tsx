@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, Building2, CalendarClock, CalendarDays, ChevronDown, ChevronRight, ClipboardCheck, Clock3, MapPin, UserRound, Zap, type LucideIcon } from "lucide-react";
+import { Bell, Building2, CalendarClock, CalendarDays, ChevronDown, ChevronRight, ClipboardCheck, Clock3, FileText, MapPin, UserRound, Zap, type LucideIcon } from "lucide-react";
 import { ActivityImagePreview } from "@/features/actividades/components/ActivityImagePreview";
 import { UserAvatar } from "@/components/layout/user-menu/UserAvatar";
 import { useAuth } from "@/stores/auth";
@@ -14,6 +14,7 @@ const quickActions: Array<{href:string;label:string;icon:LucideIcon}> = [
   {href:"/teacher/schedules",label:"Horarios",icon:Clock3},
   {href:"/teacher/notifications",label:"Notificaciones",icon:Bell},
   {href:"/teacher/profile",label:"Mi perfil",icon:UserRound},
+  {href:"/teacher/citizen-documents",label:"Documentos ciudadanos",icon:FileText},
 ];
 
 export function TeacherMobileDashboard({data}:{data:TeacherSummary}) {
@@ -27,7 +28,7 @@ export function TeacherMobileDashboard({data}:{data:TeacherSummary}) {
 
     <section className="grid grid-cols-3 gap-2 px-4"><Metric icon={CalendarDays} label="Clases de hoy" value={data.todaySessions} href="/teacher/classes"/><Metric icon={CalendarClock} label="Próximas clases" value={data.upcomingSessions} href="/teacher/classes"/><Metric icon={ClipboardCheck} label="Pendientes" value={data.pendingRosters} href="/teacher/attendance"/></section>
 
-    <section className="mt-6"><h2 className="mb-3 flex items-center gap-2 px-4 font-extrabold text-[var(--brand-primary)]"><Zap className="size-5 fill-current"/>Acciones rápidas</h2><div className="grid grid-cols-5 gap-2 px-4">{quickActions.map(({href,label,icon:Icon})=><Link key={href} href={href} className="flex min-h-24 min-w-0 flex-col items-center justify-center rounded-2xl border border-[var(--brand-border-soft)] bg-[#F9FAF5] px-1 py-2 text-center text-[9px] font-bold leading-3 text-[var(--brand-ink)] shadow-sm"><span className="mb-2 grid size-8 place-items-center text-[var(--brand-primary)]"><Icon className="size-6"/></span>{label}</Link>)}</div></section>
+    <section className="mt-6"><h2 className="mb-3 flex items-center gap-2 px-4 font-extrabold text-[var(--brand-primary)]"><Zap className="size-5 fill-current"/>Acciones rápidas</h2><div className="grid grid-cols-3 gap-2 px-4">{quickActions.map(({href,label,icon:Icon})=><Link key={href} href={href} className="flex min-h-24 min-w-0 flex-col items-center justify-center rounded-2xl border border-[var(--brand-border-soft)] bg-[#F9FAF5] px-1 py-2 text-center text-[9px] font-bold leading-3 text-[var(--brand-ink)] shadow-sm"><span className="mb-2 grid size-8 place-items-center text-[var(--brand-primary)]"><Icon className="size-6"/></span>{label}</Link>)}</div></section>
 
     <section className="mt-6 grid grid-cols-2 items-stretch gap-3 px-4">
       <NextClass session={data.nextSession}/>

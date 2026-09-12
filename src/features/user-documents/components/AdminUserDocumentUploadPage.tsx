@@ -4,17 +4,16 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, FileCheck2, FileText, Home, IdCard, Loader2, Mail, MessageSquareText, Phone, Search, UploadCloud, UserRound, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, FileCheck2, FileText, Home, IdCard, Loader2, Mail, MessageSquareText, Phone, UploadCloud, UserRound, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { AdminFormPage } from "@/components/layout/admin-form-page";
 import { PersonSearchSelector, type PersonSearchOption } from "@/components/shared/PersonSearchSelector";
-import { MobilePersonSearchResultCard } from "@/components/shared/MobilePersonSearchResultCard";
+import { MobileCitizenSearch } from "@/components/shared/MobileCitizenSearch";
 import { AdminFormCard, AdminFormField, adminControlClass, adminPrimaryButtonClass, adminSecondaryButtonClass } from "@/components/shared/admin-patterns";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { ReceptionMobileHeader } from "@/features/reception/components/mobile/ReceptionMobileHeader";
 import { MAX_ENROLLMENT_DOCUMENT_BYTES } from "@/features/enrollment-documents/constants/file-rules";
 import { listRequirementsClient } from "@/features/requirements/services/requirements.service";
@@ -154,7 +153,7 @@ function ReceptionMobileUploadConfirmation({data,citizen,onAnother}:{data:Upload
 type MobileUploadProps={citizen:Citizen|null;onCitizen:(citizen:Citizen|null)=>void;requirements:Requirement[];requirementId:string;onRequirement:(value:string)=>void;loadingOptions:boolean;optionsError:boolean;file:File|null;onChoose:(file?:File)=>void;onRemoveFile:()=>void;observations:string;onObservations:(value:string)=>void;loading:boolean;dragging:boolean;onDragging:(value:boolean)=>void;inputRef:RefObject<HTMLInputElement|null>;onSubmit:()=>Promise<void>};
 
 function ReceptionMobileDocumentUpload(props:MobileUploadProps){
-  if(!props.citizen)return <MobileCitizenSearch onSelect={props.onCitizen}/>;
+  if(!props.citizen)return <MobileCitizenSearch search={searchCitizens} onSelect={props.onCitizen} title="Adjuntar documentos" description="Buscá a la persona para cargar o actualizar documentación." className="min-h-[calc(100dvh-80px-env(safe-area-inset-top))] overflow-x-hidden bg-[var(--brand-page)] px-4 pb-[calc(92px+env(safe-area-inset-bottom))] pt-5"/>;
   const citizen=props.citizen,photo=citizen.avatarUrl||citizen.identityPhotoUrl;
   return <main className="min-h-[calc(100dvh-80px-env(safe-area-inset-top))] overflow-x-hidden bg-[var(--brand-page)] px-4 pb-[calc(152px+env(safe-area-inset-bottom))] pt-4"><header className="flex items-start gap-2"><button type="button" onClick={()=>props.onCitizen(null)} className="grid size-10 shrink-0 place-items-center rounded-full text-[var(--brand-primary)]" aria-label="Volver a buscar persona"><ArrowLeft/></button><div><h1 className="text-xl font-extrabold text-[var(--brand-primary)]">Adjuntar documentos</h1><p className="mt-1 text-sm leading-5 text-[var(--brand-muted)]">Adjuntá documentación para la persona seleccionada.</p></div></header>
 
@@ -168,5 +167,5 @@ function ReceptionMobileDocumentUpload(props:MobileUploadProps){
   </main>;
 }
 
-function MobileCitizenSearch({onSelect}:{onSelect:(citizen:Citizen|null)=>void}){const[query,setQuery]=useState(""),[items,setItems]=useState<Citizen[]>([]),[loading,setLoading]=useState(false);useEffect(()=>{const value=query.trim();if(value.length<2){setItems([]);setLoading(false);return}const timer=window.setTimeout(()=>{setLoading(true);void searchCitizens(value).then(setItems).catch(()=>setItems([])).finally(()=>setLoading(false))},300);return()=>window.clearTimeout(timer)},[query]);return <main className="min-h-[calc(100dvh-80px-env(safe-area-inset-top))] overflow-x-hidden bg-[var(--brand-page)] px-4 pb-[calc(92px+env(safe-area-inset-bottom))] pt-5"><header className="flex items-start gap-3"><span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[var(--brand-panel)] text-[var(--brand-primary)]"><FileText className="size-6"/></span><div><h1 className="text-xl font-extrabold text-[var(--brand-primary)]">Adjuntar documentos</h1><p className="mt-1 text-sm leading-5 text-[var(--brand-muted)]">Buscá a la persona para cargar o actualizar documentación.</p></div></header><div className="relative mt-5"><Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[var(--brand-primary)]"/><Input value={query} onChange={(event)=>setQuery(event.target.value)} placeholder="Buscar por DNI, nombre, apellido o email" className="h-12 rounded-2xl border-[var(--brand-secondary)]/35 bg-white pl-12"/></div><section className="mt-4 grid gap-3">{loading&&!items.length?<div className="h-32 animate-pulse rounded-2xl bg-[var(--brand-panel)]"/>:items.length?items.map((person)=><MobilePersonSearchResultCard key={person.id} name={person.fullName} documentNumber={person.documentNumber} email={person.email} avatarUrl={person.avatarUrl} onClick={()=>onSelect(person)}/>):<div className="rounded-2xl border border-dashed border-[var(--brand-border)] bg-white/70 p-5 text-center text-sm text-[var(--brand-muted)]">{query.trim().length>=2?"No se encontraron personas.":"Ingresá al menos dos caracteres para comenzar la búsqueda."}</div>}</section></main>}
+
 function MobilePersonFact({icon:Icon,label,value}:{icon:typeof IdCard;label:string;value?:string|null}){return <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-3 rounded-xl bg-[var(--brand-page)] p-3"><Icon className="mt-0.5 size-4 shrink-0 text-[var(--brand-secondary)]"/><div className="min-w-0"><dt className="text-[9px] font-extrabold uppercase text-[var(--brand-muted)]">{label}</dt><dd className="mt-0.5 break-words text-xs font-bold text-[var(--brand-primary)]">{value||"No informado"}</dd></div></div>}

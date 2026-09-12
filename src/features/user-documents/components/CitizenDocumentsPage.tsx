@@ -21,6 +21,7 @@ import { CitizenHeader } from "@/features/citizen/components/CitizenPrimitives";
 import { axiosInstance } from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import { AdminDetailHeader, AdminDetailPanel } from "@/components/shared/admin-patterns";
+import { documentDisplayStatus } from "../helpers/document-display-status";
 
 type Doc = {
   id: string;
@@ -321,14 +322,6 @@ function DocumentIcon({ status, large = false }: { status: string; large?: boole
       <Icon className={large ? "size-8" : "size-6"} />
     </span>
   );
-}
-
-function documentDisplayStatus(document: Doc | null) {
-  if (!document) return "missing";
-  if (document.status === "APROBADO" && ["PROXIMO_A_VENCER", "VENCIDO"].includes(document.validity)) {
-    return document.validity;
-  }
-  return document.status;
 }
 
 function StatusPill({ status }: { status: string }) {

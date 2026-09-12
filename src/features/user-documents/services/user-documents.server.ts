@@ -22,9 +22,9 @@ function validateDocumentFile(file: File) {
   return { expected, extension };
 }
 
-export async function listCitizenUserDocuments(userId: string) {
-  const requirements = await prisma.requisito.findMany({ where: { activo: true, requiereDocumento: true }, orderBy: [{ orden: "asc" }, { nombre: "asc" }] });
-  const documents = await prisma.documentoUsuario.findMany({ where: { usuarioId: userId }, include, orderBy: [{ requisitoId: "asc" }, { version: "desc" }] });
+export async function listCitizenUserDocuments(userId: string, db: Prisma.TransactionClient = prisma) {
+  const requirements = await db.requisito.findMany({ where: { activo: true, requiereDocumento: true }, orderBy: [{ orden: "asc" }, { nombre: "asc" }] });
+  const documents = await db.documentoUsuario.findMany({ where: { usuarioId: userId }, include, orderBy: [{ requisitoId: "asc" }, { version: "desc" }] });
   return { requirements: requirements.map((requirement) => ({ id: requirement.id, name: requirement.nombre, instructions: requirement.instrucciones, current: documents.find((document) => document.requisitoId === requirement.id) ? map(documents.find((document) => document.requisitoId === requirement.id)!) : null, history: documents.filter((document) => document.requisitoId === requirement.id).map(map) })) };
 }
 

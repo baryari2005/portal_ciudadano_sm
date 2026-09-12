@@ -15,8 +15,10 @@ import { formatActividadLevel } from "@/features/actividades/helpers/actividad-d
 import { getAxiosMessage } from "@/lib/errors/getAxiosErrorMessage";
 import { citizenPost } from "../services/citizen.service";
 import { useCitizenData } from "./CitizenPrimitives";
+import { useMobileMissingDocuments } from "../hooks/useMobileMissingDocuments";
+import { CitizenMobileMissingDocuments } from "./mobile/CitizenMobileMissingDocuments";
 
-type Requirement = { id: string; type: "INFORMACION" | "DOCUMENTO" | "CONSENTIMIENTO" | "ELEMENTO_PERSONAL" | "CONDICION"; mandatory: boolean };
+type Requirement = { id: string; name: string; active: boolean; requiresDocument: boolean; type: "INFORMACION" | "DOCUMENTO" | "CONSENTIMIENTO" | "ELEMENTO_PERSONAL" | "CONDICION"; mandatory: boolean };
 type Schedule = { id: string; day: string; startTime: string; endTime: string; slotDurationMinutes: number | null; slotGapMinutes: number; establishment: { name: string } | null };
 type Activity = { id: string; name: string; imageUrl: string | null; category: string; free: boolean; price: number | null; level: "INICIAL" | "INTERMEDIO" | "AVANZADO" | null; enrollmentMode: "PERMANENTE" | "POR_PERIODO" | "POR_CLASE"; modalidadOperacion: string; eventSessions: Array<{id:string;date:string;horaInicio:string;horaFin:string}>; requirements: Requirement[]; requiresDocumentation: boolean; schedules: Schedule[] };
 type Choice = { schedule: Schedule; startTime: string; endTime: string };
@@ -28,6 +30,7 @@ export function CitizenEnrollmentConfirmationPage({ id }: { id: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data, loading, error, retry } = useCitizenData<Activity>(`/activities/${id}`);
+  const documentation = useMobileMissingDocuments(data?.requirements);
   const [levelConsent, setLevelConsent] = useState(false);
   const [requirementsConsent, setRequirementsConsent] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -79,13 +82,13 @@ export function CitizenEnrollmentConfirmationPage({ id }: { id: string }) {
     }
   }
 
-  if (loading) return <CatalogLoadingState label="confirmación de inscripción" fullPage />;
+  if (loading || documentation.loading) return <CatalogLoadingState label="confirmación de inscripción" fullPage />;
   if (error || !data) return <CatalogErrorState message="No pudimos cargar la confirmación de la inscripción." onRetry={retry} />;
   if (!validSelection) return <CatalogErrorState message={data.modalidadOperacion === "EVENTO_UNICO" && data.eventSessions.length === 0 ? "Esta actividad está configurada como evento único, pero todavía no tiene una fecha futura programada." : "Los horarios seleccionados no son válidos. Volvé a la actividad y elegilos nuevamente."} onRetry={() => router.replace(`/citizen/activities/${id}`)} />;
 
   return (
     <main className="min-h-[calc(100dvh-var(--topbar-h)-48px)] bg-[var(--brand-page)] pb-[calc(var(--citizen-mobile-nav-h)+92px)] lg:p-8 lg:pb-8">
-      <MobileConfirmation activity={data} choices={choices} eventSession={eventSession} needsRequirementsConsent={needsRequirementsConsent} requirementsConsent={requirementsConsent} setRequirementsConsent={setRequirementsConsent} levelConsent={levelConsent} setLevelConsent={setLevelConsent} canSubmit={canSubmit} saving={saving} onBack={() => router.back()} onSubmit={() => void submit()} />
+      <MobileConfirmation missingDocuments={documentation.missing} activity={data} choices={choices} eventSession={eventSession} needsRequirementsConsent={needsRequirementsConsent} requirementsConsent={requirementsConsent} setRequirementsConsent={setRequirementsConsent} levelConsent={levelConsent} setLevelConsent={setLevelConsent} canSubmit={canSubmit} saving={saving} onBack={() => router.back()} onSubmit={() => void submit()} />
       <div className="hidden lg:block">
       <AdminFormHeader icon={CalendarCheck2} title="Confirmar inscripción" description="Revisá los horarios elegidos y confirmá la información antes de finalizar." />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
@@ -118,13 +121,14 @@ export function CitizenEnrollmentConfirmationPage({ id }: { id: string }) {
   );
 }
 
-function MobileConfirmation({ activity, choices, eventSession, needsRequirementsConsent, requirementsConsent, setRequirementsConsent, levelConsent, setLevelConsent, canSubmit, saving, onBack, onSubmit }: { activity: Activity; choices: Choice[]; eventSession: Activity["eventSessions"][number] | null | undefined; needsRequirementsConsent: boolean; requirementsConsent: boolean; setRequirementsConsent: (value: boolean) => void; levelConsent: boolean; setLevelConsent: (value: boolean) => void; canSubmit: boolean; saving: boolean; onBack: () => void; onSubmit: () => void }) {
+function MobileConfirmation({ missingDocuments, activity, choices, eventSession, needsRequirementsConsent, requirementsConsent, setRequirementsConsent, levelConsent, setLevelConsent, canSubmit, saving, onBack, onSubmit }: { missingDocuments: Array<{ id: string; name: string }>; activity: Activity; choices: Choice[]; eventSession: Activity["eventSessions"][number] | null | undefined; needsRequirementsConsent: boolean; requirementsConsent: boolean; setRequirementsConsent: (value: boolean) => void; levelConsent: boolean; setLevelConsent: (value: boolean) => void; canSubmit: boolean; saving: boolean; onBack: () => void; onSubmit: () => void }) {
   return <div className="lg:hidden">
     <header className="flex min-h-16 items-center gap-3 bg-[var(--brand-primary)] px-4 py-3 text-white"><button type="button" onClick={onBack} aria-label="Volver" className="grid size-9 shrink-0 place-items-center rounded-full bg-white/10"><ChevronLeft className="size-5" /></button><h1 className="min-w-0 flex-1 text-lg font-extrabold">Confirmar inscripción</h1><span className="rounded-full border border-[#9FC45B] px-2.5 py-1 text-[10px] font-bold">Paso 3 de 3</span></header>
     <div className="space-y-4 p-4">
       <section className="flex items-center gap-3 rounded-2xl border border-[var(--brand-border-soft)] bg-[#F9FAF5] p-3 shadow-sm"><ActivityImagePreview source={activity.imageUrl} alt={`Imagen de ${activity.name}`} className="size-20 shrink-0 rounded-xl" /><div className="min-w-0"><h2 className="text-xl font-extrabold text-[var(--brand-primary)]">{activity.name}</h2><p className="text-xs text-[var(--brand-muted)]">{activity.category}</p><div className="mt-2 flex flex-wrap gap-1.5"><MobileTag>{activity.free ? "Gratuita" : activity.price != null ? `$${activity.price}` : "Arancelada"}</MobileTag><MobileTag>{formatActividadLevel(activity.level)}</MobileTag></div></div></section>
       <section className="overflow-hidden rounded-2xl border border-[var(--brand-border-soft)] bg-[#F9FAF5] shadow-sm"><div className="flex items-center justify-between border-b border-[var(--brand-border-soft)] px-4 py-3"><h3 className="font-extrabold text-[var(--brand-primary)]">Horarios seleccionados</h3><span className="rounded-full bg-[var(--brand-secondary)] px-2 py-1 text-[10px] font-bold text-white">{eventSession ? 1 : choices.length} {eventSession || choices.length === 1 ? "turno" : "turnos"}</span></div><div className="divide-y divide-[var(--brand-border-soft)]">{eventSession ? <MobileSelectedSlot day={eventSession.date} time={`${eventSession.horaInicio} a ${eventSession.horaFin}`} establishment="Evento" /> : choices.map((choice) => <MobileSelectedSlot key={slotKey(choice)} day={dayLabels[choice.schedule.day] ?? choice.schedule.day} time={`${choice.startTime} a ${choice.endTime}`} establishment={choice.schedule.establishment?.name || "Sin establecimiento asignado"} />)}</div></section>
       <section className="rounded-2xl border border-[var(--brand-border-soft)] bg-[#F9FAF5] p-4 shadow-sm"><h3 className="font-extrabold text-[var(--brand-primary)]">Confirmaciones</h3><p className="mt-1 text-xs text-[var(--brand-muted)]">Revisá y aceptá las condiciones para finalizar.</p><div className="mt-3 space-y-2">{needsRequirementsConsent ? <Consent checked={requirementsConsent} onCheckedChange={setRequirementsConsent}>Confirmo que conozco los elementos y condiciones obligatorias para participar.</Consent> : null}<Consent checked={levelConsent} onCheckedChange={setLevelConsent}>Confirmo que fui informado sobre el nivel {formatActividadLevel(activity.level)}.</Consent></div></section>
+      <CitizenMobileMissingDocuments documents={missingDocuments} />
       <section className="flex gap-3 rounded-2xl border border-[var(--brand-border-soft)] bg-[#EEF6E9] p-4"><ShieldCheck className="size-6 shrink-0 text-[var(--brand-primary)]" /><div><h3 className="text-sm font-extrabold text-[var(--brand-primary)]">Importante</h3><p className="mt-1 text-xs leading-5 text-[var(--brand-muted)]">{activity.requiresDocumentation ? "Podés inscribirte ahora, pero quedará pendiente hasta que se apruebe la documentación obligatoria." : "Tu lugar quedará reservado de acuerdo con la modalidad de inscripción de la actividad."}</p></div></section>
     </div>
     <div className="fixed inset-x-0 bottom-[var(--citizen-mobile-nav-h)] z-30 border-t border-[var(--brand-border-soft)] bg-[#F9FAF5]/95 p-3 backdrop-blur"><Button type="button" disabled={!canSubmit} onClick={onSubmit} className="h-12 w-full rounded-2xl bg-[var(--brand-primary)] text-sm font-extrabold hover:bg-[#143A27]">{saving ? <><Loader2 className="animate-spin" />Confirmando...</> : <>Confirmar inscripción<CheckCircle2 /></>}</Button></div>

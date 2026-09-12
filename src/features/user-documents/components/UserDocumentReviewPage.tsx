@@ -29,7 +29,7 @@ import {
   profileSecondaryButtonClassName,
 } from "@/components/layout/user-menu/ProfileDialogParts";
 import { axiosInstance } from "@/lib/axios";
-import Image from "next/image";
+import { UserDocumentPreview } from "./UserDocumentPreview";
 
 type DocumentRow = {
   id: string;
@@ -143,22 +143,7 @@ export function UserDocumentReviewPage({ documentId }: { documentId: string }) {
           {loading ? (
             <Loading />
           ) : document && url ? (
-            document.mimeType.startsWith("image/") ? (
-              <div className="grid h-full min-h-[65dvh] place-items-center overflow-auto rounded-2xl bg-white">
-                <Image
-                  src={url}
-                  alt={`Vista previa de ${document.originalName}`}
-                  className="max-h-full max-w-full object-contain"
-                  fill
-                />
-              </div>
-            ) : (
-              <iframe
-                src={url}
-                title={`Vista previa de ${document.originalName}`}
-                className="h-[65dvh] w-full rounded-2xl border-0 bg-white"
-              />
-            )
+            <UserDocumentPreview url={url} mimeType={document.mimeType} originalName={document.originalName} />
           ) : (
             <p>No pudimos mostrar el archivo.</p>
           )}

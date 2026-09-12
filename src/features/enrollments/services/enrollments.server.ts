@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- Normalización diferencial de relaciones Prisma de inscripciones. */
+import { notifyCitizenEnrollmentMissingDocuments } from "@/features/citizen/services/citizen-enrollment-document-notifications.server";
 import { InscripcionEstado, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { CatalogConflictError, CatalogNotFoundError, CatalogValidationError } from "@/lib/errors/catalog-errors";
@@ -28,7 +29,7 @@ async function assertNoEnrollmentConflicts(tx:Prisma.TransactionClient,userId:st
   for(const enrollment of existing){const enrolledScopes=enrollment.horarios.length?enrollment.horarios.map(item=>({scheduleId:item.horarioActividadId,day:item.horarioActividad.diaSemana,startTime:item.horaInicio??item.horarioActividad.horaInicio,endTime:item.horaFin??item.horarioActividad.horaFin,activity:item.horarioActividad.actividad.nombre})):[{scheduleId:enrollment.horarioActividad.id,day:enrollment.horarioActividad.diaSemana,startTime:enrollment.horarioActividad.horaInicio,endTime:enrollment.horarioActividad.horaFin,activity:enrollment.horarioActividad.actividad.nombre}];for(const requested of requestedScopes){if(enrolledScopes.some(current=>current.scheduleId===requested.scheduleId))throw new CatalogConflictError("La persona ya posee una inscripción activa en este horario.");const conflict=enrolledScopes.find(current=>scopesOverlap(requested,current));if(conflict)throw new CatalogConflictError(`La persona ya está inscripta en “${conflict.activity}” el ${conflict.day.toLowerCase()} de ${conflict.startTime} a ${conflict.endTime}.`);}}
 }
 
-export async function createEnrollment(input: CreateEnrollmentInput, options: { notifyAdmin?: boolean } = {}) {
+export async function createEnrollment(input: CreateEnrollmentInput, options: { notifyAdmin?: boolean; notifyMissingDocuments?: boolean } = {}) {
   try{return await serializable(async (tx) => {
     const user = await tx.usuario.findFirst({
       where: { id: input.usuarioId, deletedAt: null },
@@ -97,6 +98,16 @@ export async function createEnrollment(input: CreateEnrollmentInput, options: { 
     if (classId && state === "CONFIRMADA") await tx.reservaClase.upsert({ where: { claseActividadId_usuarioId: { claseActividadId: classId, usuarioId: input.usuarioId } }, create: { claseActividadId: classId, usuarioId: input.usuarioId, inscripcionId: row.id, estado: "RESERVADA", confirmadoAt: now }, update: { inscripcionId: row.id, estado: "RESERVADA", confirmadoAt: now, canceladoAt: null, motivoCancelacion: null } });
     await createNotification({ userId: row.usuarioId, type: state === "CONFIRMADA" ? "INSCRIPCION_CONFIRMADA" : state === "LISTA_ESPERA" ? "LISTA_ESPERA" : "GENERAL", title: state === "CONFIRMADA" ? "Inscripción confirmada" : state === "LISTA_ESPERA" ? "Lista de espera" : "Inscripción pendiente", message: state === "CONFIRMADA" ? `Tu inscripción a ${row.horarioActividad.actividad.nombre}, ${row.horarioActividad.diaSemana.toLowerCase()} a las ${row.horarioActividad.horaInicio}, fue confirmada.` : state === "LISTA_ESPERA" ? `Ingresaste a la lista de espera de ${row.horarioActividad.actividad.nombre}.` : `Tu inscripción a ${row.horarioActividad.actividad.nombre} quedó pendiente hasta que completes y se apruebe la documentación obligatoria.`, priority: state === "PENDIENTE" ? "ALTA" : "NORMAL", actionUrl: state === "PENDIENTE" ? "/citizen/documents" : "/citizen/enrollments", actionLabel: state === "PENDIENTE" ? "Completar documentación" : "Ver inscripción", entityType: "enrollment", entityId: row.id, deduplicationKey: `enrollment-${state.toLowerCase()}:${row.id}:${row.updatedAt.getTime()}` }, tx);
     if(options.notifyAdmin){const citizenName=[row.usuario.nombre,row.usuario.apellido].filter(Boolean).join(" ")||row.usuario.documento||"Un ciudadano",title=state==="CONFIRMADA"?"Nueva inscripción ciudadana":state==="LISTA_ESPERA"?"Ciudadano en lista de espera":"Inscripción pendiente de documentación",message=state==="CONFIRMADA"?`${citizenName} se inscribió a ${row.horarioActividad.actividad.nombre}.`:state==="LISTA_ESPERA"?`${citizenName} se inscribió a ${row.horarioActividad.actividad.nombre} y quedó en lista de espera.`:`${citizenName} se inscribió a ${row.horarioActividad.actividad.nombre}, pero todavía no tiene aprobada toda la documentación obligatoria.`;await notifyAdministrators({senderId:row.usuarioId,type:"GENERAL",title,message,priority:state==="PENDIENTE"?"ALTA":"NORMAL",actionUrl:`/enrollments?activityId=${row.horarioActividad.actividad.id}`,actionLabel:"Ver inscripción",entityType:"enrollment",entityId:row.id,deduplicationKey:`admin-citizen-enrollment-${state.toLowerCase()}:${row.id}:${row.updatedAt.getTime()}`},tx)}
+    if (options.notifyMissingDocuments) {
+      await notifyCitizenEnrollmentMissingDocuments({
+        enrollmentId: row.id,
+        enrolledAt: row.fechaInscripcion,
+        userId: row.usuarioId,
+        citizenName: [row.usuario.nombre, row.usuario.apellido].filter(Boolean).join(" ") || row.usuario.userId,
+        activityName: row.horarioActividad.actividad.nombre,
+        requiredDocumentIds: schedule.actividad.requisitos.map((item) => item.requisitoId),
+      }, tx);
+    }
     return map(tx, row);
   });}catch(error){if(error instanceof Prisma.PrismaClientKnownRequestError&&error.code==="P2002")throw new CatalogConflictError("La persona ya posee una inscripción activa en este horario.");throw error;}
 }
