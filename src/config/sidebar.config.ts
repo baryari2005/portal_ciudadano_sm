@@ -255,6 +255,7 @@ export const RECEPTION_SIDEBAR_CONFIG: SidebarItemConfig[] = [
 export const TEACHER_SIDEBAR_CONFIG: SidebarItemConfig[] = [
   { section: "Inicio", title: "Dashboard", href: "/teacher", icon: Home, permission: { modulo: "activity_sessions", accion: "ver" } },
   { section: "Docencia", title: "Clases", href: "/teacher/classes", icon: CalendarDays, permission: { modulo: "activity_sessions", accion: "ver" } },
+  { section: "Docencia", title: "Inscriptos", href: "/teacher/enrollees", icon: UsersRound, permission: { modulo: "enrollments", accion: "ver" } },
   { section: "Docencia", title: "Asistencias", href: "/teacher/attendance", icon: ListChecks, permission: { modulo: "attendance", accion: "ver" } },
   { section: "Mi cuenta", title: "Mi perfil", href: "/teacher/profile", icon: UserRound },
   { section: "Comunicación", title: "Notificaciones", href: "/teacher/notifications", icon: BellRing, badgeKey: "notifications" },

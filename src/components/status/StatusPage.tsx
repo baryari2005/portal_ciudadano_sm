@@ -13,6 +13,8 @@ type Props = {
   imageSrc: string;
   primaryAction?: { label: string; href: string };
   secondaryAction?: { label: string; href: string };
+  illustrationOnly?: boolean;
+  animateIllustration?: boolean;
 };
 
 function getStatusMeta(code: Props["code"]) {
@@ -56,13 +58,15 @@ export function StatusPage({
   imageSrc,
   primaryAction = { label: "Volver al inicio", href: "/" },
   secondaryAction,
+  illustrationOnly = false,
+  animateIllustration = true,
 }: Props) {
   const meta = getStatusMeta(code);
   const StatusIcon = meta.icon;
 
   return (
-    <div className="w-full min-h-[75vh] px-6 py-10 md:px-10 lg:px-12">
-      <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+    <div className="min-h-[75vh] w-full px-6 py-10 md:px-10 lg:px-12">
+      <div className={illustrationOnly ? "mx-auto grid max-w-3xl place-items-center" : "mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.15fr_0.85fr]"}>
         <div className="flex justify-center">
           <div className="relative aspect-[4/3] w-full max-w-[620px]">
             <Image
@@ -70,12 +74,12 @@ export function StatusPage({
               alt={title}
               fill
               priority
-              className="object-contain drop-shadow-2xl animate-[float_4s_ease-in-out_infinite]"
+              className={`object-contain drop-shadow-2xl ${animateIllustration ? "animate-[float_4s_ease-in-out_infinite]" : ""}`}
             />
           </div>
         </div>
 
-        <div className="flex justify-center">
+        {!illustrationOnly ? <div className="flex justify-center">
           <div className="w-full max-w-xl rounded-3xl border bg-background/90 p-6 shadow-xl backdrop-blur-sm md:p-8">
             <div className="flex flex-col items-center text-center">
               <Logo size="lg" className="w-auto justify-center px-0" />
@@ -127,7 +131,7 @@ export function StatusPage({
               </div>
             </div>
           </div>
-        </div>
+        </div> : null}
       </div>
     </div>
   );

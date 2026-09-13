@@ -3,6 +3,7 @@ export const USER_RECORD_SECTIONS = [
   "system-access",
   "address",
   "contact",
+  "images",
   "overview",
   "documents",
   "enrollments",

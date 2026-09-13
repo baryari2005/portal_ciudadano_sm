@@ -48,6 +48,7 @@ export function WeeklySchedules({
               cupoMaximo: payload.cupo ?? 1,
               profesorIds: [],
               recursoIds: [],
+              teacherAssignments: [],
             };
       }),
     });

@@ -1,13 +1,17 @@
 import { axiosInstance } from "@/lib/axios";
 import type { AttendanceFilters,AttendanceRoster, MarkAttendanceBatchInput } from "@/features/attendance/types/attendance.types";
 import type { ActivitySession, ActivitySessionFilters } from "@/features/activity-sessions/types/activity-session.types";
+import { toManagedUser, type ApiUser } from "@/features/users/services/users-management.service";
 import { workspaceEstablishmentStorageKey } from "@/features/auth/libs/workspaces";
 import { useAuth } from "@/stores/auth";
 export type TeacherEstablishment = { id: string; nombre: string; direccion: string };
+export type TeacherEnrollee = { id:string;status:string;enrollmentDate:string;citizen:{id:string;userId:string;firstName:string|null;lastName:string|null;documentNumber:string|null;email:string;phone:string|null;address:string|null;avatarUrl:string|null};activity:{id:string;nombre:string};establishment:{id:string;nombre:string};documentation:{status:string;requiredCount:number;uploadedCount:number;pendingReviewCount:number;approvedCount:number;rejectedCount:number;missingCount:number;missingRequirementNames?:string[];updatedAt:string|null}|null };
 const establishmentId = () => { const userId=useAuth.getState().user?.id; return userId && typeof window!=="undefined" ? sessionStorage.getItem(workspaceEstablishmentStorageKey(userId,"teacher")) ?? undefined : undefined; };
 const venueParams = (params?:Record<string,string|number|undefined>) => ({...params,establishmentId:establishmentId()});
 export const getTeacherEstablishmentsClient=async()=>(await axiosInstance.get<{data:TeacherEstablishment[]}>("/teacher/establishments")).data.data;
-export const getTeacherClassesClient=async(params?:ActivitySessionFilters)=>(await axiosInstance.get<{data:ActivitySession[];meta:{total:number;page:number;pageSize:number;pageCount:number}}>("/teacher/classes",{params:venueParams(params as Record<string,string|number|undefined>)})).data;
+export const getTeacherClassesClient=async(params?:ActivitySessionFilters&{participation?:"WITH"|"WITHOUT"})=>(await axiosInstance.get<{data:ActivitySession[];meta:{total:number;page:number;pageSize:number;pageCount:number}}>("/teacher/classes",{params:venueParams(params as Record<string,string|number|undefined>)})).data;
+export const getTeacherEnrolleesClient=async(params?:{search?:string;page?:number;pageSize?:number})=>(await axiosInstance.get<{data:TeacherEnrollee[];meta:{total:number;page:number;pageSize:number;pageCount:number}}>("/teacher/enrollees",{params:venueParams(params)})).data;
+export const getTeacherCitizenRecordClient=async(id:string)=>toManagedUser((await axiosInstance.get<{data:ApiUser}>(`/teacher/enrollees/${id}`,{params:venueParams()})).data.data);
 export const getTeacherClassClient=async(id:string)=>(await axiosInstance.get<{data:ActivitySession}>(`/teacher/classes/${id}`,{params:venueParams()})).data.data;
 export const suspendTeacherClassClient=async(id:string,reason:string)=>(await axiosInstance.post(`/teacher/classes/${id}/suspend`,{reason,establishmentId:establishmentId()})).data.data;
 export const getTeacherSummaryClient=async()=>(await axiosInstance.get("/teacher/summary",{params:venueParams()})).data.data;

@@ -37,12 +37,12 @@ export function Topbar({ collapsed, setCollapsed, experience = "administration" 
   return (
     <header className="flex h-[var(--topbar-h)] w-full flex-col border-l border-white/15 bg-primary text-white">
       <div className="flex min-h-0 flex-1 items-center justify-between px-[var(--content-pad)]">
-      <div className="flex min-w-0 items-center gap-5">
+      <div className="flex min-w-0 items-center gap-3 xl:gap-5">
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="h-[60px] w-[60px] rounded-lg text-white hover:bg-[var(--brand-accent)] hover:text-primary"
+          className="h-[60px] w-[60px] shrink-0 rounded-lg text-white hover:bg-[var(--brand-accent)] hover:text-primary"
           onClick={() => setCollapsed((value) => !value)}
           aria-label={
             collapsed ? "Mostrar iconos y texto" : "Mostrar solo iconos"
@@ -65,14 +65,15 @@ export function Topbar({ collapsed, setCollapsed, experience = "administration" 
           <h1 className="truncate text-xl font-bold leading-6 text-white">
             {experience === "reception" ? "Portal de Recepción" : experience === "teacher" ? "Portal del Profesor" : "Portal ciudadano"}
           </h1>
-          <div className="text-base  leading-5 text-[var(--brand-accent)]">
+          <div className={experience === "teacher" ? "hidden text-base leading-5 text-[var(--brand-accent)] xl:block" : "text-base leading-5 text-[var(--brand-accent)]"}>
             <p className="truncate">Sistema de Ayuda</p>
             <p className="truncate">y Actividades</p>
           </div>
+          {experience === "teacher" ? <WorkspaceEstablishmentSelector compact className="mt-1 xl:hidden" /> : null}
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3">
         {experience === "teacher" || experience === "reception" ? <WorkspaceEstablishmentSelector /> : null}
         <div className="hidden min-w-0 text-right lg:block">
           <p className="truncate text-sm font-bold text-white">

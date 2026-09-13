@@ -17,12 +17,12 @@ type TimeScope="today"|"upcoming"|"recent";
 type FilterSection={id:string;title:string;value:string;options:Array<{value:string;label:string}>;onChange:(value:string)=>void};
 
 export function TeacherClassesPage(){
-  const[search,setSearch]=useState(""),[status,setStatus]=useState("all"),[page,setPage]=useState(1),[selectedId,setSelectedId]=useState(""),[items,setItems]=useState<ActivitySession[]>([]),[total,setTotal]=useState(0),[loading,setLoading]=useState(true),[error,setError]=useState(false),[timeScope,setTimeScope]=useState<TimeScope>("today");
-  const key=useMemo(()=>JSON.stringify({search,status,page}),[search,status,page]);
-  useEffect(()=>{let active=true;setLoading(true);setError(false);void getTeacherClassesClient({search:search||undefined,status:status==="all"?undefined:status as ActivitySessionStatus,page,pageSize:CATALOG_PAGE_SIZE}).then(result=>{if(active){setItems(result.data);setTotal(result.meta.total)}}).catch(()=>{if(active)setError(true)}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[key]);
-  useEffect(()=>setPage(1),[search,status]);
+  const[search,setSearch]=useState(""),[status,setStatus]=useState("all"),[participation,setParticipation]=useState("WITH"),[page,setPage]=useState(1),[selectedId,setSelectedId]=useState(""),[items,setItems]=useState<ActivitySession[]>([]),[total,setTotal]=useState(0),[loading,setLoading]=useState(true),[error,setError]=useState(false),[timeScope,setTimeScope]=useState<TimeScope>("today");
+  const key=useMemo(()=>JSON.stringify({search,status,participation,page}),[search,status,participation,page]);
+  useEffect(()=>{let active=true;setLoading(true);setError(false);void getTeacherClassesClient({search:search||undefined,status:status==="all"?undefined:status as ActivitySessionStatus,participation:participation==="all"?undefined:participation as "WITH"|"WITHOUT",page,pageSize:CATALOG_PAGE_SIZE}).then(result=>{if(active){setItems(result.data);setTotal(result.meta.total)}}).catch(()=>{if(active)setError(true)}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[key]);
+  useEffect(()=>setPage(1),[search,status,participation]);
   const selected=items.find(item=>item.id===selectedId)??items[0]??null;
-  const sections:FilterSection[]=[{id:"status",title:"Estado",value:status,options:[["all","Todos"],...ACTIVITY_SESSION_STATUSES.map(item=>[item,sessionStatusLabel(item)])].map(([value,label])=>({value,label})),onChange:setStatus}];
+  const sections:FilterSection[]=[{id:"participation",title:"Participación",value:participation,options:[{value:"WITH",label:"Con participantes"},{value:"WITHOUT",label:"Sin participantes"},{value:"all",label:"Todas"}],onChange:setParticipation},{id:"status",title:"Estado",value:status,options:[["all","Todos"],...ACTIVITY_SESSION_STATUSES.map(item=>[item,sessionStatusLabel(item)])].map(([value,label])=>({value,label})),onChange:setStatus}];
   const mobileItems=useMemo(()=>items.filter((item)=>matchesTimeScope(item,timeScope)),[items,timeScope]);
   return <>
     <div className="md:hidden"><TeacherMobileClassesView items={mobileItems} search={search} setSearch={setSearch} status={status} page={page} setPage={setPage} selectedId={selectedId} setSelectedId={setSelectedId} total={total} loading={loading} error={error} sections={sections} timeScope={timeScope} setTimeScope={setTimeScope}/></div>

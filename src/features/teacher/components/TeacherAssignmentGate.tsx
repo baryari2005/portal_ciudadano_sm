@@ -6,13 +6,18 @@ import { BellRing, BookOpenCheck, HelpCircle, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { WorkspaceRouteLoading } from "@/components/shared/WorkspaceRouteLoading";
 import { useWorkspaceEstablishment } from "@/features/workspace-establishment/WorkspaceEstablishmentProvider";
 
 const ACCOUNT_ROUTES = ["/teacher/profile", "/teacher/notifications", "/teacher/help"];
 
 export function TeacherAssignmentGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { options } = useWorkspaceEstablishment();
+  const { options, establishmentId, loading } = useWorkspaceEstablishment();
+
+  if (loading || (options.length > 0 && !establishmentId)) {
+    return <WorkspaceRouteLoading label="portal del profesor" />;
+  }
 
   if (options.length > 0 || ACCOUNT_ROUTES.some((route) => pathname.startsWith(route))) {
     return <>{children}</>;

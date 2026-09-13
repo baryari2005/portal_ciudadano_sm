@@ -14,10 +14,11 @@ import { cn } from "@/lib/utils";
 import { getTeacherAttendanceClient,updateTeacherAttendanceClient } from "../services/teacher.service";
 
 export function TeacherAttendancePage({sessionId}:{sessionId:string}){
-  const[data,setData]=useState<AttendanceRoster|null>(null),[query,setQuery]=useState(""),[draft,setDraft]=useState<Record<string,AttendanceRosterItem>>({}),[saving,setSaving]=useState(false);
-  useEffect(()=>{void getTeacherAttendanceClient(sessionId).then(setData).catch(()=>toast.error("La planilla solo está disponible el día de la clase."))},[sessionId]);
+  const[data,setData]=useState<AttendanceRoster|null>(null),[query,setQuery]=useState(""),[draft,setDraft]=useState<Record<string,AttendanceRosterItem>>({}),[saving,setSaving]=useState(false),[loading,setLoading]=useState(true),[loadError,setLoadError]=useState<string|null>(null);
+  useEffect(()=>{let active=true;setLoading(true);setLoadError(null);void getTeacherAttendanceClient(sessionId).then(result=>{if(active)setData(result)}).catch((error:unknown)=>{if(active)setLoadError(getAxiosMessage(error,"No pudimos cargar la planilla de asistencia."))}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[sessionId]);
   const rows=useMemo(()=>data?.attendees.map((row)=>draft[row.enrollmentId]??row).filter((row)=>`${row.user.firstName} ${row.user.lastName} ${row.user.documentNumber}`.toLowerCase().includes(query.toLowerCase()))??[],[data,draft,query]);
-  if(!data)return <CatalogLoadingState label="planilla de asistencia"/>;
+  if(loading)return <CatalogLoadingState label="planilla de asistencia" fullPage/>;
+  if(loadError||!data)return <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] place-items-center px-4 text-center"><div><XCircle className="mx-auto size-10 text-amber-700"/><p className="mt-3 max-w-md font-bold text-[var(--brand-primary)]">{loadError??"No pudimos cargar la planilla de asistencia."}</p><Button asChild variant="outline" className="mt-5"><Link href="/teacher/attendance"><ArrowLeft/>Volver a asistencias</Link></Button></div></div>;
   const closed=data.session.attendanceState==="CLOSED";
   const patch=(row:AttendanceRosterItem,value:Partial<AttendanceRosterItem>)=>setDraft((current)=>({...current,[row.enrollmentId]:{...row,...current[row.enrollmentId],...value}}));
   const markAllPresent=()=>data.attendees.forEach((row)=>patch(row,{status:"PRESENTE",justificationReason:null}));

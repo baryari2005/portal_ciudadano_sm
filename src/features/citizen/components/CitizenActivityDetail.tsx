@@ -50,6 +50,7 @@ type CitizenActivitySchedule = {
   space: string | null;
   establishment: { name: string } | null;
   professors: string[];
+  teacherAssignments: Array<{ startTime: string; endTime: string; professors: string[] }>;
   availableCount: number;
   waitlistEnabled: boolean;
   ownEnrollmentStatus: string | null;
@@ -375,7 +376,7 @@ export function CitizenActivityDetail({ id }: { id: string }) {
                                 "Sin establecimiento asignado"}
                             </small>
                             <small className="block text-[#5F6F68]">
-                              {schedule.professors.join(", ") ||
+                              {professorsForChoice(choice).join(", ") ||
                                 "Sin profesor asignado"}
                             </small>
                             {checking ? (
@@ -468,6 +469,10 @@ function buildScheduleChoices(
 
 function choiceKey(choice: EnrollmentChoice) {
   return `${choice.schedule.id}-${choice.startTime}-${choice.endTime}`;
+}
+
+function professorsForChoice(choice: EnrollmentChoice) {
+  return choice.schedule.teacherAssignments.find((assignment) => assignment.startTime === choice.startTime && assignment.endTime === choice.endTime)?.professors ?? choice.schedule.professors;
 }
 
 function toMinutes(value: string) {

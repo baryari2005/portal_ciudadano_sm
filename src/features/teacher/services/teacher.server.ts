@@ -7,6 +7,7 @@ import { createNotifications, getUnreadCount, listUserNotifications, notifyAdmin
 import { listActivitySessions, getActivitySession } from "@/features/activity-sessions/services/activity-sessions.server";
 import { createAuditLog } from "@/features/audit-log/services/audit-log.server";
 import type { ActivitySessionStatus } from "@/features/activity-sessions/types/activity-session.types";
+import { getEnrollmentDocumentationSummaries } from "@/features/enrollment-documents/services/enrollment-documents.server";
 
 export class TeacherSessionAccessError extends Error {
   readonly status = 403;
@@ -18,10 +19,7 @@ export class TeacherSessionAccessError extends Error {
 }
 
 const teacherSessionAssignment = (professorId: string): Prisma.ClaseActividadWhereInput => ({
-  OR: [
-    { profesores: { some: { profesorId: professorId } } },
-    { horarioActividad: { profesores: { some: { profesorId: professorId } } } },
-  ],
+  profesores: { some: { profesorId: professorId } },
 });
 
 export async function listTeacherEstablishments(userId: string) {
@@ -86,17 +84,82 @@ export async function listTeacherSessions(userId: string, filters: { search?: st
   if (!filters.establishmentId) throw new CatalogValidationError("Seleccioná un establecimiento para continuar.");
   await assertTeacherEstablishment(userId, filters.establishmentId);
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-  return listAttendanceSessions({ professorId: teacher.id, includeScheduleAssignments: true, search: filters.search, attendanceState: filters.attendanceState, status: filters.status, activityId: filters.activityId, establishmentId: filters.establishmentId, dateFrom: filters.dateFrom ?? today, dateTo: filters.dateTo, page: filters.page ?? 1, pageSize: filters.pageSize ?? 8 } as Parameters<typeof listAttendanceSessions>[0]);
+  return listAttendanceSessions({ professorId: teacher.id, includeScheduleAssignments: false, search: filters.search, attendanceState: filters.attendanceState, status: filters.status, activityId: filters.activityId, establishmentId: filters.establishmentId, dateFrom: filters.dateFrom ?? today, dateTo: filters.dateTo, page: filters.page ?? 1, pageSize: filters.pageSize ?? 8 } as Parameters<typeof listAttendanceSessions>[0]);
 }
 
-export async function listTeacherClasses(userId: string, filters: { search?: string; status?: ActivitySessionStatus; establishmentId: string; dateFrom?: string; dateTo?: string; page?: number; pageSize?: number }) {
+export async function listTeacherClasses(userId: string, filters: { search?: string; status?: ActivitySessionStatus; participation?: "WITH"|"WITHOUT"; establishmentId: string; dateFrom?: string; dateTo?: string; page?: number; pageSize?: number }) {
   const teacher = await requireTeacherProfile(userId);
   await assertTeacherEstablishment(userId, filters.establishmentId);
   const threshold = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(threshold);
   const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value ?? "";
   const visibleAfter = { date: `${part("year")}-${part("month")}-${part("day")}`, time: `${part("hour")}:${part("minute")}` };
-  return listActivitySessions({ ...filters, professorId: teacher.id, visibleAfter, excludedStatuses: ["CANCELADA"], page: filters.page ?? 1, pageSize: filters.pageSize ?? 8 });
+  return listActivitySessions({ ...filters, professorId: teacher.id, includeScheduleAssignments: false, visibleAfter, excludedStatuses: ["CANCELADA"], page: filters.page ?? 1, pageSize: filters.pageSize ?? 8 });
+}
+
+export async function listTeacherEnrollees(userId: string, filters: { establishmentId: string; search?: string; page?: number; pageSize?: number }) {
+  const teacher = await requireTeacherProfile(userId);
+  await assertTeacherEstablishment(userId, filters.establishmentId);
+  const page = filters.page ?? 1;
+  const pageSize = filters.pageSize ?? 8;
+  const search = filters.search?.trim();
+  const assignedClass = { some: { establecimientoId: filters.establishmentId, profesores: { some: { profesorId: teacher.id } } } };
+  const where: Prisma.InscripcionWhereInput = {
+    estado: { in: ["PENDIENTE", "CONFIRMADA", "LISTA_ESPERA"] },
+    OR: [
+      { horarioActividad: { clases: assignedClass } },
+      { horarios: { some: { horarioActividad: { clases: assignedClass } } } },
+    ],
+    ...(search ? { usuario: { OR: [
+      { nombre: { contains: search, mode: "insensitive" } },
+      { apellido: { contains: search, mode: "insensitive" } },
+      { documento: { contains: search, mode: "insensitive" } },
+      { email: { contains: search, mode: "insensitive" } },
+    ] } } : {}),
+  };
+  const [total, rows] = await prisma.$transaction([
+    prisma.inscripcion.count({ where }),
+    prisma.inscripcion.findMany({
+      where,
+      select: {
+        id: true,
+        estado: true,
+        fechaInscripcion: true,
+        usuario: { select: { id: true, userId: true, nombre: true, apellido: true, documento: true, email: true, celular: true, domicilio: true, avatarUrl: true } },
+        horarioActividad: { select: { actividad: { select: { id: true, nombre: true } }, establecimiento: { select: { id: true, nombre: true } } } },
+      },
+      orderBy: [{ usuario: { apellido: "asc" } }, { usuario: { nombre: "asc" } }, { fechaInscripcion: "desc" }],
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+  ]);
+  const documentation = await getEnrollmentDocumentationSummaries(rows.map((row) => row.id));
+  return {
+    items: rows.map((row) => ({
+      id: row.id,
+      status: row.estado,
+      enrollmentDate: row.fechaInscripcion.toISOString(),
+      citizen: { id: row.usuario.id, userId: row.usuario.userId, firstName: row.usuario.nombre, lastName: row.usuario.apellido, documentNumber: row.usuario.documento, email: row.usuario.email, phone: row.usuario.celular, address: row.usuario.domicilio, avatarUrl: row.usuario.avatarUrl },
+      activity: row.horarioActividad.actividad,
+      establishment: row.horarioActividad.establecimiento,
+      documentation: documentation.get(row.id) ?? null,
+    })),
+    meta: { total, page, pageSize, pageCount: Math.max(1, Math.ceil(total / pageSize)) },
+  };
+}
+
+export async function assertTeacherCitizenAccess(userId: string, citizenId: string, establishmentId: string) {
+  const teacher = await requireTeacherProfile(userId);
+  await assertTeacherEstablishment(userId, establishmentId);
+  const linked = await prisma.inscripcion.count({ where: { usuarioId: citizenId, OR: [{ horarioActividad: { clases: { some: { establecimientoId: establishmentId, profesores: { some: { profesorId: teacher.id } } } } } }, { horarios: { some: { horarioActividad: { clases: { some: { establecimientoId: establishmentId, profesores: { some: { profesorId: teacher.id } } } } } } } }] } });
+  if (!linked) throw new TeacherSessionAccessError();
+}
+
+export async function assertTeacherEnrollmentAccess(userId: string, enrollmentId: string, establishmentId: string) {
+  const teacher = await requireTeacherProfile(userId);
+  await assertTeacherEstablishment(userId, establishmentId);
+  const linked = await prisma.inscripcion.count({ where: { id: enrollmentId, OR: [{ horarioActividad: { clases: { some: { establecimientoId: establishmentId, profesores: { some: { profesorId: teacher.id } } } } } }, { horarios: { some: { horarioActividad: { clases: { some: { establecimientoId: establishmentId, profesores: { some: { profesorId: teacher.id } } } } } } } }] } });
+  if (!linked) throw new TeacherSessionAccessError();
 }
 
 export async function getTeacherClass(userId: string, sessionId: string, establishmentId: string) {
@@ -134,7 +197,9 @@ export async function suspendTeacherClass(input: { userId: string; sessionId: st
 
 export async function getTeacherSession(userId: string, sessionId: string, establishmentId: string) {
   await assertTeacherSession(userId, sessionId, establishmentId);
-  return getAttendanceRoster(sessionId);
+  const roster = await getAttendanceRoster(sessionId);
+  const documentation = await getEnrollmentDocumentationSummaries(roster.attendees.map((item) => item.enrollmentId));
+  return { ...roster, attendees: roster.attendees.map((item) => ({ ...item, documentation: documentation.get(item.enrollmentId) ?? null })) };
 }
 
 export async function getTeacherSummary(userId: string, establishmentId: string) {

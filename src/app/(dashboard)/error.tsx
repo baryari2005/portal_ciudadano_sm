@@ -10,6 +10,8 @@ export default function DashboardError() {
       description="Ocurrió un error inesperado en el dashboard."
       imageSrc="/404.png"
       primaryAction={{ label: "Volver al inicio", href: "/" }}
+      illustrationOnly
+      animateIllustration={false}
     />
   );
 }

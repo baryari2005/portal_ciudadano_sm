@@ -46,6 +46,7 @@ import { GeneralInformation } from "./GeneralInformation";
 import { WeeklySchedules } from "./WeeklySchedules";
 import { WorkflowSelectionBrowser } from "./WorkflowSelectionBrowser";
 import { ReservationSettings } from "./ReservationSettings";
+import { TeacherTurnDistribution } from "./TeacherTurnDistribution";
 import {
   adminPrimaryButtonClass,
   adminSecondaryButtonClass,
@@ -89,6 +90,7 @@ const stepIcons = [
   CalendarDays,
   PackageOpen,
   GraduationCap,
+  Clock3,
   UsersRound,
   FileCheck2,
   Clock3,
@@ -102,6 +104,7 @@ const steps = [
   "Horarios",
   "Cupos y recursos",
   "Profesores",
+  "Distribución docente",
   "Dirigido a",
   "Requisitos",
   "Reservas",
@@ -447,7 +450,7 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
               <ArrowLeft className="size-5" />
               Anterior
             </Button>
-            {step < 10 ? (
+            {step < steps.length ? (
               <Button
                 type="button"
                 size="lg"
@@ -702,6 +705,10 @@ function StepContent({
                 profesorIds: checked
                   ? [...new Set([...schedule.profesorIds, id])]
                   : schedule.profesorIds.filter((item) => item !== id),
+                teacherAssignments: schedule.teacherAssignments.map((assignment) => ({
+                  ...assignment,
+                  professorIds: checked ? assignment.professorIds : assignment.professorIds.filter((item) => item !== id),
+                })),
               })),
             });
           }}
@@ -721,6 +728,8 @@ function StepContent({
       </div>
     );
   if (step === 7)
+    return <TeacherTurnDistribution payload={payload} patch={patch} professors={options.professors} />;
+  if (step === 8)
     return (
       <div className="space-y-4">
         <Missing text="Este paso es opcional. Si no seleccionás ningún público, la actividad estará disponible para todas las personas." />
@@ -754,7 +763,7 @@ function StepContent({
         />
       </div>
     );
-  if (step === 8)
+  if (step === 9)
     return (
       <div className="space-y-4">
         <Missing text="Este paso es opcional. Si no seleccionás ninguno, la actividad se publicará sin requisitos." />
@@ -797,7 +806,7 @@ function StepContent({
         />
       </div>
     );
-  if (step === 9)
+  if (step === 10)
     return <ReservationSettings payload={payload} patch={patch} />;
   return <Review payload={payload} pending={pending} onGoToStep={onGoToStep} />;
 }
@@ -823,6 +832,7 @@ function Schedules({
           cupoMaximo: payload.cupo ?? 1,
           profesorIds: [],
           recursoIds: [],
+          teacherAssignments: [],
         },
       ],
     });
@@ -1139,6 +1149,7 @@ function stepDescription(step: number) {
     "Definí días y franjas disponibles.",
     "Configurá capacidad y recursos físicos.",
     "Asigná profesores aprobados cuando estén disponibles.",
+    "Distribuí los profesores seleccionados entre los turnos.",
     "Indicá quiénes pueden participar.",
     "Seleccioná documentación, elementos y condiciones.",
     "Definí vigencia, turnos y cancelaciones.",

@@ -14,6 +14,7 @@ import {
   HeartPulse,
   IdCard,
   Info,
+  Images,
   Loader2,
   Mail,
   MapPin,
@@ -57,6 +58,7 @@ const sections = [
   { id: "system-access", label: "Acceso al sistema", icon: ShieldCheck },
   { id: "address", label: "Domicilio", icon: MapPin },
   { id: "contact", label: "Contacto y cobertura", icon: HeartPulse },
+  { id: "images", label: "Imágenes", icon: Images },
   { id: "documents", label: "Documentos", icon: FileCheck2 },
   { id: "enrollments", label: "Inscripciones", icon: ClipboardCheck },
   { id: "attendance", label: "Asistencias", icon: Activity },
@@ -201,6 +203,21 @@ export function UserRecordPage({
             onLoadingChange={setSectionLoading}
           />
         </RecordCard>
+      ) : null}
+      {user && activeSection === "images" ? (
+        <AdminRecordSectionContent
+          title="Imágenes personales"
+          description="Fotografías asociadas al ciudadano."
+          icon={Images}
+        >
+          <div className="grid content-start gap-5 sm:grid-cols-2">
+            <RecordImage label="Avatar" src={user.avatarUrl} />
+            <RecordImage
+              label="Foto de identidad"
+              src={user.identityPhotoUrl ?? null}
+            />
+          </div>
+        </AdminRecordSectionContent>
       ) : null}
       {user && activeSection === "enrollments" ? (
         <RecordCard
@@ -373,22 +390,6 @@ function CitizenRecordDataSection({
           {section === "address" ? <div className="min-w-0"><p className="mb-2 text-sm font-extrabold text-[var(--brand-primary)]">Ubicación del domicilio</p><AddressMapView lat={user.addressLat} lng={user.addressLng} label={`Domicilio de ${user.fullName}`}/></div> : null}
         </div>
       </AdminRecordSectionContent>
-      {section === "personal-data" ? (
-        <AdminRecordSectionContent
-          className="mt-8 border-t border-[var(--brand-border)] pt-8"
-          title="Imágenes personales"
-          description="Fotografías asociadas al ciudadano."
-          icon={FileCheck2}
-        >
-          <div className="grid gap-5 sm:grid-cols-2">
-            <RecordImage label="Avatar" src={user.avatarUrl} />
-            <RecordImage
-              label="Foto de identidad"
-              src={user.identityPhotoUrl ?? null}
-            />
-          </div>
-        </AdminRecordSectionContent>
-      ) : null}
       {section === "personal-data" &&
       user.role.toLowerCase().includes("profesor") ? (
         <AdminRecordSectionContent
@@ -420,9 +421,15 @@ function RecordImage({ label, src }: { label: string; src: string | null }) {
       <p className="mb-2 text-sm font-extrabold text-[var(--brand-primary)]">
         {label}
       </p>
-      <div className="grid aspect-[4/3] max-w-sm place-items-center overflow-hidden rounded-2xl border border-[var(--brand-border)] bg-[var(--brand-panel)]">
+      <div className="relative grid aspect-[4/3] w-full max-w-48 place-items-center overflow-hidden rounded-2xl border border-[var(--brand-border)] bg-[var(--brand-panel)]">
         {src ? (
-          <Image src={src} alt={label} className="size-full object-cover" />
+          <Image
+            src={src}
+            alt={label}
+            fill
+            sizes="(max-width: 640px) 100vw, 384px"
+            className="object-cover"
+          />
         ) : (
           <span className="text-sm font-bold text-[var(--brand-muted)]">
             Sin imagen registrada
