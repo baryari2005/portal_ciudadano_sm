@@ -9,10 +9,10 @@ import {
   ChevronRight,
   CircleAlert,
   Clock3,
-  Dumbbell,
   Edit3,
   FileText,
   GraduationCap,
+  LibraryBig,
   RefreshCcw,
   ShieldCheck,
   Tags,
@@ -196,7 +196,7 @@ export function ActividadesPage() {
   return (
     <div className="grid min-h-[calc(100dvh-var(--topbar-h)-48px)] w-full grid-rows-[auto_minmax(0,1fr)] gap-5 bg-[var(--brand-page)] p-4 sm:p-6 lg:h-[calc(100dvh-var(--topbar-h)-48px)] lg:overflow-hidden lg:p-8">
       <CatalogPageHeader
-        icon={Dumbbell}
+        icon={LibraryBig}
         title="Actividades"
         description="Administrá la información general de las propuestas municipales."
         total={filteredItems.length}

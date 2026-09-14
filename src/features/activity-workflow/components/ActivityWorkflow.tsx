@@ -29,7 +29,6 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -41,6 +40,7 @@ import {
 } from "@/components/ui/select";
 import { CatalogLoadingState } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { useActivityCatalogs } from "@/features/actividades/hooks/useActivityCatalogs";
+import { CheckCard } from "./CheckCard";
 import { GeneralInformation } from "./GeneralInformation";
 import { WeeklySchedules } from "./WeeklySchedules";
 import { WorkflowSelectionBrowser } from "./WorkflowSelectionBrowser";
@@ -615,36 +615,35 @@ function StepContent({
     );
   if (step === 3)
     return (
-      <div>
-        <IconField label="Sedes *" icon={<Building2 />}>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {options.establishments.map((establishment) => (
-              <CheckCard
-                key={establishment.id}
-                checked={payload.establecimientoIds.includes(establishment.id)}
-                label={`${establishment.nombre} · ${establishment.direccion}`}
-                onChange={(checked) => {
-                  const nextIds = checked
-                    ? [...payload.establecimientoIds, establishment.id]
-                    : payload.establecimientoIds.filter((id) => id !== establishment.id);
-                  patch({
-                    establecimientoIds: nextIds,
-                    schedules: payload.schedules.map((item) => {
-                      const keepsEstablishment = nextIds.includes(item.establecimientoId);
-                      return {
-                        ...item,
-                        // Nunca vaciar la sede: si no queda ninguna seleccionada, conservamos la
-                        // actual (el paso quedará marcado como pendiente hasta elegir una nueva).
-                        establecimientoId: keepsEstablishment ? item.establecimientoId : (nextIds[0] ?? item.establecimientoId),
-                        recursoIds: keepsEstablishment ? item.recursoIds : [],
-                      };
-                    }),
-                  });
-                }}
-              />
-            ))}
-          </div>
-        </IconField>
+      <div className="space-y-3">
+        <Label className="font-bold text-[var(--brand-ink)]">Sedes *</Label>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {options.establishments.map((establishment) => (
+            <CheckCard
+              key={establishment.id}
+              checked={payload.establecimientoIds.includes(establishment.id)}
+              label={`${establishment.nombre} · ${establishment.direccion}`}
+              onChange={(checked) => {
+                const nextIds = checked
+                  ? [...payload.establecimientoIds, establishment.id]
+                  : payload.establecimientoIds.filter((id) => id !== establishment.id);
+                patch({
+                  establecimientoIds: nextIds,
+                  schedules: payload.schedules.map((item) => {
+                    const keepsEstablishment = nextIds.includes(item.establecimientoId);
+                    return {
+                      ...item,
+                      // Nunca vaciar la sede: si no queda ninguna seleccionada, conservamos la
+                      // actual (el paso quedará marcado como pendiente hasta elegir una nueva).
+                      establecimientoId: keepsEstablishment ? item.establecimientoId : (nextIds[0] ?? item.establecimientoId),
+                      recursoIds: keepsEstablishment ? item.recursoIds : [],
+                    };
+                  }),
+                });
+              }}
+            />
+          ))}
+        </div>
         {!options.establishments.length ? (
           <Missing text="No hay establecimientos disponibles. La actividad puede guardarse, pero seguirá incompleta." />
         ) : null}
@@ -1171,27 +1170,6 @@ function Pick({
         ))}
       </SelectContent>
     </Select>
-  );
-}
-function CheckCard({
-  checked,
-  label,
-  onChange,
-}: {
-  checked: boolean;
-  label: string;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <label
-      className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 ${checked ? "border-[var(--brand-secondary)] bg-[var(--brand-panel)]" : "border-[var(--brand-border-soft)] bg-white"}`}
-    >
-      <Checkbox
-        checked={checked}
-        onCheckedChange={(value) => onChange(value === true)}
-      />
-      <span className="font-bold text-[var(--brand-ink)]">{label}</span>
-    </label>
   );
 }
 function Missing({ text }: { text: string }) {

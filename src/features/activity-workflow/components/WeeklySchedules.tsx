@@ -1,17 +1,18 @@
 "use client";
 
-import { useMemo } from "react";
-import { CalendarDays, Clock3, Info } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CalendarDays, Clock3, Plus, Trash2 } from "lucide-react";
+import { CheckCard } from "./CheckCard";
 import type { ActivityDraftPayload } from "../types/activity-draft.types";
 import type { Establecimiento } from "@/features/establecimientos/types/establecimiento.types";
 
-const dayLabels: Record<string, string> = { LUNES: "Lunes", MARTES: "Martes", MIERCOLES: "Miércoles", JUEVES: "Jueves", VIERNES: "Viernes", SABADO: "Sábado", DOMINGO: "Domingo" };
+type Schedule = ActivityDraftPayload["schedules"][number];
+type Day = Schedule["diaSemana"];
 
-const days = [
+const days: Array<[Day, string, string]> = [
   ["LUNES", "LUN", "Lunes"],
   ["MARTES", "MAR", "Martes"],
   ["MIERCOLES", "MIÉ", "Miércoles"],
@@ -19,7 +20,34 @@ const days = [
   ["VIERNES", "VIE", "Viernes"],
   ["SABADO", "SÁB", "Sábado"],
   ["DOMINGO", "DOM", "Domingo"],
-] as const;
+];
+
+type Block = { key: string; horaInicio: string; horaFin: string; days: Set<Day>; establecimientoIds: Set<string> };
+
+function groupBlocks(schedules: Schedule[]): Block[] {
+  const map = new Map<string, Block>();
+  for (const item of schedules) {
+    const key = `${item.horaInicio}|${item.horaFin}`;
+    const block = map.get(key) ?? { key, horaInicio: item.horaInicio, horaFin: item.horaFin, days: new Set(), establecimientoIds: new Set() };
+    block.days.add(item.diaSemana);
+    block.establecimientoIds.add(item.establecimientoId);
+    map.set(key, block);
+  }
+  return [...map.values()].sort((a, b) => a.horaInicio.localeCompare(b.horaInicio) || a.horaFin.localeCompare(b.horaFin));
+}
+
+function nextDefaultRange(blocks: Block[]): { horaInicio: string; horaFin: string } {
+  const used = new Set(blocks.map((block) => block.horaInicio));
+  for (let hour = 8; hour <= 20; hour += 1) {
+    const horaInicio = `${String(hour).padStart(2, "0")}:00`;
+    if (!used.has(horaInicio)) return { horaInicio, horaFin: `${String(hour + 1).padStart(2, "0")}:00` };
+  }
+  return { horaInicio: "10:00", horaFin: "11:00" };
+}
+
+function emptyRow(payload: ActivityDraftPayload, establecimientoId: string, diaSemana: Day, horaInicio: string, horaFin: string): Schedule {
+  return { establecimientoId, diaSemana, horaInicio, horaFin, espacio: null, cupoMaximo: payload.cupo ?? 1, profesorIds: [], recursoIds: [], teacherAssignments: [] };
+}
 
 export function WeeklySchedules({
   payload,
@@ -30,45 +58,6 @@ export function WeeklySchedules({
   patch: (value: Partial<ActivityDraftPayload>) => void;
   establishments: Establecimiento[];
 }) {
-  const selected = useMemo(
-    () => new Set(payload.schedules.map((item) => item.diaSemana)),
-    [payload.schedules],
-  );
-  const start = payload.schedules[0]?.horaInicio ?? "10:00";
-  const end = payload.schedules[0]?.horaFin ?? "13:00";
-
-  function update(nextDays: string[], nextStart = start, nextEnd = end) {
-    patch({
-      schedules: nextDays.map((diaSemana) => {
-        const current = payload.schedules.find(
-          (item) => item.diaSemana === diaSemana,
-        );
-        return current
-          ? { ...current, horaInicio: nextStart, horaFin: nextEnd }
-          : {
-              establecimientoId: payload.establecimientoIds[0] ?? "",
-              diaSemana:
-                diaSemana as ActivityDraftPayload["schedules"][number]["diaSemana"],
-              horaInicio: nextStart,
-              horaFin: nextEnd,
-              espacio: null,
-              cupoMaximo: payload.cupo ?? 1,
-              profesorIds: [],
-              recursoIds: [],
-              teacherAssignments: [],
-            };
-      }),
-    });
-  }
-
-  function toggle(day: string, checked: boolean) {
-    update(
-      checked
-        ? [...selected, day]
-        : [...selected].filter((item) => item !== day),
-    );
-  }
-
   if (!payload.establecimientoIds.length) {
     return (
       <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
@@ -77,114 +66,157 @@ export function WeeklySchedules({
     );
   }
 
+  const blocks = groupBlocks(payload.schedules);
+  const showEstablishments = payload.establecimientoIds.length > 1;
+
+  function addBlock() {
+    const { horaInicio, horaFin } = nextDefaultRange(blocks);
+    patch({ schedules: [...payload.schedules, emptyRow(payload, payload.establecimientoIds[0] ?? "", "LUNES", horaInicio, horaFin)] });
+  }
+
+  function removeBlock(block: Block) {
+    patch({ schedules: payload.schedules.filter((item) => !(item.horaInicio === block.horaInicio && item.horaFin === block.horaFin)) });
+  }
+
+  function updateBlockTime(block: Block, nextStart: string, nextEnd: string) {
+    patch({
+      schedules: payload.schedules.map((item) =>
+        item.horaInicio === block.horaInicio && item.horaFin === block.horaFin
+          ? { ...item, horaInicio: nextStart, horaFin: nextEnd }
+          : item,
+      ),
+    });
+  }
+
+  function toggleBlockDay(block: Block, day: Day, checked: boolean) {
+    if (checked) {
+      const sedes = block.establecimientoIds.size ? [...block.establecimientoIds] : [payload.establecimientoIds[0] ?? ""];
+      const existing = new Set(
+        payload.schedules
+          .filter((item) => item.horaInicio === block.horaInicio && item.horaFin === block.horaFin && item.diaSemana === day)
+          .map((item) => item.establecimientoId),
+      );
+      const created = sedes.filter((id) => !existing.has(id)).map((id) => emptyRow(payload, id, day, block.horaInicio, block.horaFin));
+      patch({ schedules: [...payload.schedules, ...created] });
+    } else {
+      patch({
+        schedules: payload.schedules.filter(
+          (item) => !(item.horaInicio === block.horaInicio && item.horaFin === block.horaFin && item.diaSemana === day),
+        ),
+      });
+    }
+  }
+
+  function toggleBlockEstablishment(block: Block, establishmentId: string, checked: boolean) {
+    if (checked) {
+      const existing = new Set(
+        payload.schedules
+          .filter((item) => item.horaInicio === block.horaInicio && item.horaFin === block.horaFin && item.establecimientoId === establishmentId)
+          .map((item) => item.diaSemana),
+      );
+      const created = [...block.days].filter((day) => !existing.has(day)).map((day) => emptyRow(payload, establishmentId, day, block.horaInicio, block.horaFin));
+      patch({ schedules: [...payload.schedules, ...created] });
+    } else {
+      patch({
+        schedules: payload.schedules.filter(
+          (item) => !(item.horaInicio === block.horaInicio && item.horaFin === block.horaFin && item.establecimientoId === establishmentId),
+        ),
+      });
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-[var(--brand-border-soft)] bg-[var(--brand-page)] p-5">
-        <div className="flex items-start gap-3">
-          <span className="grid size-10 place-items-center rounded-xl bg-[var(--brand-border-soft)] text-[var(--brand-primary)]">
-            <CalendarDays className="size-5" />
-          </span>
-          <div>
-            <h3 className="font-extrabold text-[var(--brand-primary)]">
-              Días de la actividad
-            </h3>
-            <p className="text-sm text-[var(--brand-muted)]">
-              Marcá todos los días que comparten la misma franja horaria.
-            </p>
-          </div>
-        </div>
-        <div className="mt-5 grid grid-cols-4 gap-3 sm:grid-cols-7">
-          {days.map(([value, shortLabel, fullLabel]) => (
-            <label
-              key={value}
-              className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border p-3 font-bold transition ${selected.has(value) ? "border-[var(--brand-primary)] bg-[var(--brand-accent)] text-[var(--brand-primary)]" : "border-[var(--brand-border)] bg-white text-[var(--brand-text)]"}`}
-            >
-              <Checkbox
-                className="sr-only"
-                checked={selected.has(value)}
-                onCheckedChange={(checked) => toggle(value, checked === true)}
-              />
-              <span className="2xl:hidden">{shortLabel}</span>
-              <span className="hidden 2xl:inline">{fullLabel}</span>
-            </label>
-          ))}
-        </div>
-      </section>
-      {payload.establecimientoIds.length > 1 && selected.size > 0 ? (
-        <section className="rounded-2xl border border-[var(--brand-border-soft)] bg-[var(--brand-page)] p-5">
-          <h3 className="font-extrabold text-[var(--brand-primary)]">Sede por día</h3>
-          <p className="text-sm text-[var(--brand-muted)]">Elegiste más de una sede: indicá dónde se dicta cada día.</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {payload.schedules.map((schedule) => (
-              <div key={schedule.diaSemana} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--brand-border-soft)] bg-white p-3">
-                <span className="font-bold text-[var(--brand-ink)]">{dayLabels[schedule.diaSemana] ?? schedule.diaSemana}</span>
-                <Select
-                  value={schedule.establecimientoId}
-                  onValueChange={(value) =>
-                    patch({
-                      schedules: payload.schedules.map((item) =>
-                        item.diaSemana === schedule.diaSemana ? { ...item, establecimientoId: value, recursoIds: [] } : item,
-                      ),
-                    })
-                  }
-                >
-                  <SelectTrigger className="h-10 w-48"><SelectValue placeholder="Sede" /></SelectTrigger>
-                  <SelectContent>
-                    {payload.establecimientoIds.map((id) => {
-                      const establishment = establishments.find((item) => item.id === id);
-                      return <SelectItem key={id} value={id}>{establishment?.nombre ?? id}</SelectItem>;
-                    })}
-                  </SelectContent>
-                </Select>
+      {blocks.map((block, index) => (
+        <section key={block.key} className="rounded-2xl border border-[var(--brand-border-soft)] bg-[var(--brand-page)] p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--brand-border-soft)] text-[var(--brand-primary)]">
+                <CalendarDays className="size-5" />
+              </span>
+              <div>
+                <h3 className="font-extrabold text-[var(--brand-primary)]">Horario {index + 1}</h3>
+                <p className="text-sm text-[var(--brand-muted)]">
+                  Marcá los días que comparten esta franja. Si la actividad se dicta en otro horario del mismo día, agregá otro bloque.
+                </p>
               </div>
+            </div>
+            {blocks.length > 1 ? (
+              <Button type="button" variant="ghost" size="icon" onClick={() => removeBlock(block)} aria-label="Eliminar este horario">
+                <Trash2 className="size-4 text-red-600" />
+              </Button>
+            ) : null}
+          </div>
+          <div className="mt-5 grid grid-cols-4 gap-3 sm:grid-cols-7">
+            {days.map(([value, shortLabel, fullLabel]) => (
+              <label
+                key={value}
+                className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border p-3 font-bold transition ${block.days.has(value) ? "border-[var(--brand-primary)] bg-[var(--brand-accent)] text-[var(--brand-primary)]" : "border-[var(--brand-border)] bg-white text-[var(--brand-text)]"}`}
+              >
+                <Checkbox
+                  className="sr-only"
+                  checked={block.days.has(value)}
+                  onCheckedChange={(checked) => toggleBlockDay(block, value, checked === true)}
+                />
+                <span className="2xl:hidden">{shortLabel}</span>
+                <span className="hidden 2xl:inline">{fullLabel}</span>
+              </label>
             ))}
           </div>
+          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+            <Field label="Hora de inicio" icon={<Clock3 />}>
+              <Input
+                type="time"
+                value={block.horaInicio}
+                onChange={(event) => updateBlockTime(block, event.target.value, block.horaFin)}
+              />
+            </Field>
+            <Field label="Hora de finalización" icon={<Clock3 />}>
+              <Input
+                type="time"
+                min={block.horaInicio}
+                value={block.horaFin}
+                onChange={(event) => updateBlockTime(block, block.horaInicio, event.target.value)}
+              />
+            </Field>
+          </div>
+          {block.horaFin <= block.horaInicio ? (
+            <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
+              La hora de finalización debe ser posterior a la hora de inicio.
+            </p>
+          ) : null}
+          {showEstablishments ? (
+            <div className="mt-5 space-y-2">
+              <Label className="font-bold text-[var(--brand-ink)]">Sedes de este horario</Label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {payload.establecimientoIds.map((establishmentId) => {
+                  const establishment = establishments.find((item) => item.id === establishmentId);
+                  const checked = block.establecimientoIds.has(establishmentId);
+                  const isLastChecked = checked && block.establecimientoIds.size === 1;
+                  return (
+                    <CheckCard
+                      key={establishmentId}
+                      checked={checked}
+                      disabled={isLastChecked}
+                      label={establishment?.nombre ?? establishmentId}
+                      onChange={(nextChecked) => toggleBlockEstablishment(block, establishmentId, nextChecked)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
         </section>
-      ) : null}
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Hora de inicio de la franja" icon={<Clock3 />}>
-          <Input
-            type="time"
-            value={start}
-            onChange={(event) => update([...selected], event.target.value, end)}
-          />
-        </Field>
-        <Field label="Hora de finalización de la franja" icon={<Clock3 />}>
-          <Input
-            type="time"
-            min={start}
-            value={end}
-            onChange={(event) =>
-              update([...selected], start, event.target.value)
-            }
-          />
-        </Field>
-      </div>
-      {selected.size ? (
-        <p
-          className={`flex items-start gap-3 rounded-xl border p-4 text-sm font-medium ${end > start ? "border-[var(--brand-border)] bg-[var(--brand-panel)] text-[var(--brand-text)]" : "border-red-200 bg-red-50 text-red-800"}`}
-        >
-          <Info className="mt-0.5 size-5 shrink-0" />
-          <span>
-            {end > start ? (
-              <>
-                La actividad estará disponible los días seleccionados de{" "}
-                <strong>
-                  {start} a {end}
-                </strong>
-                . Esta es la franja general; en el paso Reservas definirás
-                cuánto dura cada turno dentro de ella.
-              </>
-            ) : (
-              "La hora de finalización debe ser posterior a la hora de inicio."
-            )}
-          </span>
-        </p>
-      ) : (
+      ))}
+      {!blocks.length ? (
         <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          Seleccioná al menos un día para continuar.
+          Todavía no cargaste ningún horario. Agregá al menos uno para continuar.
         </p>
-      )}
+      ) : null}
+      <Button type="button" variant="outline" onClick={addBlock}>
+        <Plus />
+        Agregar horario
+      </Button>
     </div>
   );
 }
