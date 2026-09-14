@@ -22,9 +22,6 @@ import { activityGeneralStateSchema } from "../schemas/actividad.schema";
 import type { ActividadFilters } from "../types/actividad.types";
 
 const actividadInclude = {
-  establecimiento: {
-    select: { id: true, nombre: true, direccion: true },
-  },
   categoriaActividad: {
     select: {
       id: true,
@@ -49,6 +46,7 @@ const actividadInclude = {
   },
   horarios: {
     orderBy: { diaSemana: "asc" as const },
+    include: { establecimiento: { select: { id: true, nombre: true, direccion: true } } },
   },
   asignados: {
     include: {
@@ -160,7 +158,7 @@ function buildWhere(filters: ActividadFilters): Prisma.ActividadWhereInput {
     where.estado = filters.estado as ActividadEstado;
   }
   if (filters.establecimientoId) {
-    where.establecimientoId = filters.establecimientoId;
+    where.horarios = { some: { establecimientoId: filters.establecimientoId } };
   }
   if (filters.categoriaActividadId) {
     where.categoriaActividadId = filters.categoriaActividadId;
@@ -186,8 +184,8 @@ function buildWhere(filters: ActividadFilters): Prisma.ActividadWhereInput {
       { descripcion: { contains: search, mode: "insensitive" } },
       { descripcionCorta: { contains: search, mode: "insensitive" } },
       {
-        establecimiento: {
-          is: { nombre: { contains: search, mode: "insensitive" } },
+        horarios: {
+          some: { establecimiento: { nombre: { contains: search, mode: "insensitive" } } },
         },
       },
       {
@@ -376,7 +374,6 @@ async function syncSchedules(
   tx: Prisma.TransactionClient,
   actividadId: string,
   schedules: ActividadInput["horarios"],
-  establecimientoId: string,
   cupoMaximo: number,
 ) {
   const existing = await tx.horarioActividad.findMany({ where: { actividadId }, include: { clases: { where: { asistenciaCerradaAt: null, estado: { notIn: ["FINALIZADA", "CANCELADA"] } }, orderBy: [{ fecha: "asc" }, { horaInicio: "asc" }] } } });
@@ -397,16 +394,16 @@ async function syncSchedules(
     const day = toDiaSemana(item.diaSemana);
     const current = item.id ? existing.find((row) => row.id === item.id) : undefined;
     if (!current) {
-      const created = await tx.horarioActividad.create({ data: { id: randomUUID(), actividadId, establecimientoId, cupoMaximo: Math.max(cupoMaximo, 1), diaSemana: day, horaInicio: item.horaInicio, horaFin: item.horaFin } });
+      const created = await tx.horarioActividad.create({ data: { id: randomUUID(), actividadId, establecimientoId: item.establecimientoId, cupoMaximo: Math.max(cupoMaximo, 1), diaSemana: day, horaInicio: item.horaInicio, horaFin: item.horaFin } });
       if (horizon) {
         for (let date = new Date(operational.today); date <= horizon; date = new Date(date.getTime() + 86_400_000)) {
           if (date.getUTCDay() !== DAY_INDEX[day] || (date.getTime() === operational.today.getTime() && item.horaInicio < operational.time)) continue;
-          await tx.claseActividad.create({ data: { horarioActividadId: created.id, fecha: date, horaInicio: item.horaInicio, horaFin: item.horaFin, establecimientoId, cupoMaximo: Math.max(cupoMaximo, 1), estado: "PROGRAMADA" } });
+          await tx.claseActividad.create({ data: { horarioActividadId: created.id, fecha: date, horaInicio: item.horaInicio, horaFin: item.horaFin, establecimientoId: item.establecimientoId, cupoMaximo: Math.max(cupoMaximo, 1), estado: "PROGRAMADA" } });
         }
       }
       continue;
     }
-    await tx.horarioActividad.update({ where: { id: current.id }, data: { establecimientoId, cupoMaximo: Math.max(cupoMaximo, 1), diaSemana: day, horaInicio: item.horaInicio, horaFin: item.horaFin, estado: "ACTIVO" } });
+    await tx.horarioActividad.update({ where: { id: current.id }, data: { establecimientoId: item.establecimientoId, cupoMaximo: Math.max(cupoMaximo, 1), diaSemana: day, horaInicio: item.horaInicio, horaFin: item.horaFin, estado: "ACTIVO" } });
     const future = current.clases.filter((row) => row.fecha > operational.today || (row.fecha.getTime() === operational.today.getTime() && row.horaInicio >= operational.time));
     for (const session of future) {
       let date = session.fecha;
@@ -414,7 +411,7 @@ async function syncSchedules(
         const delta = (DAY_INDEX[day] - DAY_INDEX[current.diaSemana] + 7) % 7;
         date = new Date(session.fecha.getTime() + (delta || 7) * 86_400_000);
       }
-      await tx.claseActividad.update({ where: { id: session.id }, data: { fecha: date, horaInicio: item.horaInicio, horaFin: item.horaFin, establecimientoId, cupoMaximo: Math.max(cupoMaximo, 1) } });
+      await tx.claseActividad.update({ where: { id: session.id }, data: { fecha: date, horaInicio: item.horaInicio, horaFin: item.horaFin, establecimientoId: item.establecimientoId, cupoMaximo: Math.max(cupoMaximo, 1) } });
     }
   }
 }
@@ -423,11 +420,10 @@ async function replaceSchedulesAndAssignees(
   tx: Prisma.TransactionClient,
   actividadId: string,
   input: Pick<ActividadInput, "horarios" | "asignados">,
-  establecimientoId: string,
   cupoMaximo: number,
 ) {
   await tx.actividadUsuario.deleteMany({ where: { actividadId } });
-  await syncSchedules(tx, actividadId, input.horarios, establecimientoId, cupoMaximo);
+  await syncSchedules(tx, actividadId, input.horarios, cupoMaximo);
   if (input.asignados.length) {
     await tx.actividadUsuario.createMany({
       data: input.asignados.map((asignado) => ({
@@ -484,7 +480,6 @@ export async function createActividad(input: ActividadInput) {
           requiereAutorizacion: input.requiereAutorizacion,
           esGratuita: input.esGratuita,
           precio: input.esGratuita ? null : toDecimal(input.precio),
-          establecimientoId: input.establecimientoId,
           categoriaActividadId: category?.id ?? null,
           ...(legacyCategory ? { categoria: legacyCategory } : {}),
           cupo: input.cupo ?? null,
@@ -503,7 +498,7 @@ export async function createActividad(input: ActividadInput) {
           requiereReserva: input.requiereReserva,
         },
       });
-      await replaceSchedulesAndAssignees(tx, id, input, input.establecimientoId, input.cupo ?? 1);
+      await replaceSchedulesAndAssignees(tx, id, input, input.cupo ?? 1);
       await syncPublics(tx, id, new Set(), input.publicosObjetivoIds);
       await validateAndSyncRequirements(tx, id, input.requirements);
 
@@ -560,7 +555,6 @@ export async function updateActividad(id: string, input: ActividadInput) {
           requiereAutorizacion: input.requiereAutorizacion,
           esGratuita: input.esGratuita,
           precio: input.esGratuita ? null : toDecimal(input.precio),
-          establecimientoId: input.establecimientoId,
           ...(input.categoriaActividadId !== undefined
             ? { categoriaActividadId: category?.id ?? null }
             : {}),
@@ -581,7 +575,7 @@ export async function updateActividad(id: string, input: ActividadInput) {
           requiereReserva: input.requiereReserva,
         },
       });
-      await replaceSchedulesAndAssignees(tx, id, input, input.establecimientoId, input.cupo ?? 1);
+      await replaceSchedulesAndAssignees(tx, id, input, input.cupo ?? 1);
       await propagateActivityState(tx, id, current.estado, estado);
       await notifyActivityChange(tx, id, input.nombre, estado !== current.estado ? `La actividad cambió su estado a ${toLegacyStateText(estado)}. Revisá tus próximas clases.` : "La programación de la actividad fue actualizada. Revisá los días y horarios de tus próximas clases.");
       await syncPublics(tx, id, currentPublicIds, input.publicosObjetivoIds);
@@ -696,9 +690,6 @@ export async function patchActividad(id: string, input: UpdateActividadInput) {
                   : toDecimal(finalGeneral.precio),
               }
             : {}),
-          ...(input.establecimientoId !== undefined
-            ? { establecimientoId: input.establecimientoId }
-            : {}),
           ...(input.categoriaActividadId !== undefined
             ? { categoriaActividadId: category?.id ?? null }
             : {}),
@@ -732,7 +723,7 @@ export async function patchActividad(id: string, input: UpdateActividadInput) {
       });
 
       if (input.horarios !== undefined) {
-        await syncSchedules(tx, id, input.horarios, input.establecimientoId ?? current.establecimientoId, input.cupo ?? current.cupoMaximo);
+        await syncSchedules(tx, id, input.horarios, input.cupo ?? current.cupoMaximo);
       }
       if (input.asignados !== undefined) {
         await tx.actividadUsuario.deleteMany({ where: { actividadId: id } });
@@ -751,7 +742,7 @@ export async function patchActividad(id: string, input: UpdateActividadInput) {
         await syncPublics(tx, id, currentPublicIds, input.publicosObjetivoIds);
       }
       await propagateActivityState(tx, id, current.estado, finalState);
-      const operationalChange = input.horarios !== undefined || input.establecimientoId !== undefined || input.cupo !== undefined || finalState !== current.estado;
+      const operationalChange = input.horarios !== undefined || input.cupo !== undefined || finalState !== current.estado;
       if (operationalChange) await notifyActivityChange(tx, id, input.nombre ?? current.nombre, finalState !== current.estado ? `La actividad cambió su estado a ${toLegacyStateText(finalState)}. Revisá tus próximas clases.` : "La programación de la actividad fue actualizada. Revisá los días y horarios de tus próximas clases.");
 
       const record = await tx.actividad.findUniqueOrThrow({

@@ -59,7 +59,7 @@ export function ActivityRecordPage({
       title="Ficha completa de la actividad"
       description={
         activity
-          ? `Información integral de ${activity.nombre} · ${activity.establecimiento.nombre}`
+          ? `Información integral de ${activity.nombre} · ${[...new Set(activity.horarios.map((item) => item.establecimiento?.nombre).filter(Boolean))].join(", ") || "Sin sede asignada"}`
           : "Consultá la información integral de la actividad."
       }
       icon={ListChecks}

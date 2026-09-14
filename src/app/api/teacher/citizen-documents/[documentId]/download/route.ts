@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const user = await requireAuth(request), documentId = (await params).documentId, document = await prisma.documentoUsuario.findUnique({ where: { id: documentId }, select: { usuarioId: true } });
     if (!document) throw new CatalogNotFoundError("Documento no encontrado.");
-    await assertTeacherCitizenAccess(user.id, document.usuarioId, request.nextUrl.searchParams.get("establishmentId") ?? "");
+    await assertTeacherCitizenAccess(user.id, document.usuarioId, request.nextUrl.searchParams.get("establishmentId") ?? undefined);
     return NextResponse.json({ data: { url: await getUserDocumentUrl(documentId, document.usuarioId) } });
   } catch (error) { return mapApiRouteError(error, "No pudimos abrir el documento."); }
 }

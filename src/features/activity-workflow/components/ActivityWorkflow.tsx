@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -61,8 +60,12 @@ import {
   discardDraftClient,
   getDraftClient,
   publishDraftClient,
-  saveDraftClient,
 } from "../services/activity-drafts.service";
+import { useActivityDraftAutosave } from "../hooks/useActivityDraftAutosave";
+import { useActivityDraftNavigation } from "../hooks/useActivityDraftNavigation";
+import { draftFingerprint } from "../helpers/draft-persistence";
+import { ActivityDraftLeaveDialog } from "./ActivityDraftLeaveDialog";
+import { getAxiosMessage } from "@/lib/errors/getAxiosErrorMessage";
 import type {
   ActivityDraft,
   ActivityDraftPayload,
@@ -175,8 +178,7 @@ const modeExamples: Record<string, string> = {
 };
 
 export function ActivityWorkflow({ draftId }: { draftId: string }) {
-  const router = useRouter(),
-    catalogs = useActivityCatalogs();
+  const catalogs = useActivityCatalogs();
   const [draft, setDraft] = useState<ActivityDraft | null>(null),
     [payload, setPayload] = useState<ActivityDraftPayload | null>(null),
     [step, setStep] = useState(1),
@@ -190,13 +192,28 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
   );
   const [discardOpen, setDiscardOpen] = useState(false),
     [discarding, setDiscarding] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [options, setOptions] = useState<WorkflowOptions>({
     establishments: [],
     professors: [],
     requirements: [],
     resources: [],
   });
+  const hasUnsavedChanges = Boolean(draft && payload && draftFingerprint(payload) !== draftFingerprint(draft.payload));
+  const navigation: ReturnType<typeof useActivityDraftNavigation> = useActivityDraftNavigation(() => hasUnsavedChanges || autosave.saving || saving || publishing || discarding);
+  const autosave = useActivityDraftAutosave({
+    draft, payload, step,
+    paused: saving || publishing || discarding || discardOpen || Boolean(navigation.destination),
+    onSaved: (result) => {
+      setDraft(result);
+      setPayload((current) => current && draftFingerprint(current) === draftFingerprint(result.payload) ? result.payload : current);
+    },
+  });
   useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setLoadError(null);
     void Promise.all([
       getDraftClient(draftId),
       listActiveEstablecimientosClient(),
@@ -205,6 +222,8 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
       listResourcesClient(),
     ])
       .then(([d, establishments, professors, requirements, resources]) => {
+        if (!active) return;
+        if (d.status === "PUBLICANDO") throw new Error("La actividad se está guardando en otra sesión. Intentá nuevamente en unos segundos.");
         setDraft(d);
         setPayload(d.payload);
         setStep(d.currentStep);
@@ -215,9 +234,10 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
           resources,
         });
       })
-      .catch(() => toast.error("No pudimos cargar el workflow."))
-      .finally(() => setLoading(false));
-  }, [draftId]);
+      .catch((error) => { if (active) setLoadError(error instanceof Error && !('response' in error) ? error.message : getAxiosMessage(error, "No pudimos cargar el borrador.")); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [draftId, loadAttempt]);
   const pendingSteps = useMemo(
     () => new Set(draft?.pending.map((item) => item.step) ?? []),
     [draft],
@@ -271,8 +291,9 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
       active = false;
     };
   }, [step, draftId, payload]);
-  if (loading || catalogs.loading || !payload || !draft)
+  if (loading || catalogs.loading)
     return <CatalogLoadingState label="configuración de actividad" fullPage />;
+  if (loadError || !payload || !draft) return <main className="min-h-full bg-[var(--brand-page)] p-4 sm:p-6 lg:p-8"><p role="alert" className="text-sm text-[var(--brand-muted)]">{loadError || "No pudimos cargar el borrador."}</p><div className="mt-4 flex gap-3"><Button variant="outline" onClick={() => setLoadAttempt((attempt) => attempt + 1)}>Reintentar</Button><Button variant="outline" onClick={() => navigation.navigate("/activities")}>Volver a actividades</Button></div></main>;
   const patch = (changes: Partial<ActivityDraftPayload>) =>
     setPayload((current) => (current ? { ...current, ...changes } : current));
   async function save(targetStep = step, leave = false) {
@@ -280,15 +301,14 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
     setSaving(true);
     if (!leave && targetStep !== step) setStepLoading(true);
     try {
-      const saved = await saveDraftClient(draft!.id, payload!, targetStep);
-      setDraft(saved);
-      setPayload(saved.payload);
+      const saved = await autosave.flush(targetStep);
       if (!saved.pending.some((item) => item.step === validatedStep))
         setCompletedSteps((current) => new Set(current).add(validatedStep));
       setStep(targetStep);
       if (leave) {
-        toast.success("Borrador guardado.");
-        router.push("/activities");
+        await autosave.stop();
+        toast.success(saved.hasChanges ? "Borrador guardado." : "Sin cambios pendientes.");
+        navigation.navigate(navigation.destination ?? `/activities${draft!.activityId ? `?selected=${draft!.activityId}` : ""}`);
       }
     } catch (error) {
       toast.error(
@@ -304,13 +324,15 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
   async function publish() {
     setPublishing(true);
     try {
-      const activity = await publishDraftClient(draft!.id);
+      const saved = await autosave.flush(step);
+      await autosave.stop();
+      const activity = await publishDraftClient(saved.id, saved.updatedAt);
       toast.success(
         draft!.activityId
           ? "Cambios guardados correctamente."
           : "Actividad creada correctamente.",
       );
-      router.replace(`/activities?selected=${activity.id}`);
+      navigation.navigate(`/activities?selected=${activity.id}`);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -320,20 +342,24 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
             : "La actividad todavía no puede publicarse.",
       );
     } finally {
+      autosave.resume();
       setPublishing(false);
     }
   }
   async function discard() {
     setDiscarding(true);
     try {
-      await discardDraftClient(draft!.id);
+      const saved = await autosave.stop();
+      if (!saved) return;
+      await discardDraftClient(saved.id, saved.updatedAt);
       toast.success("Saliste sin guardar cambios.");
-      router.replace(
+      navigation.navigate(
         `/activities${draft!.activityId ? `?selected=${draft!.activityId}` : ""}`,
       );
-    } catch {
-      toast.error("No pudimos descartar los cambios.");
+    } catch (error) {
+      toast.error(getAxiosMessage(error, "No pudimos descartar los cambios."));
     } finally {
+      autosave.resume();
       setDiscarding(false);
       setDiscardOpen(false);
     }
@@ -360,34 +386,38 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
               {payload.nombre || "Nueva actividad"}
             </h1>
             <p className="mt-2 text-sm text-[var(--brand-text)]/80 sm:text-base">
-              Paso {step} de {steps.length} · completá la configuración para
-              publicar la actividad.
+              Paso {step} de {steps.length} · {draft.activityId ? "Prepará los cambios; se aplicarán al guardar la actividad." : "Completá la configuración para crear la actividad."}
             </p>
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
-          {draft.activityId ? (
+          {draft.hasChanges || hasUnsavedChanges ? (
             <Button
               variant="outline"
               onClick={() => setDiscardOpen(true)}
-              disabled={saving || discarding}
+              disabled={saving || publishing || discarding || autosave.conflict}
               className="h-12 rounded-xl border-[var(--brand-primary)]/30 bg-white px-6 font-bold text-[var(--brand-primary)]"
             >
               <ArrowLeft />
-              Salir sin guardar
+              Descartar cambios
             </Button>
           ) : null}
           <Button
-            onClick={() => void save(step, true)}
-            disabled={saving}
+            onClick={() => autosave.conflict ? navigation.request(`/activities${draft.activityId ? `?selected=${draft.activityId}` : ""}`) : void save(step, true)}
+            disabled={saving || publishing || discarding}
             className="h-12 rounded-xl bg-[var(--brand-primary)] px-7 text-base font-bold text-white hover:bg-[var(--brand-primary-hover)]"
           >
             <Save />
-            Guardar borrador y salir
+            {!autosave.conflict && (draft.hasChanges || hasUnsavedChanges) ? "Guardar borrador y salir" : "Salir"}
           </Button>
         </div>
       </header>
-      <div className="mt-6">
+      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-[var(--brand-primary)]" role="status" aria-live="polite">
+        {autosave.saving ? <><Loader2 className="size-4 animate-spin" />Guardando borrador...</> : autosave.error ? <span className="text-red-700">{autosave.error}</span> : hasUnsavedChanges ? "Cambios pendientes de guardar..." : draft.hasChanges ? `Borrador guardado · ${draft.lastEditedBy || "Administrador"} · ${new Date(draft.updatedAt).toLocaleString("es-AR")}` : "Sin cambios pendientes"}
+        {autosave.error && !autosave.conflict ? <Button variant="outline" size="sm" onClick={() => void autosave.flush().catch(() => undefined)}>Reintentar guardado</Button> : null}
+        {autosave.conflict ? <span>Para cargar la otra versión, salí de esta pantalla y volvé a abrir la edición.</span> : null}
+      </div>
+      <fieldset disabled={saving || publishing || discarding || autosave.conflict} className="mt-6 min-w-0">
         <AdminWorkflowLayout
           sections={steps.map((label, index) => {
             const id = index + 1;
@@ -458,8 +488,7 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
                 onClick={() => void save(step + 1)}
                 className={`${adminPrimaryButtonClass} w-full justify-center gap-3 sm:w-auto`}
               >
-                {saving ? <Loader2 className="animate-spin" /> : null}Guardar y
-                continuar
+                {saving ? <Loader2 className="animate-spin" /> : null}Continuar
                 <ArrowRight className="size-5" />
               </Button>
             ) : (
@@ -477,14 +506,30 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
           </div>
         </section>
         </AdminWorkflowLayout>
-      </div>
+      </fieldset>
+      <ActivityDraftLeaveDialog
+        open={Boolean(navigation.destination)}
+        busy={saving || discarding || publishing}
+        conflict={autosave.conflict}
+        onSave={() => void save(step, true)}
+        onCancel={navigation.cancel}
+        onDiscard={() => {
+          const destination = navigation.destination;
+          if (!destination) return;
+          setDiscarding(true);
+          void autosave.stop()
+            .then(() => navigation.navigate(destination))
+            .catch((error) => toast.error(getAxiosMessage(error, "No pudimos salir de la edición.")))
+            .finally(() => setDiscarding(false));
+        }}
+      />
       <ConfirmDialog
         open={discardOpen}
-        title="¿Salir sin guardar?"
-        description="Se descartará el borrador de edición. La actividad publicada y todos sus datos permanecerán sin cambios."
-        confirmLabel="Salir sin guardar"
+        title="¿Descartar todos los cambios?"
+        description={draft.activityId ? "Se eliminarán todos los cambios del borrador, incluidos los guardados automáticamente. La actividad publicada permanecerá sin cambios." : "Se eliminará el borrador de esta nueva actividad."}
+        confirmLabel="Descartar cambios"
         loading={discarding}
-        onClose={() => setDiscardOpen(false)}
+        onClose={() => { if (!discarding) setDiscardOpen(false); }}
         onConfirm={() => void discard()}
       />
     </main>
@@ -571,36 +616,49 @@ function StepContent({
   if (step === 3)
     return (
       <div>
-        <IconField label="Establecimiento *" icon={<Building2 />}>
-          <Pick
-            value={payload.establecimientoId}
-            onChange={(establecimientoId) =>
-              patch({
-                establecimientoId,
-                schedules: payload.schedules.map((item) => ({
-                  ...item,
-                  recursoIds: [],
-                })),
-              })
-            }
-            options={options.establishments.map((item) => [
-              item.id,
-              `${item.nombre} · ${item.direccion}`,
-            ])}
-          />
+        <IconField label="Sedes *" icon={<Building2 />}>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {options.establishments.map((establishment) => (
+              <CheckCard
+                key={establishment.id}
+                checked={payload.establecimientoIds.includes(establishment.id)}
+                label={`${establishment.nombre} · ${establishment.direccion}`}
+                onChange={(checked) => {
+                  const nextIds = checked
+                    ? [...payload.establecimientoIds, establishment.id]
+                    : payload.establecimientoIds.filter((id) => id !== establishment.id);
+                  patch({
+                    establecimientoIds: nextIds,
+                    schedules: payload.schedules.map((item) => {
+                      const keepsEstablishment = nextIds.includes(item.establecimientoId);
+                      return {
+                        ...item,
+                        // Nunca vaciar la sede: si no queda ninguna seleccionada, conservamos la
+                        // actual (el paso quedará marcado como pendiente hasta elegir una nueva).
+                        establecimientoId: keepsEstablishment ? item.establecimientoId : (nextIds[0] ?? item.establecimientoId),
+                        recursoIds: keepsEstablishment ? item.recursoIds : [],
+                      };
+                    }),
+                  });
+                }}
+              />
+            ))}
+          </div>
         </IconField>
         {!options.establishments.length ? (
           <Missing text="No hay establecimientos disponibles. La actividad puede guardarse, pero seguirá incompleta." />
         ) : null}
       </div>
     );
-  if (step === 4) return <WeeklySchedules payload={payload} patch={patch} />;
+  if (step === 4) return <WeeklySchedules payload={payload} patch={patch} establishments={options.establishments} />;
   if (step === 5) {
-    const resources = options.resources.filter(
-      (item) =>
-        item.establecimientoId === payload.establecimientoId &&
-        item.estado === "ACTIVO",
-    );
+    const scheduleEstablishmentIds = [...new Set(payload.schedules.map((item) => item.establecimientoId))];
+    const groups = (scheduleEstablishmentIds.length ? scheduleEstablishmentIds : payload.establecimientoIds).map((establishmentId) => ({
+      establishment: options.establishments.find((item) => item.id === establishmentId),
+      scheduleIndexes: payload.schedules.map((item, index) => [item, index] as const).filter(([item]) => item.establecimientoId === establishmentId).map(([, index]) => index),
+      resources: options.resources.filter((item) => item.establecimientoId === establishmentId && item.estado === "ACTIVO"),
+    }));
+    const hasAnyResource = groups.some((group) => group.resources.length > 0);
     return (
       <div className="space-y-5">
         <IconField label="Cupo general" icon={<UsersRound />}>
@@ -621,29 +679,38 @@ function StepContent({
             }
           />
         </IconField>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {resources.map((resource) => (
-            <CheckCard
-              key={resource.id}
-              checked={payload.schedules.some((schedule) =>
-                schedule.recursoIds.includes(resource.id),
-              )}
-              label={`${resource.nombre} · ${resource.capacidadUnidades} u.`}
-              onChange={(checked) =>
-                patch({
-                  schedules: payload.schedules.map((schedule) => ({
-                    ...schedule,
-                    recursoIds: checked
-                      ? [...new Set([...schedule.recursoIds, resource.id])]
-                      : schedule.recursoIds.filter((id) => id !== resource.id),
-                  })),
-                })
-              }
-            />
-          ))}
-        </div>
-        {!resources.length ? (
-          <Missing text="No hay recursos activos para este establecimiento. Solo será obligatorio si la actividad necesita uno." />
+        {groups.map((group) => (
+          <div key={group.establishment?.id ?? "sin-sede"} className="space-y-3">
+            {groups.length > 1 ? (
+              <h4 className="font-bold text-[var(--brand-primary)]">Recursos en {group.establishment?.nombre ?? "sede sin definir"}</h4>
+            ) : null}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {group.resources.map((resource) => (
+                <CheckCard
+                  key={resource.id}
+                  checked={group.scheduleIndexes.some((index) => payload.schedules[index].recursoIds.includes(resource.id))}
+                  label={`${resource.nombre} · ${resource.capacidadUnidades} u.`}
+                  onChange={(checked) =>
+                    patch({
+                      schedules: payload.schedules.map((schedule, index) =>
+                        group.scheduleIndexes.includes(index)
+                          ? {
+                              ...schedule,
+                              recursoIds: checked
+                                ? [...new Set([...schedule.recursoIds, resource.id])]
+                                : schedule.recursoIds.filter((id) => id !== resource.id),
+                            }
+                          : schedule,
+                      ),
+                    })
+                  }
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+        {!hasAnyResource ? (
+          <Missing text="No hay recursos activos para las sedes seleccionadas. Solo será obligatorio si la actividad necesita uno." />
         ) : null}
       </div>
     );
@@ -825,6 +892,7 @@ function Schedules({
       schedules: [
         ...payload.schedules,
         {
+          establecimientoId: payload.establecimientoIds[0] ?? "",
           diaSemana: "LUNES",
           horaInicio: "09:00",
           horaFin: "10:00",

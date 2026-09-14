@@ -533,7 +533,7 @@ export function EnrollmentForm({
           />
         </AdminFormField>
         {selectedActivity ? (<>
-          {mobileReception?<div className="mt-4 flex min-w-0 items-center gap-3 rounded-2xl border border-[var(--brand-primary)] bg-[var(--brand-control)] p-3 md:hidden"><ActivityImagePreview source={selectedActivity.imagenUrl} alt={`Imagen de ${selectedActivity.nombre}`} className="size-14 shrink-0 rounded-xl"/><div className="min-w-0 flex-1"><div className="flex min-w-0 items-center gap-2"><strong className="min-w-0 flex-1 truncate text-[var(--brand-primary)]">{selectedActivity.nombre}</strong><span className="shrink-0 rounded-full border border-[var(--brand-secondary)]/35 bg-white px-2 py-0.5 text-[9px] font-bold text-[var(--brand-primary)]">{MODES[selectedActivity.modalidadOperacion]?.label}</span></div><p className="mt-1 truncate text-[11px] text-[var(--brand-muted)]">{selectedActivity.categoriaActividad?.nombre??selectedActivity.categoria} · {selectedActivity.establecimiento.nombre}</p><p className="mt-1.5 flex min-w-0 items-start gap-1 text-[11px] font-bold text-[var(--brand-primary)]"><CalendarClock className="mt-px size-3.5 shrink-0 text-[var(--brand-secondary)]"/><span className="min-w-0 line-clamp-2">{formatCompactScheduleSummary(activitySchedules)}</span></p></div><Check className="size-5 shrink-0 text-[var(--brand-secondary)]"/></div>:null}
+          {mobileReception?<div className="mt-4 flex min-w-0 items-center gap-3 rounded-2xl border border-[var(--brand-primary)] bg-[var(--brand-control)] p-3 md:hidden"><ActivityImagePreview source={selectedActivity.imagenUrl} alt={`Imagen de ${selectedActivity.nombre}`} className="size-14 shrink-0 rounded-xl"/><div className="min-w-0 flex-1"><div className="flex min-w-0 items-center gap-2"><strong className="min-w-0 flex-1 truncate text-[var(--brand-primary)]">{selectedActivity.nombre}</strong><span className="shrink-0 rounded-full border border-[var(--brand-secondary)]/35 bg-white px-2 py-0.5 text-[9px] font-bold text-[var(--brand-primary)]">{MODES[selectedActivity.modalidadOperacion]?.label}</span></div><p className="mt-1 truncate text-[11px] text-[var(--brand-muted)]">{selectedActivity.categoriaActividad?.nombre??selectedActivity.categoria} · {activityEstablishmentNames(selectedActivity)}</p><p className="mt-1.5 flex min-w-0 items-start gap-1 text-[11px] font-bold text-[var(--brand-primary)]"><CalendarClock className="mt-px size-3.5 shrink-0 text-[var(--brand-secondary)]"/><span className="min-w-0 line-clamp-2">{formatCompactScheduleSummary(activitySchedules)}</span></p></div><Check className="size-5 shrink-0 text-[var(--brand-secondary)]"/></div>:null}
           <div className={`mt-4 items-start gap-4 rounded-2xl border border-[var(--brand-primary)] bg-[var(--brand-control)] p-4 ${mobileReception?"hidden md:flex":"flex"}`}>
             <ActivityImagePreview
               source={selectedActivity.imagenUrl}
@@ -557,7 +557,7 @@ export function EnrollmentForm({
               <p className="mt-2 text-xs font-medium text-[var(--brand-muted)]">
                 {selectedActivity.categoriaActividad?.nombre ??
                   selectedActivity.categoria}{" "}
-                · {selectedActivity.establecimiento.nombre}
+                · {activityEstablishmentNames(selectedActivity)}
               </p>
               <p className="mt-2 flex items-start gap-1.5 text-sm font-bold text-[var(--brand-primary)]">
                 <CalendarClock className="mt-0.5 size-4 shrink-0 text-[var(--brand-secondary)]" />
@@ -589,7 +589,7 @@ export function EnrollmentForm({
                   className="size-14 shrink-0 rounded-xl"
                 />
                 <span className="min-w-0 flex-1">
-                  {mobileReception ? <span className="block min-w-0 md:hidden"><span className="flex min-w-0 items-center gap-2"><strong className={`min-w-0 flex-1 truncate ${conflict ? "text-red-800" : "text-[var(--brand-primary)]"}`}>{a.nombre}</strong><span className="shrink-0 rounded-full border border-[var(--brand-secondary)]/35 bg-[var(--brand-control)] px-2 py-0.5 text-[9px] font-bold text-[var(--brand-primary)]">{MODES[a.modalidadOperacion]?.label}</span></span><span className="mt-1 block truncate text-[11px] text-[var(--brand-muted)]">{a.categoriaActividad?.nombre??a.categoria} · {a.establecimiento.nombre}</span><span className="mt-1.5 flex min-w-0 items-start gap-1 text-[11px] font-bold text-[var(--brand-primary)]"><CalendarClock className="mt-px size-3.5 shrink-0 text-[var(--brand-secondary)]"/><span className="min-w-0 line-clamp-2">{checking?"Verificando disponibilidad...":compactSummary}</span></span></span> : null}
+                  {mobileReception ? <span className="block min-w-0 md:hidden"><span className="flex min-w-0 items-center gap-2"><strong className={`min-w-0 flex-1 truncate ${conflict ? "text-red-800" : "text-[var(--brand-primary)]"}`}>{a.nombre}</strong><span className="shrink-0 rounded-full border border-[var(--brand-secondary)]/35 bg-[var(--brand-control)] px-2 py-0.5 text-[9px] font-bold text-[var(--brand-primary)]">{MODES[a.modalidadOperacion]?.label}</span></span><span className="mt-1 block truncate text-[11px] text-[var(--brand-muted)]">{a.categoriaActividad?.nombre??a.categoria} · {activityEstablishmentNames(a)}</span><span className="mt-1.5 flex min-w-0 items-start gap-1 text-[11px] font-bold text-[var(--brand-primary)]"><CalendarClock className="mt-px size-3.5 shrink-0 text-[var(--brand-secondary)]"/><span className="min-w-0 line-clamp-2">{checking?"Verificando disponibilidad...":compactSummary}</span></span></span> : null}
                   <span className={mobileReception ? "hidden md:block" : "block"}>
                   <strong
                     className={`block truncate ${conflict ? "text-red-800" : "text-[var(--brand-primary)]"}`}
@@ -598,7 +598,7 @@ export function EnrollmentForm({
                   </strong>
                   <span className="block text-xs text-[var(--brand-muted)]">
                     {MODES[a.modalidadOperacion]?.label} ·{" "}
-                    {a.establecimiento.nombre}
+                    {activityEstablishmentNames(a)}
                   </span>
                   <span className="mt-1 flex items-start gap-1 text-xs font-bold text-[var(--brand-primary)]">
                     <CalendarClock className="mt-px size-3.5 shrink-0 text-[var(--brand-secondary)]" />
@@ -960,6 +960,10 @@ function buildScheduleSlots(schedule: ActivitySchedule) {
       establishment: schedule.establishment.name,
     });
   return items;
+}
+function activityEstablishmentNames(activity: Actividad) {
+  const names = [...new Set(activity.horarios.map((item) => item.establecimiento?.nombre).filter((value): value is string => Boolean(value)))];
+  return names.length ? names.join(", ") : "Sin sede asignada";
 }
 function formatScheduleSummary(items: ActivitySchedule[]) {
   if (!items.length) return "Sin días ni horarios configurados";

@@ -4,7 +4,7 @@ generator client {
 
 generator seedClient {
   provider = "prisma-client-js"
-  output   = "./generated/requirements-seed-client"
+  output   = "../generated/requirements-seed-client"
 }
 
 datasource db {
@@ -283,7 +283,6 @@ model Establecimiento {
   estado      String              @default("activo")
   observacion String?
 
-  actividades       Actividad[]
   horarios          HorarioEstablecimiento[]
   horariosActividad HorarioActividad[]
   clases            ClaseActividad[]
@@ -317,7 +316,6 @@ model HorarioEstablecimiento {
 
 model Actividad {
   id                   String  @id
-  establecimientoId    String
   categoriaActividadId String? @db.Uuid
 
   nombre                      String
@@ -350,7 +348,6 @@ model Actividad {
   limiteReservasPorUsuario    Int?
   requiereReserva             Boolean              @default(true)
 
-  establecimiento    Establecimiento            @relation(fields: [establecimientoId], references: [id], onDelete: Cascade)
   categoriaActividad CategoriaActividad?        @relation(fields: [categoriaActividadId], references: [id], onDelete: SetNull)
   horarios           HorarioActividad[]
   asignados          ActividadUsuario[]
@@ -362,7 +359,6 @@ model Actividad {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([establecimientoId])
   @@index([categoriaActividadId])
   @@index([categoria])
   @@index([estado])

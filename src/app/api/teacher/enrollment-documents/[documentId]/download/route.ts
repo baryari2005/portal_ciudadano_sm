@@ -6,7 +6,7 @@ import { requireAuth } from "@/lib/server-auth";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ documentId: string }> }) {
   try {
-    const user = await requireAuth(request), documentId = (await params).documentId, document = await getEnrollmentDocument(documentId), establishmentId = request.nextUrl.searchParams.get("establishmentId") ?? "";
+    const user = await requireAuth(request), documentId = (await params).documentId, document = await getEnrollmentDocument(documentId), establishmentId = request.nextUrl.searchParams.get("establishmentId") ?? undefined;
     await assertTeacherEnrollmentAccess(user.id, document.enrollmentId, establishmentId);
     return NextResponse.json({ data: { url: await getSignedDocumentUrl(documentId) } });
   } catch (error) { return mapApiRouteError(error, "No pudimos abrir el documento."); }

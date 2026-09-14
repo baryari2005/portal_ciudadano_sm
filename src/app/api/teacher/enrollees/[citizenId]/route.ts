@@ -8,7 +8,7 @@ import { requireAuth } from "@/lib/server-auth";
 export async function GET(request: NextRequest, { params }: { params: Promise<{ citizenId: string }> }) {
   try {
     const user = await requireAuth(request);
-    const citizenId = (await params).citizenId, establishmentId = request.nextUrl.searchParams.get("establishmentId") ?? "";
+    const citizenId = (await params).citizenId, establishmentId = request.nextUrl.searchParams.get("establishmentId") ?? undefined;
     await assertTeacherCitizenAccess(user.id, citizenId, establishmentId);
     return NextResponse.json({ data: toUserDetail(await getUserByIdOrThrow(citizenId)) });
   } catch (error) {

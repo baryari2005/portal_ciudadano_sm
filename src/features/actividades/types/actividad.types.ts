@@ -9,6 +9,8 @@ import type { ActivityRequirement } from "@/features/requirements/types/requirem
 
 export type HorarioActividad = {
   id?: string;
+  establecimientoId: string;
+  establecimiento?: Pick<Establecimiento, "id" | "nombre" | "direccion">;
   diaSemana: string;
   horaInicio: string;
   horaFin: string;
@@ -52,8 +54,6 @@ export type Actividad = {
   anticipacionReservaDias: number;
   limiteReservasPorUsuario: number | null;
   requiereReserva: boolean;
-  establecimientoId: string;
-  establecimiento: Pick<Establecimiento, "id" | "nombre" | "direccion">;
   cupo: number | null;
   cupoMaximo?: number;
   estadoTexto: string | null;

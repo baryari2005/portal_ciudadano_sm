@@ -1,4 +1,4 @@
-import { PrismaClient, RequisitoTipo } from "./generated/requirements-seed-client";
+import { PrismaClient, RequisitoTipo } from "../generated/requirements-seed-client";
 const prisma = new PrismaClient();
 const requirements = [
   ["DNI", "dni", RequisitoTipo.DOCUMENTO, true],

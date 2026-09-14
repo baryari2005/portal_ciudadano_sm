@@ -143,7 +143,7 @@ async function main() {
   const schedules: Record<string, string> = {};
   for (const spec of activitySpecs) {
     const activity = await prisma.actividad.create({ data: {
-      id: spec.id, establecimientoId: spec.facility.id, nombre: spec.name, descripcionCorta: `Fixture ${batch}`,
+      id: spec.id, nombre: spec.name, descripcionCorta: `Fixture ${batch}`,
       estado: "ACTIVA", estadoTexto: "activa", modalidadOperacion: "TURNO_RECURRENTE", modalidadInscripcion: "PERMANENTE",
       cupoMaximo: spec.cap, publicosObjetivo: { create: { publicoObjetivoId: spec.audience.id } },
       requisitos: { create: { requisitoId: requirement.id, obligatorio: false, orden: 1, observaciones: "QA opcional" } },

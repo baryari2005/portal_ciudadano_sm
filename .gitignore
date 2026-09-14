@@ -37,6 +37,7 @@ yarn-error.log*
 .env.local
 .env.*.local
 /prisma/schemaback
+/generated/
 
 *.sql
 !prisma/migrations/**/migration.sql

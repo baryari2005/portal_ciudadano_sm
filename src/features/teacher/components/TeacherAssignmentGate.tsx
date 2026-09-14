@@ -13,9 +13,9 @@ const ACCOUNT_ROUTES = ["/teacher/profile", "/teacher/notifications", "/teacher/
 
 export function TeacherAssignmentGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { options, establishmentId, loading } = useWorkspaceEstablishment();
+  const { options, loading } = useWorkspaceEstablishment();
 
-  if (loading || (options.length > 0 && !establishmentId)) {
+  if (loading) {
     return <WorkspaceRouteLoading label="portal del profesor" />;
   }
 

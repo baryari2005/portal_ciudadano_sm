@@ -13,7 +13,7 @@ async function rejects(action: () => Promise<unknown>, label: string) { let fail
 async function main() {
   try {
     await prisma.establecimiento.create({ data: { id: ids.establishment, nombre: "Sede temporal QA", direccion: "QA 123" } });
-    await prisma.actividad.create({ data: { id: ids.activity, establecimientoId: ids.establishment, nombre: "Actividad temporal QA" } });
+    await prisma.actividad.create({ data: { id: ids.activity, nombre: "Actividad temporal QA" } });
     const existingRole = await prisma.rol.findFirst({ select: { id: true }, orderBy: { id: "asc" } });
     assert.ok(existingRole, "Se necesita un rol existente para crear usuarios temporales sin alterar RBAC");
     for (const [index, id] of ids.users.entries()) {

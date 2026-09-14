@@ -46,6 +46,12 @@ export async function assertTeacherEstablishment(userId: string, establishmentId
   if (!allowed.some((item) => item.id === establishmentId)) throw new TeacherSessionAccessError();
 }
 
+async function teacherEstablishmentScope(userId: string, establishmentId?: string) {
+  if (establishmentId) { await assertTeacherEstablishment(userId, establishmentId); return establishmentId; }
+  const all = await listTeacherEstablishments(userId);
+  return { in: all.map((item) => item.id) };
+}
+
 export async function requireTeacherProfile(userId: string) {
   const teacher = await prisma.profesor.findUnique({ where: { usuarioId: userId }, include: { usuario: { select: { id: true, nombre: true, apellido: true, documento: true, avatarUrl: true, email: true, estado: true } } } });
   if (!teacher) throw new CatalogValidationError("Tu usuario no posee un perfil de profesor.");
@@ -72,38 +78,37 @@ export function isTeacherRole(user: { rol: { codigo: string } | null }) {
   return user.rol?.codigo === "teacher";
 }
 
-export async function listTeacherSchedules(userId: string, establishmentId: string) {
+export async function listTeacherSchedules(userId: string, establishmentId?: string) {
   const teacher = await requireTeacherProfile(userId);
-  await assertTeacherEstablishment(userId, establishmentId);
-  const rows = await prisma.horarioActividad.findMany({ where: { establecimientoId: establishmentId, profesores: { some: { profesorId: teacher.id } } }, include: { actividad: { select: { id: true, nombre: true } }, establecimiento: { select: { id: true, nombre: true } }, profesores: { where: { profesorId: teacher.id }, select: { esPrincipal: true } }, clases: { where: { fecha: { gte: new Date() }, estado: { in: ["PROGRAMADA", "EN_CURSO"] } }, orderBy: { fecha: "asc" }, take: 1, select: { id: true, fecha: true, horaInicio: true } } }, orderBy: [{ diaSemana: "asc" }, { horaInicio: "asc" }] });
+  const scope = await teacherEstablishmentScope(userId, establishmentId);
+  const rows = await prisma.horarioActividad.findMany({ where: { establecimientoId: scope, profesores: { some: { profesorId: teacher.id } } }, include: { actividad: { select: { id: true, nombre: true } }, establecimiento: { select: { id: true, nombre: true } }, profesores: { where: { profesorId: teacher.id }, select: { esPrincipal: true } }, clases: { where: { fecha: { gte: new Date() }, estado: { in: ["PROGRAMADA", "EN_CURSO"] } }, orderBy: { fecha: "asc" }, take: 1, select: { id: true, fecha: true, horaInicio: true } } }, orderBy: [{ diaSemana: "asc" }, { horaInicio: "asc" }] });
   return rows.map((row) => ({ id: row.id, activity: row.actividad, day: row.diaSemana, startTime: row.horaInicio, endTime: row.horaFin, establishment: row.establecimiento, space: row.espacio, status: row.estado, capacity: row.cupoMaximo, isPrimary: row.profesores[0]?.esPrincipal ?? false, nextSession: row.clases[0] ?? null }));
 }
 
 export async function listTeacherSessions(userId: string, filters: { search?: string; attendanceState?: "PENDING"|"OPEN"|"CLOSED"; status?: string; activityId?: string; establishmentId?: string; dateFrom?: string; dateTo?: string; page?: number; pageSize?: number }) {
   const teacher = await requireTeacherProfile(userId);
-  if (!filters.establishmentId) throw new CatalogValidationError("Seleccioná un establecimiento para continuar.");
-  await assertTeacherEstablishment(userId, filters.establishmentId);
+  const scope = await teacherEstablishmentScope(userId, filters.establishmentId);
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-  return listAttendanceSessions({ professorId: teacher.id, includeScheduleAssignments: false, search: filters.search, attendanceState: filters.attendanceState, status: filters.status, activityId: filters.activityId, establishmentId: filters.establishmentId, dateFrom: filters.dateFrom ?? today, dateTo: filters.dateTo, page: filters.page ?? 1, pageSize: filters.pageSize ?? 8 } as Parameters<typeof listAttendanceSessions>[0]);
+  return listAttendanceSessions({ professorId: teacher.id, includeScheduleAssignments: false, search: filters.search, attendanceState: filters.attendanceState, status: filters.status, activityId: filters.activityId, establishmentId: scope, dateFrom: filters.dateFrom ?? today, dateTo: filters.dateTo, page: filters.page ?? 1, pageSize: filters.pageSize ?? 8 } as Parameters<typeof listAttendanceSessions>[0]);
 }
 
-export async function listTeacherClasses(userId: string, filters: { search?: string; status?: ActivitySessionStatus; participation?: "WITH"|"WITHOUT"; establishmentId: string; dateFrom?: string; dateTo?: string; page?: number; pageSize?: number }) {
+export async function listTeacherClasses(userId: string, filters: { search?: string; status?: ActivitySessionStatus; participation?: "WITH"|"WITHOUT"; establishmentId?: string; dateFrom?: string; dateTo?: string; page?: number; pageSize?: number }) {
   const teacher = await requireTeacherProfile(userId);
-  await assertTeacherEstablishment(userId, filters.establishmentId);
+  const scope = await teacherEstablishmentScope(userId, filters.establishmentId);
   const threshold = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(threshold);
   const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value ?? "";
   const visibleAfter = { date: `${part("year")}-${part("month")}-${part("day")}`, time: `${part("hour")}:${part("minute")}` };
-  return listActivitySessions({ ...filters, professorId: teacher.id, includeScheduleAssignments: false, visibleAfter, excludedStatuses: ["CANCELADA"], page: filters.page ?? 1, pageSize: filters.pageSize ?? 8 });
+  return listActivitySessions({ ...filters, establishmentId: scope, professorId: teacher.id, includeScheduleAssignments: false, visibleAfter, excludedStatuses: ["CANCELADA"], page: filters.page ?? 1, pageSize: filters.pageSize ?? 8 } as Parameters<typeof listActivitySessions>[0]);
 }
 
-export async function listTeacherEnrollees(userId: string, filters: { establishmentId: string; search?: string; page?: number; pageSize?: number }) {
+export async function listTeacherEnrollees(userId: string, filters: { establishmentId?: string; search?: string; page?: number; pageSize?: number }) {
   const teacher = await requireTeacherProfile(userId);
-  await assertTeacherEstablishment(userId, filters.establishmentId);
+  const scope = await teacherEstablishmentScope(userId, filters.establishmentId);
   const page = filters.page ?? 1;
   const pageSize = filters.pageSize ?? 8;
   const search = filters.search?.trim();
-  const assignedClass = { some: { establecimientoId: filters.establishmentId, profesores: { some: { profesorId: teacher.id } } } };
+  const assignedClass = { some: { establecimientoId: scope, profesores: { some: { profesorId: teacher.id } } } };
   const where: Prisma.InscripcionWhereInput = {
     estado: { in: ["PENDIENTE", "CONFIRMADA", "LISTA_ESPERA"] },
     OR: [
@@ -148,31 +153,31 @@ export async function listTeacherEnrollees(userId: string, filters: { establishm
   };
 }
 
-export async function assertTeacherCitizenAccess(userId: string, citizenId: string, establishmentId: string) {
+export async function assertTeacherCitizenAccess(userId: string, citizenId: string, establishmentId?: string) {
   const teacher = await requireTeacherProfile(userId);
-  await assertTeacherEstablishment(userId, establishmentId);
-  const linked = await prisma.inscripcion.count({ where: { usuarioId: citizenId, OR: [{ horarioActividad: { clases: { some: { establecimientoId: establishmentId, profesores: { some: { profesorId: teacher.id } } } } } }, { horarios: { some: { horarioActividad: { clases: { some: { establecimientoId: establishmentId, profesores: { some: { profesorId: teacher.id } } } } } } } }] } });
+  const scope = await teacherEstablishmentScope(userId, establishmentId);
+  const linked = await prisma.inscripcion.count({ where: { usuarioId: citizenId, OR: [{ horarioActividad: { clases: { some: { establecimientoId: scope, profesores: { some: { profesorId: teacher.id } } } } } }, { horarios: { some: { horarioActividad: { clases: { some: { establecimientoId: scope, profesores: { some: { profesorId: teacher.id } } } } } } } }] } });
   if (!linked) throw new TeacherSessionAccessError();
 }
 
-export async function assertTeacherEnrollmentAccess(userId: string, enrollmentId: string, establishmentId: string) {
+export async function assertTeacherEnrollmentAccess(userId: string, enrollmentId: string, establishmentId?: string) {
   const teacher = await requireTeacherProfile(userId);
-  await assertTeacherEstablishment(userId, establishmentId);
-  const linked = await prisma.inscripcion.count({ where: { id: enrollmentId, OR: [{ horarioActividad: { clases: { some: { establecimientoId: establishmentId, profesores: { some: { profesorId: teacher.id } } } } } }, { horarios: { some: { horarioActividad: { clases: { some: { establecimientoId: establishmentId, profesores: { some: { profesorId: teacher.id } } } } } } } }] } });
+  const scope = await teacherEstablishmentScope(userId, establishmentId);
+  const linked = await prisma.inscripcion.count({ where: { id: enrollmentId, OR: [{ horarioActividad: { clases: { some: { establecimientoId: scope, profesores: { some: { profesorId: teacher.id } } } } } }, { horarios: { some: { horarioActividad: { clases: { some: { establecimientoId: scope, profesores: { some: { profesorId: teacher.id } } } } } } } }] } });
   if (!linked) throw new TeacherSessionAccessError();
 }
 
-export async function getTeacherClass(userId: string, sessionId: string, establishmentId: string) {
+export async function getTeacherClass(userId: string, sessionId: string, establishmentId?: string) {
   await assertTeacherSession(userId, sessionId, establishmentId);
   const item = await getActivitySession(sessionId);
   if (!item) throw new CatalogNotFoundError("Clase no encontrada.");
   return item;
 }
 
-export async function suspendTeacherClass(input: { userId: string; sessionId: string; establishmentId: string; reason: string; requestContext?: { ip?: string | null; userAgent?: string | null } }) {
+export async function suspendTeacherClass(input: { userId: string; sessionId: string; reason: string; requestContext?: { ip?: string | null; userAgent?: string | null } }) {
   const reason = input.reason.trim();
   if (reason.length < 10 || reason.length > 500) throw new CatalogValidationError("El motivo debe tener entre 10 y 500 caracteres.");
-  const teacher = await assertTeacherSession(input.userId, input.sessionId, input.establishmentId);
+  const teacher = await assertTeacherSession(input.userId, input.sessionId);
   return prisma.$transaction(async (tx) => {
     const current = await tx.claseActividad.findUnique({ where: { id: input.sessionId }, include: { establecimiento: true, horarioActividad: { include: { actividad: true } }, reservas: { where: { estado: { in: ["RESERVADA", "LISTA_ESPERA", "OFRECIDA"] } }, select: { usuarioId: true } }, profesores: { where: { profesorId: teacher.id }, select: { id: true } } } });
     if (!current) throw new CatalogNotFoundError("Clase no encontrada.");
@@ -195,18 +200,18 @@ export async function suspendTeacherClass(input: { userId: string; sessionId: st
   });
 }
 
-export async function getTeacherSession(userId: string, sessionId: string, establishmentId: string) {
+export async function getTeacherSession(userId: string, sessionId: string, establishmentId?: string) {
   await assertTeacherSession(userId, sessionId, establishmentId);
   const roster = await getAttendanceRoster(sessionId);
   const documentation = await getEnrollmentDocumentationSummaries(roster.attendees.map((item) => item.enrollmentId));
   return { ...roster, attendees: roster.attendees.map((item) => ({ ...item, documentation: documentation.get(item.enrollmentId) ?? null })) };
 }
 
-export async function getTeacherSummary(userId: string, establishmentId: string) {
+export async function getTeacherSummary(userId: string, establishmentId?: string) {
   const teacher = await requireTeacherProfile(userId);
-  await assertTeacherEstablishment(userId, establishmentId);
+  const scope = await teacherEstablishmentScope(userId, establishmentId);
   const today = new Date(); today.setHours(0, 0, 0, 0); const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
-  const ownership = { establecimientoId: establishmentId, ...teacherSessionAssignment(teacher.id) };
+  const ownership = { establecimientoId: scope, ...teacherSessionAssignment(teacher.id) };
   const sessionSummaryInclude = { horarioActividad: { include: { actividad: { select: { nombre: true, imagenUrl: true } }, inscripciones: { where: { estado: "CONFIRMADA" as const }, select: { id: true } } } }, establecimiento: { select: { nombre: true } } };
   const [todaySessions, todayClasses, upcomingSessions, nextSession, pendingRosters, unreadCount, schedulesChanged] = await Promise.all([
     prisma.claseActividad.count({ where: { ...ownership, fecha: { gte: today, lt: tomorrow } } }),
@@ -215,7 +220,7 @@ export async function getTeacherSummary(userId: string, establishmentId: string)
     prisma.claseActividad.findFirst({ where: { ...ownership, fecha: { gte: today }, estado: { in: ["PROGRAMADA", "EN_CURSO"] } }, include: sessionSummaryInclude, orderBy: [{ fecha: "asc" }, { horaInicio: "asc" }] }),
     prisma.claseActividad.count({ where: { ...ownership, fecha: { lt: tomorrow }, estado: { in: ["PROGRAMADA", "EN_CURSO", "FINALIZADA"] }, asistenciaCerradaAt: null } }),
     getUnreadCount(userId),
-    prisma.horarioActividad.count({ where: { establecimientoId: establishmentId, profesores: { some: { profesorId: teacher.id } }, estado: { in: ["SUSPENDIDO", "CANCELADO"] } } }),
+    prisma.horarioActividad.count({ where: { establecimientoId: scope, profesores: { some: { profesorId: teacher.id } }, estado: { in: ["SUSPENDIDO", "CANCELADO"] } } }),
   ]);
   const mapSession = (session: NonNullable<typeof nextSession>) => ({ id: session.id, date: session.fecha, startTime: session.horaInicio, endTime: session.horaFin, activityName: session.horarioActividad.actividad.nombre, activityImageUrl: session.horarioActividad.actividad.imagenUrl, establishmentName: session.establecimiento.nombre, space: session.espacio, status: session.estado, confirmedCount: session.horarioActividad.inscripciones.length });
   return { todaySessions, upcomingSessions, pendingRosters, unreadCount, schedulesChanged, todayClasses: todayClasses.map(mapSession), nextSession: nextSession ? mapSession(nextSession) : null };

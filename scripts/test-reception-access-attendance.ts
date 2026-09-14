@@ -45,7 +45,7 @@ async function main() {
   const teacher = await prisma.profesor.create({ data: { usuarioId: teacherUser.id, especialidad: "QA", estado: "ACTIVO" } }); ids.teacherProfile = teacher.id;
   ids.users.push(operator.id, citizen.id, admin.id, teacherUser.id);
   const establishment = await prisma.establecimiento.create({ data: { id: `${marker}_EST`, nombre: marker, direccion: "QA 100", estado: "activo" } }); ids.establishment = establishment.id;
-  const activity = await prisma.actividad.create({ data: { id: `${marker}_ACT`, establecimientoId: establishment.id, nombre: marker, estado: "ACTIVA" } }); ids.activity = activity.id;
+  const activity = await prisma.actividad.create({ data: { id: `${marker}_ACT`, nombre: marker, estado: "ACTIVA" } }); ids.activity = activity.id;
   const schedules = await Promise.all([0, 1].map((index) => prisma.horarioActividad.create({ data: { actividadId: activity.id, establecimientoId: establishment.id, diaSemana: now.weekday as never, horaInicio: index === 0 ? time(currentMinutes - 10) : time(currentMinutes + 120), horaFin: index === 0 ? time(currentMinutes + 10) : time(currentMinutes + 180), cupoMaximo: 10, estado: "ACTIVO" } })));
   ids.schedules.push(...schedules.map((row) => row.id));
   const sessionDate = new Date(`${now.date}T00:00:00-03:00`);

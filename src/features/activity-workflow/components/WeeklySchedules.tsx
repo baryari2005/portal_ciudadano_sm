@@ -5,7 +5,11 @@ import { CalendarDays, Clock3, Info } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ActivityDraftPayload } from "../types/activity-draft.types";
+import type { Establecimiento } from "@/features/establecimientos/types/establecimiento.types";
+
+const dayLabels: Record<string, string> = { LUNES: "Lunes", MARTES: "Martes", MIERCOLES: "Miércoles", JUEVES: "Jueves", VIERNES: "Viernes", SABADO: "Sábado", DOMINGO: "Domingo" };
 
 const days = [
   ["LUNES", "LUN", "Lunes"],
@@ -20,9 +24,11 @@ const days = [
 export function WeeklySchedules({
   payload,
   patch,
+  establishments,
 }: {
   payload: ActivityDraftPayload;
   patch: (value: Partial<ActivityDraftPayload>) => void;
+  establishments: Establecimiento[];
 }) {
   const selected = useMemo(
     () => new Set(payload.schedules.map((item) => item.diaSemana)),
@@ -40,6 +46,7 @@ export function WeeklySchedules({
         return current
           ? { ...current, horaInicio: nextStart, horaFin: nextEnd }
           : {
+              establecimientoId: payload.establecimientoIds[0] ?? "",
               diaSemana:
                 diaSemana as ActivityDraftPayload["schedules"][number]["diaSemana"],
               horaInicio: nextStart,
@@ -59,6 +66,14 @@ export function WeeklySchedules({
       checked
         ? [...selected, day]
         : [...selected].filter((item) => item !== day),
+    );
+  }
+
+  if (!payload.establecimientoIds.length) {
+    return (
+      <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        Seleccioná primero al menos una sede en el paso anterior para configurar los horarios.
+      </p>
     );
   }
 
@@ -95,6 +110,37 @@ export function WeeklySchedules({
           ))}
         </div>
       </section>
+      {payload.establecimientoIds.length > 1 && selected.size > 0 ? (
+        <section className="rounded-2xl border border-[var(--brand-border-soft)] bg-[var(--brand-page)] p-5">
+          <h3 className="font-extrabold text-[var(--brand-primary)]">Sede por día</h3>
+          <p className="text-sm text-[var(--brand-muted)]">Elegiste más de una sede: indicá dónde se dicta cada día.</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {payload.schedules.map((schedule) => (
+              <div key={schedule.diaSemana} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--brand-border-soft)] bg-white p-3">
+                <span className="font-bold text-[var(--brand-ink)]">{dayLabels[schedule.diaSemana] ?? schedule.diaSemana}</span>
+                <Select
+                  value={schedule.establecimientoId}
+                  onValueChange={(value) =>
+                    patch({
+                      schedules: payload.schedules.map((item) =>
+                        item.diaSemana === schedule.diaSemana ? { ...item, establecimientoId: value, recursoIds: [] } : item,
+                      ),
+                    })
+                  }
+                >
+                  <SelectTrigger className="h-10 w-48"><SelectValue placeholder="Sede" /></SelectTrigger>
+                  <SelectContent>
+                    {payload.establecimientoIds.map((id) => {
+                      const establishment = establishments.find((item) => item.id === id);
+                      return <SelectItem key={id} value={id}>{establishment?.nombre ?? id}</SelectItem>;
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Hora de inicio de la franja" icon={<Clock3 />}>
           <Input

@@ -9,7 +9,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   try {
     const user = await requireAuth(request);
     requirePermission(user, "actividades", "editar");
-    const { professorId, schedules } = (await request.json()) as { professorId?: string; schedules?: Array<{ id?: string; diaSemana: string; horaInicio: string; horaFin: string }> };
+    const { professorId, schedules } = (await request.json()) as { professorId?: string; schedules?: Array<{ id?: string; establecimientoId: string; diaSemana: string; horaInicio: string; horaFin: string }> };
     if (!professorId) return NextResponse.json({ message: "Seleccioná un profesor." }, { status: 400 });
     const draft = await getActivityDraft((await params).id);
     if (!draft) return NextResponse.json({ message: "Borrador no encontrado." }, { status: 404 });
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     for (const schedule of schedulesToCheck) {
       try {
         await assertActivityScheduleAvailability({
-          establishmentId: draft.payload.establecimientoId,
+          establishmentId: schedule.establecimientoId,
           diaSemana: schedule.diaSemana,
           horaInicio: schedule.horaInicio,
           horaFin: schedule.horaFin,

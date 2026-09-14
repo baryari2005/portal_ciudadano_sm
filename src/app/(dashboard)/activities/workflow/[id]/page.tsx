@@ -4,5 +4,6 @@ export default async function Page({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  return <ActivityWorkflow draftId={(await params).id} />;
+  const { id } = await params;
+  return <ActivityWorkflow key={id} draftId={id} />;
 }

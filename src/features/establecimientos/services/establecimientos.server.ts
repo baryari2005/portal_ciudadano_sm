@@ -16,30 +16,44 @@ export class EstablecimientoConflictError extends Error {
 
 const establecimientoInclude = {
   horarios: { orderBy: { diaSemana: "asc" as const } },
-  actividades: {
-    orderBy: { nombre: "asc" as const },
-    select: { id: true, nombre: true, estadoTexto: true, estado: true },
+  horariosActividad: {
+    distinct: ["actividadId"] as const,
+    select: { actividad: { select: { id: true, nombre: true, estadoTexto: true, estado: true } } },
   },
 } satisfies Prisma.EstablecimientoInclude;
 
+function mapEstablecimiento<T extends { horariosActividad: { actividad: { id: string; nombre: string; estadoTexto: string | null; estado: string } }[] }>(
+  record: T,
+) {
+  const { horariosActividad, ...rest } = record;
+  return {
+    ...rest,
+    actividades: horariosActividad
+      .map((item) => item.actividad)
+      .sort((a, b) => a.nombre.localeCompare(b.nombre)),
+  };
+}
+
 export async function listEstablecimientos() {
-  return prisma.establecimiento.findMany({
+  const records = await prisma.establecimiento.findMany({
     orderBy: { nombre: "asc" },
     include: establecimientoInclude,
   });
+  return records.map(mapEstablecimiento);
 }
 
 export async function getEstablecimiento(id: string) {
-  return prisma.establecimiento.findUnique({
+  const record = await prisma.establecimiento.findUnique({
     where: { id },
     include: establecimientoInclude,
   });
+  return record ? mapEstablecimiento(record) : null;
 }
 
 export async function createEstablecimiento(input: EstablecimientoInput) {
   await assertUniqueEstablecimiento(input);
 
-  return prisma.establecimiento.create({
+  return mapEstablecimiento(await prisma.establecimiento.create({
     data: {
       id: randomUUID(),
       nombre: input.nombre,
@@ -67,7 +81,7 @@ export async function createEstablecimiento(input: EstablecimientoInput) {
       },
     },
     include: establecimientoInclude,
-  });
+  }));
 }
 
 export async function updateEstablecimiento(
@@ -81,7 +95,7 @@ export async function updateEstablecimiento(
       where: { establecimientoId: id },
     });
 
-    return tx.establecimiento.update({
+    return mapEstablecimiento(await tx.establecimiento.update({
       where: { id },
       data: {
         nombre: input.nombre,
@@ -109,7 +123,7 @@ export async function updateEstablecimiento(
         },
       },
       include: establecimientoInclude,
-    });
+    }));
   });
 }
 
@@ -153,9 +167,9 @@ export async function deactivateEstablecimiento(id: string) {
   });
   if (!current)
     throw new EstablecimientoConflictError("El establecimiento no existe.");
-  return prisma.establecimiento.update({
+  return mapEstablecimiento(await prisma.establecimiento.update({
     where: { id },
     data: { activo: false, estado: "inactivo" },
     include: establecimientoInclude,
-  });
+  }));
 }

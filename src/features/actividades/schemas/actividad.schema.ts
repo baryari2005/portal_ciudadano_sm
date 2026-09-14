@@ -165,6 +165,7 @@ export const activityGeneralStateSchema = z
 export const horarioActividadSchema = z
   .object({
     id: z.string().optional(),
+    establecimientoId: z.string().min(1, "El establecimiento del horario es obligatorio"),
     diaSemana: z.string().min(1, "El día es obligatorio"),
     horaInicio: z.string().min(1, "La hora de inicio es obligatoria"),
     horaFin: z.string().min(1, "La hora de fin es obligatoria"),
@@ -194,7 +195,6 @@ export const actividadSchema = z
   .object({
     nombre: z.string().trim().min(1, "El nombre es obligatorio"),
     ...generalFields,
-    establecimientoId: z.string().min(1, "El establecimiento es obligatorio"),
     cupo: z.coerce.number().int().min(0).optional().nullable(),
     estado: z.enum(ACTIVIDAD_ESTADOS_COMPATIBLES).optional(),
     estadoTexto: z.string().trim().optional(),
@@ -228,10 +228,6 @@ export const updateActividadSchema = z
     anticipacionReservaDias: z.coerce.number().int().min(0).max(365).optional(),
     limiteReservasPorUsuario: z.preprocess((value) => value === "" || value === null ? null : value, z.coerce.number().int().min(1).max(100).nullable().optional()),
     requiereReserva: z.boolean().optional(),
-    establecimientoId: z
-      .string()
-      .min(1, "El establecimiento es obligatorio")
-      .optional(),
     cupo: z.coerce.number().int().min(0).optional().nullable(),
     estadoTexto: z.string().trim().optional(),
     estado: z.enum(ACTIVIDAD_ESTADOS_COMPATIBLES).optional(),

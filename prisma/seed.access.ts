@@ -1,4 +1,4 @@
-import { PrismaClient } from "./generated/requirements-seed-client";
+import { PrismaClient } from "../generated/requirements-seed-client";
 const prisma = new PrismaClient();
 async function main() {
   for (const accion of ["ver", "crear", "editar", "eliminar", "asignar"]) {

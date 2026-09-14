@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     await requireTeacherProfile(user.id);
     const citizenId = request.nextUrl.searchParams.get("citizenId");
     if (citizenId) {
-      await assertTeacherCitizenAccess(user.id, citizenId, request.nextUrl.searchParams.get("establishmentId") ?? "");
+      await assertTeacherCitizenAccess(user.id, citizenId, request.nextUrl.searchParams.get("establishmentId") ?? undefined);
       return NextResponse.json({ data: await listCitizenUserDocuments(citizenId) });
     }
     const query = request.nextUrl.searchParams.get("q")?.trim() ?? "";
