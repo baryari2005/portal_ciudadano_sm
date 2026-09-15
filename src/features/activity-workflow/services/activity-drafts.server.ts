@@ -41,8 +41,27 @@ export function activityDraftPending(payload: ActivityDraftPayload) {
   return pending;
 }
 
+// Compatibilidad con borradores guardados antes de que la sede pasara de ser
+// un único campo de la actividad a un campo por horario (establecimientoId -> establecimientoIds).
+function migrateLegacyDraftPayload(raw: any): any {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return raw;
+  const legacyEstablecimientoId = typeof raw.establecimientoId === "string" ? raw.establecimientoId : null;
+  const establecimientoIds = Array.isArray(raw.establecimientoIds)
+    ? raw.establecimientoIds
+    : legacyEstablecimientoId
+      ? [legacyEstablecimientoId]
+      : [];
+  const schedules = Array.isArray(raw.schedules)
+    ? raw.schedules.map((item: any) => ({
+        ...item,
+        establecimientoId: item?.establecimientoId || legacyEstablecimientoId || establecimientoIds[0] || "",
+      }))
+    : raw.schedules;
+  return { ...raw, establecimientoIds, schedules };
+}
+
 function map(row: any) {
-  const payload = activityDraftPayloadSchema.parse(row.payload);
+  const payload = activityDraftPayloadSchema.parse(migrateLegacyDraftPayload(row.payload));
   const pending = activityDraftPending(payload);
   return { id: row.id, activityId: row.actividadId, name: row.nombre, modality: row.modalidad, currentStep: row.pasoActual, status: row.estado === "PUBLICANDO" ? "PUBLICANDO" : pending.length ? "INCOMPLETO" : "COMPLETO", hasChanges: draftHasChanges(payload, readDraftMetadata(row.payload)), lastEditedBy: row.creadoPor ? [row.creadoPor.nombre, row.creadoPor.apellido].filter(Boolean).join(" ") : null, payload, pending, completion: Math.round(((8 - new Set(pending.map((item) => item.step)).size) / 8) * 100), createdAt: row.createdAt, updatedAt: row.updatedAt };
 }
