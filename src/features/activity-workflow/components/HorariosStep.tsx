@@ -55,6 +55,21 @@ function groupSchedules(schedules: Schedule[]): Group[] {
   return [...map.values()].sort((a, b) => a.horaInicio.localeCompare(b.horaInicio) || a.horaFin.localeCompare(b.horaFin) || a.establecimientoId.localeCompare(b.establecimientoId));
 }
 
+function rangesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string) {
+  return aStart < bEnd && bStart < aEnd;
+}
+
+function conflictingDays(editor: Editor, groups: Group[]): Set<Day> {
+  const conflicts = new Set<Day>();
+  for (const group of groups) {
+    if (group.key === editor.originalKey) continue;
+    if (group.establecimientoId !== editor.establecimientoId) continue;
+    if (!rangesOverlap(editor.horaInicio, editor.horaFin, group.horaInicio, group.horaFin)) continue;
+    for (const day of group.days) if (editor.days.has(day)) conflicts.add(day);
+  }
+  return conflicts;
+}
+
 function nextDefaultRange(groups: Group[]): { horaInicio: string; horaFin: string } {
   const used = new Set(groups.map((group) => group.horaInicio));
   for (let hour = 8; hour <= 20; hour += 1) {
@@ -97,22 +112,14 @@ export function HorariosStep({
   const [checkingProfessor, setCheckingProfessor] = useState(false);
   const [conflict, setConflict] = useState<string | null>(null);
 
-  if (!payload.establecimientoIds.length) {
-    return (
-      <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-        Seleccioná primero al menos una sede en el paso anterior para configurar los horarios.
-      </p>
-    );
-  }
-
   const usesTurns = ["TURNO_RECURRENTE", "TURNO_PUNTUAL"].includes(payload.modalidadOperacion ?? "");
   const groups = groupSchedules(payload.schedules);
-  const showEstablishments = payload.establecimientoIds.length > 1;
+  const showEstablishments = establishments.length > 1;
   const teacherProfessors = professors.filter((professor) => ["teacher", "profesor"].includes(professor.usuario.rol?.codigo));
 
   function openNew() {
     const { horaInicio, horaFin } = nextDefaultRange(groups);
-    setEditor({ originalKey: null, days: new Set(), horaInicio, horaFin, establecimientoId: payload.establecimientoIds[0] ?? "", profesorIds: [], recursoIds: [], cupoMaximo: payload.cupo ?? 1, duracionTurnoMinutos: payload.duracionTurnoMinutos, intervaloTurnoMinutos: payload.intervaloTurnoMinutos, teacherAssignments: [] });
+    setEditor({ originalKey: null, days: new Set(), horaInicio, horaFin, establecimientoId: establishments[0]?.id ?? "", profesorIds: [], recursoIds: [], cupoMaximo: payload.cupo ?? 1, duracionTurnoMinutos: payload.duracionTurnoMinutos, intervaloTurnoMinutos: payload.intervaloTurnoMinutos, teacherAssignments: [] });
     setConflict(null);
   }
 
@@ -132,7 +139,8 @@ export function HorariosStep({
   function withDerivedDefaults(schedules: Schedule[]): Partial<ActivityDraftPayload> {
     const cupo = schedules.length ? Math.max(...schedules.map((item) => item.cupoMaximo)) : null;
     const reference = schedules.find((item) => item.duracionTurnoMinutos);
-    return { schedules, cupo, duracionTurnoMinutos: reference?.duracionTurnoMinutos ?? null, intervaloTurnoMinutos: reference?.intervaloTurnoMinutos ?? 0 };
+    const establecimientoIds = [...new Set(schedules.map((item) => item.establecimientoId))];
+    return { schedules, cupo, duracionTurnoMinutos: reference?.duracionTurnoMinutos ?? null, intervaloTurnoMinutos: reference?.intervaloTurnoMinutos ?? 0, establecimientoIds };
   }
 
   function removeGroup(group: Group) {
@@ -140,7 +148,7 @@ export function HorariosStep({
   }
 
   function saveEditor() {
-    if (!editor || !editor.days.size || editor.horaFin <= editor.horaInicio || editor.cupoMaximo < 1) return;
+    if (!editor || !editor.days.size || editor.horaFin <= editor.horaInicio || editor.cupoMaximo < 1 || conflictingDays(editor, groups).size) return;
     const previousRows = editor.originalKey ? payload.schedules.filter((item) => groupKey(item) === editor.originalKey) : [];
     const previousByDay = new Map(previousRows.map((row) => [row.diaSemana, row]));
     const rest = editor.originalKey ? payload.schedules.filter((item) => groupKey(item) !== editor.originalKey) : payload.schedules;
@@ -231,6 +239,10 @@ export function HorariosStep({
   const editorResources = editor ? resources.filter((resource) => resource.establecimientoId === editor.establecimientoId && resource.estado === "ACTIVO") : [];
   const editorProfessors = editor ? teacherProfessors.filter((professor) => editor.profesorIds.includes(professor.id)) : [];
   const turnoSlots = editor && usesTurns ? buildTeacherSlots({ horaInicio: editor.horaInicio, horaFin: editor.horaFin }, editor.duracionTurnoMinutos, editor.intervaloTurnoMinutos, true) : [];
+  const editorConflicts = editor ? conflictingDays(editor, groups) : new Set<Day>();
+  const editorConflictLabel = editorConflicts.size
+    ? days.filter(([value]) => editorConflicts.has(value)).map(([, , label]) => label).join(", ")
+    : "";
 
   return (
     <div className="space-y-6">
@@ -353,6 +365,11 @@ export function HorariosStep({
               {editor.cupoMaximo < 1 ? (
                 <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">El cupo de este horario debe ser al menos 1.</p>
               ) : null}
+              {editorConflicts.size ? (
+                <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
+                  Ya existe un horario en esta sede que se superpone en: {editorConflictLabel}. Cambiá el rango horario o los días.
+                </p>
+              ) : null}
 
               {usesTurns ? (
                 <div className="grid grid-cols-2 gap-4">
@@ -378,7 +395,7 @@ export function HorariosStep({
                   <Label className="font-bold text-[var(--brand-ink)]">Sede de este horario</Label>
                   <div className="mt-2">
                     <SearchableCheckList
-                      items={payload.establecimientoIds.map((id) => ({ id, label: establishments.find((item) => item.id === id)?.nombre ?? id }))}
+                      items={establishments.map((item) => ({ id: item.id, label: item.nombre }))}
                       selectedIds={[editor.establecimientoId]}
                       searchPlaceholder="Buscar sede..."
                       emptyText="No se encontraron sedes."
@@ -446,7 +463,7 @@ export function HorariosStep({
 
             <div className="flex gap-3 border-t border-[var(--brand-border-soft)] p-5">
               <Button type="button" variant="outline" className="flex-1" onClick={closeEditor}>Cancelar</Button>
-              <Button type="button" className="flex-1 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]" disabled={!editor.days.size || editor.horaFin <= editor.horaInicio || editor.cupoMaximo < 1} onClick={saveEditor}>
+              <Button type="button" className="flex-1 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]" disabled={!editor.days.size || editor.horaFin <= editor.horaInicio || editor.cupoMaximo < 1 || editorConflicts.size > 0} onClick={saveEditor}>
                 <Check />
                 Guardar horario
               </Button>

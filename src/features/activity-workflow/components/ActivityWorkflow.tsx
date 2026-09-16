@@ -5,7 +5,6 @@ import Image from "next/image";
 import {
   ArrowLeft,
   ArrowRight,
-  Building2,
   CalendarDays,
   CalendarRange,
   Check,
@@ -28,7 +27,6 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Label } from "@/components/ui/label";
 import { CatalogLoadingState } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { useActivityCatalogs } from "@/features/actividades/hooks/useActivityCatalogs";
-import { CheckCard } from "./CheckCard";
 import { GeneralInformation } from "./GeneralInformation";
 import { HorariosStep } from "./HorariosStep";
 import { WorkflowSelectionBrowser } from "./WorkflowSelectionBrowser";
@@ -75,7 +73,6 @@ type WorkflowPublic = PublicoObjetivo & { genero?: string | null };
 const stepIcons = [
   Repeat2,
   FileText,
-  Building2,
   CalendarDays,
   UsersRound,
   FileCheck2,
@@ -86,7 +83,6 @@ const stepIcons = [
 const steps = [
   "Modalidad",
   "Información",
-  "Establecimiento",
   "Horarios",
   "Dirigido a",
   "Requisitos",
@@ -549,42 +545,6 @@ function StepContent({
     );
   if (step === 3)
     return (
-      <div className="space-y-3">
-        <Label className="font-bold text-[var(--brand-ink)]">Sedes *</Label>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {options.establishments.map((establishment) => (
-            <CheckCard
-              key={establishment.id}
-              checked={payload.establecimientoIds.includes(establishment.id)}
-              label={`${establishment.nombre} · ${establishment.direccion}`}
-              onChange={(checked) => {
-                const nextIds = checked
-                  ? [...payload.establecimientoIds, establishment.id]
-                  : payload.establecimientoIds.filter((id) => id !== establishment.id);
-                patch({
-                  establecimientoIds: nextIds,
-                  schedules: payload.schedules.map((item) => {
-                    const keepsEstablishment = nextIds.includes(item.establecimientoId);
-                    return {
-                      ...item,
-                      // Nunca vaciar la sede: si no queda ninguna seleccionada, conservamos la
-                      // actual (el paso quedará marcado como pendiente hasta elegir una nueva).
-                      establecimientoId: keepsEstablishment ? item.establecimientoId : (nextIds[0] ?? item.establecimientoId),
-                      recursoIds: keepsEstablishment ? item.recursoIds : [],
-                    };
-                  }),
-                });
-              }}
-            />
-          ))}
-        </div>
-        {!options.establishments.length ? (
-          <Missing text="No hay establecimientos disponibles. La actividad puede guardarse, pero seguirá incompleta." />
-        ) : null}
-      </div>
-    );
-  if (step === 4)
-    return (
       <HorariosStep
         draftId={draftId}
         payload={payload}
@@ -594,7 +554,7 @@ function StepContent({
         resources={options.resources}
       />
     );
-  if (step === 5)
+  if (step === 4)
     return (
       <div className="space-y-4">
         <Missing text="Este paso es opcional. Si no seleccionás ningún público, la actividad estará disponible para todas las personas." />
@@ -628,7 +588,7 @@ function StepContent({
         />
       </div>
     );
-  if (step === 6)
+  if (step === 5)
     return (
       <div className="space-y-4">
         <Missing text="Este paso es opcional. Si no seleccionás ninguno, la actividad se publicará sin requisitos." />
@@ -671,7 +631,7 @@ function StepContent({
         />
       </div>
     );
-  if (step === 7)
+  if (step === 6)
     return <ReservationSettings payload={payload} patch={patch} />;
   return <Review payload={payload} pending={pending} onGoToStep={onGoToStep} />;
 }
@@ -831,7 +791,6 @@ function stepDescription(step: number) {
   return [
     "Elegí cómo se ofrecerá la actividad.",
     "Completá los datos que identifican la propuesta.",
-    "Seleccioná dónde se desarrollará.",
     "Cargá cada horario con sus días, sede, profesores, recursos, cupo y turnos.",
     "Indicá quiénes pueden participar.",
     "Seleccioná documentación, elementos y condiciones.",
