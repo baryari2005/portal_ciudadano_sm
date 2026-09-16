@@ -25,19 +25,19 @@ export function activityDraftPending(payload: ActivityDraftPayload) {
   if (!payload.establecimientoIds.length) pending.push({ step: 3, key: "establecimiento", label: "Seleccionar al menos una sede" });
   if (!payload.schedules.length) pending.push({ step: 4, key: "horarios", label: "Configurar al menos un horario" });
   if (payload.schedules.some((schedule) => !schedule.establecimientoId)) pending.push({ step: 4, key: "establecimiento-horario", label: "Asignar una sede a cada horario" });
-  if (payload.requiereReserva && (!payload.cupo || payload.cupo < 1)) pending.push({ step: 5, key: "cupo", label: "Definir el cupo" });
+  if (payload.requiereReserva && (!payload.cupo || payload.cupo < 1)) pending.push({ step: 4, key: "cupo", label: "Definir el cupo" });
   const needsTeacher = payload.modalidadOperacion && !["ACCESO_LIBRE", "TURNO_PUNTUAL"].includes(payload.modalidadOperacion);
   const usesTurns = ["TURNO_RECURRENTE", "TURNO_PUNTUAL"].includes(payload.modalidadOperacion ?? "");
   const uncoveredTeacherSlot = payload.schedules.some((schedule) => effectiveTeacherAssignments(schedule, payload.duracionTurnoMinutos, payload.intervaloTurnoMinutos, usesTurns).some((assignment) => assignment.professorIds.length === 0));
   const scheduleWithoutTeacher = payload.schedules.some((schedule) => schedule.profesorIds.length === 0);
   const hasSelectedTeacher = payload.schedules.some((schedule) => schedule.profesorIds.length > 0);
-  if (needsTeacher && (!payload.schedules.length || scheduleWithoutTeacher)) pending.push({ step: 6, key: "profesor", label: "Asignar un profesor aprobado a cada horario" });
-  else if (usesTurns && hasSelectedTeacher && uncoveredTeacherSlot) pending.push({ step: 7, key: "profesor-turno", label: "Asignar al menos un profesor a cada turno" });
-  if (["TURNO_RECURRENTE", "TURNO_PUNTUAL"].includes(payload.modalidadOperacion ?? "") && !payload.duracionTurnoMinutos) pending.push({ step: 7, key: "duracion", label: "Definir la duración del turno" });
-  if (payload.modalidadOperacion !== "ACCESO_LIBRE" && (!payload.generacionClasesDesde || !payload.generacionClasesHasta)) pending.push({ step: 10, key: "generacion", label: "Definir el período inicial de clases" });
-  if (payload.generacionClasesDesde && payload.generacionClasesHasta && payload.generacionClasesDesde > payload.generacionClasesHasta) pending.push({ step: 10, key: "generacion-rango", label: "Corregir el período inicial de clases" });
-  if (payload.modalidadOperacion === "EVENTO_UNICO" && payload.generacionClasesDesde && payload.generacionClasesHasta && payload.generacionClasesDesde !== payload.generacionClasesHasta) pending.push({ step: 10, key: "evento-fecha", label: "El evento único debe generarse en una sola fecha" });
-  if (payload.generacionClasesDesde && payload.generacionClasesHasta && (Date.parse(payload.generacionClasesHasta) - Date.parse(payload.generacionClasesDesde)) / 86_400_000 > 184) pending.push({ step: 10, key: "generacion-maxima", label: "El período inicial no puede superar seis meses" });
+  if (needsTeacher && (!payload.schedules.length || scheduleWithoutTeacher)) pending.push({ step: 4, key: "profesor", label: "Asignar un profesor aprobado a cada horario" });
+  else if (usesTurns && hasSelectedTeacher && uncoveredTeacherSlot) pending.push({ step: 5, key: "profesor-turno", label: "Asignar al menos un profesor a cada turno" });
+  if (["TURNO_RECURRENTE", "TURNO_PUNTUAL"].includes(payload.modalidadOperacion ?? "") && !payload.duracionTurnoMinutos) pending.push({ step: 5, key: "duracion", label: "Definir la duración del turno" });
+  if (payload.modalidadOperacion !== "ACCESO_LIBRE" && (!payload.generacionClasesDesde || !payload.generacionClasesHasta)) pending.push({ step: 8, key: "generacion", label: "Definir el período inicial de clases" });
+  if (payload.generacionClasesDesde && payload.generacionClasesHasta && payload.generacionClasesDesde > payload.generacionClasesHasta) pending.push({ step: 8, key: "generacion-rango", label: "Corregir el período inicial de clases" });
+  if (payload.modalidadOperacion === "EVENTO_UNICO" && payload.generacionClasesDesde && payload.generacionClasesHasta && payload.generacionClasesDesde !== payload.generacionClasesHasta) pending.push({ step: 8, key: "evento-fecha", label: "El evento único debe generarse en una sola fecha" });
+  if (payload.generacionClasesDesde && payload.generacionClasesHasta && (Date.parse(payload.generacionClasesHasta) - Date.parse(payload.generacionClasesDesde)) / 86_400_000 > 184) pending.push({ step: 8, key: "generacion-maxima", label: "El período inicial no puede superar seis meses" });
   return pending;
 }
 
@@ -63,7 +63,7 @@ function migrateLegacyDraftPayload(raw: any): any {
 function map(row: any) {
   const payload = activityDraftPayloadSchema.parse(migrateLegacyDraftPayload(row.payload));
   const pending = activityDraftPending(payload);
-  return { id: row.id, activityId: row.actividadId, name: row.nombre, modality: row.modalidad, currentStep: row.pasoActual, status: row.estado === "PUBLICANDO" ? "PUBLICANDO" : pending.length ? "INCOMPLETO" : "COMPLETO", hasChanges: draftHasChanges(payload, readDraftMetadata(row.payload)), lastEditedBy: row.creadoPor ? [row.creadoPor.nombre, row.creadoPor.apellido].filter(Boolean).join(" ") : null, payload, pending, completion: Math.round(((8 - new Set(pending.map((item) => item.step)).size) / 8) * 100), createdAt: row.createdAt, updatedAt: row.updatedAt };
+  return { id: row.id, activityId: row.actividadId, name: row.nombre, modality: row.modalidad, currentStep: row.pasoActual, status: row.estado === "PUBLICANDO" ? "PUBLICANDO" : pending.length ? "INCOMPLETO" : "COMPLETO", hasChanges: draftHasChanges(payload, readDraftMetadata(row.payload)), lastEditedBy: row.creadoPor ? [row.creadoPor.nombre, row.creadoPor.apellido].filter(Boolean).join(" ") : null, payload, pending, completion: Math.round(((6 - new Set(pending.map((item) => item.step)).size) / 6) * 100), createdAt: row.createdAt, updatedAt: row.updatedAt };
 }
 
 export async function createActivityDraft(userId: string) { return map(await prisma.actividadBorrador.create({ data: { creadoPorId: userId, payload: { ...emptyActivityDraftPayload, __draft: { baseline: draftFingerprint(emptyActivityDraftPayload) } } as unknown as Prisma.InputJsonValue, estado: "SIN_CAMBIOS" }, include: draftEditor })); }

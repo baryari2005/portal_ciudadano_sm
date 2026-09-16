@@ -15,34 +15,22 @@ import {
   Dumbbell,
   FileCheck2,
   FileText,
-  GraduationCap,
   ImageIcon,
   Loader2,
-  PackageOpen,
-  Plus,
   Repeat2,
   Save,
   Sparkles,
-  Trash2,
   UsersRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CatalogLoadingState } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { useActivityCatalogs } from "@/features/actividades/hooks/useActivityCatalogs";
 import { CheckCard } from "./CheckCard";
 import { GeneralInformation } from "./GeneralInformation";
-import { WeeklySchedules } from "./WeeklySchedules";
+import { HorariosStep } from "./HorariosStep";
 import { WorkflowSelectionBrowser } from "./WorkflowSelectionBrowser";
 import { ReservationSettings } from "./ReservationSettings";
 import { TeacherTurnDistribution } from "./TeacherTurnDistribution";
@@ -56,7 +44,6 @@ import { listarProfesoresClient } from "@/features/profesores/services/profesore
 import { listRequirementsClient } from "@/features/requirements/services/requirements.service";
 import { listResourcesClient } from "@/features/resources/services/resources.service";
 import {
-  checkDraftProfessorAvailabilityClient,
   discardDraftClient,
   getDraftClient,
   publishDraftClient,
@@ -91,8 +78,6 @@ const stepIcons = [
   FileText,
   Building2,
   CalendarDays,
-  PackageOpen,
-  GraduationCap,
   Clock3,
   UsersRound,
   FileCheck2,
@@ -105,8 +90,6 @@ const steps = [
   "Información",
   "Establecimiento",
   "Horarios",
-  "Cupos y recursos",
-  "Profesores",
   "Distribución docente",
   "Dirigido a",
   "Requisitos",
@@ -133,8 +116,6 @@ const modes = [
   ["EVENTO_UNICO", "Evento único", "Una fecha y horario concretos."],
   ["CURSO_PERIODO", "Curso con período", "Ciclo con inicio y finalización."],
 ] as const;
-const inputClass =
-  "h-12 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] font-medium text-[var(--brand-ink)] placeholder:text-[#6D8D75]";
 const modePresentation = {
   HORARIO_FIJO: {
     icon: CalendarRange,
@@ -187,9 +168,6 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
     [stepLoading, setStepLoading] = useState(false),
     [publishing, setPublishing] = useState(false),
     [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
-  const [professorConflict, setProfessorConflict] = useState<string | null>(
-    null,
-  );
   const [discardOpen, setDiscardOpen] = useState(false),
     [discarding, setDiscarding] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -256,41 +234,6 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
       ),
     );
   }, [draft]);
-  useEffect(() => {
-    if (step !== 6 || !payload) return;
-    const professorIds = [
-      ...new Set(payload.schedules.flatMap((schedule) => schedule.profesorIds)),
-    ];
-    if (!professorIds.length) {
-      setProfessorConflict(null);
-      return;
-    }
-    let active = true;
-    void Promise.all(
-      professorIds.map((professorId) =>
-        checkDraftProfessorAvailabilityClient(
-          draftId,
-          professorId,
-          payload.schedules,
-        ),
-      ),
-    )
-      .then((results) => {
-        if (active)
-          setProfessorConflict(
-            results.find((result) => !result.available)?.message ?? null,
-          );
-      })
-      .catch(() => {
-        if (active)
-          setProfessorConflict(
-            "No pudimos verificar la disponibilidad de los profesores asignados.",
-          );
-      });
-    return () => {
-      active = false;
-    };
-  }, [step, draftId, payload]);
   if (loading || catalogs.loading)
     return <CatalogLoadingState label="configuración de actividad" fullPage />;
   if (loadError || !payload || !draft) return <main className="min-h-full bg-[var(--brand-page)] p-4 sm:p-6 lg:p-8"><p role="alert" className="text-sm text-[var(--brand-muted)]">{loadError || "No pudimos cargar el borrador."}</p><div className="mt-4 flex gap-3"><Button variant="outline" onClick={() => setLoadAttempt((attempt) => attempt + 1)}>Reintentar</Button><Button variant="outline" onClick={() => navigation.navigate("/activities")}>Volver a actividades</Button></div></main>;
@@ -465,8 +408,6 @@ export function ActivityWorkflow({ draftId }: { draftId: string }) {
             options={options}
             categories={catalogs.categories}
             publics={catalogs.publics}
-            professorConflict={professorConflict}
-            setProfessorConflict={setProfessorConflict}
           />
           <div className="mt-8 flex flex-col-reverse gap-3 border-t border-[var(--brand-border)] pt-5 sm:flex-row sm:justify-between">
             <Button
@@ -546,8 +487,6 @@ function StepContent({
   options,
   categories,
   publics,
-  professorConflict,
-  setProfessorConflict,
 }: {
   draftId: string;
   step: number;
@@ -558,8 +497,6 @@ function StepContent({
   options: WorkflowOptions;
   categories: CategoriaActividad[];
   publics: WorkflowPublic[];
-  professorConflict: string | null;
-  setProfessorConflict: (message: string | null) => void;
 }) {
   if (step === 1)
     return (
@@ -649,153 +586,20 @@ function StepContent({
         ) : null}
       </div>
     );
-  if (step === 4) return <WeeklySchedules payload={payload} patch={patch} establishments={options.establishments} />;
-  if (step === 5) {
-    const scheduleEstablishmentIds = [...new Set(payload.schedules.map((item) => item.establecimientoId))];
-    const groups = (scheduleEstablishmentIds.length ? scheduleEstablishmentIds : payload.establecimientoIds).map((establishmentId) => ({
-      establishment: options.establishments.find((item) => item.id === establishmentId),
-      scheduleIndexes: payload.schedules.map((item, index) => [item, index] as const).filter(([item]) => item.establecimientoId === establishmentId).map(([, index]) => index),
-      resources: options.resources.filter((item) => item.establecimientoId === establishmentId && item.estado === "ACTIVO"),
-    }));
-    const hasAnyResource = groups.some((group) => group.resources.length > 0);
+  if (step === 4)
     return (
-      <div className="space-y-5">
-        <IconField label="Cupo general" icon={<UsersRound />}>
-          <Input
-            className={`${inputClass} pl-11`}
-            type="number"
-            min={1}
-            disabled={!payload.requiereReserva}
-            value={payload.cupo ?? ""}
-            onChange={(e) =>
-              patch({
-                cupo: e.target.value ? Number(e.target.value) : null,
-                schedules: payload.schedules.map((item) => ({
-                  ...item,
-                  cupoMaximo: Number(e.target.value) || 1,
-                })),
-              })
-            }
-          />
-        </IconField>
-        {groups.map((group) => (
-          <div key={group.establishment?.id ?? "sin-sede"} className="space-y-3">
-            {groups.length > 1 ? (
-              <h4 className="font-bold text-[var(--brand-primary)]">Recursos en {group.establishment?.nombre ?? "sede sin definir"}</h4>
-            ) : null}
-            <div className="grid gap-3 sm:grid-cols-2">
-              {group.resources.map((resource) => (
-                <CheckCard
-                  key={resource.id}
-                  checked={group.scheduleIndexes.some((index) => payload.schedules[index].recursoIds.includes(resource.id))}
-                  label={`${resource.nombre} · ${resource.capacidadUnidades} u.`}
-                  onChange={(checked) =>
-                    patch({
-                      schedules: payload.schedules.map((schedule, index) =>
-                        group.scheduleIndexes.includes(index)
-                          ? {
-                              ...schedule,
-                              recursoIds: checked
-                                ? [...new Set([...schedule.recursoIds, resource.id])]
-                                : schedule.recursoIds.filter((id) => id !== resource.id),
-                            }
-                          : schedule,
-                      ),
-                    })
-                  }
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-        {!hasAnyResource ? (
-          <Missing text="No hay recursos activos para las sedes seleccionadas. Solo será obligatorio si la actividad necesita uno." />
-        ) : null}
-      </div>
+      <HorariosStep
+        draftId={draftId}
+        payload={payload}
+        patch={patch}
+        establishments={options.establishments}
+        professors={options.professors}
+        resources={options.resources}
+      />
     );
-  }
-  if (step === 6)
-    return (
-      <div className="space-y-4">
-        <WorkflowSelectionBrowser
-          options={options.professors
-            .filter((professor) =>
-              ["teacher", "profesor"].includes(professor.usuario.rol?.codigo),
-            )
-            .map((professor) => ({
-              id: professor.id,
-              title:
-                `${professor.usuario.nombre ?? ""} ${professor.usuario.apellido ?? ""}`.trim(),
-              subtitle: professor.especialidad ?? "Sin especialidad",
-              description: professor.descripcion,
-              meta: `Rol: ${professor.usuario.rol?.nombre ?? "Profesor"}${professor.matricula ? ` · Matrícula ${professor.matricula}` : ""}`,
-            }))}
-          selectedIds={[
-            ...new Set(
-              payload.schedules.flatMap((schedule) => schedule.profesorIds),
-            ),
-          ]}
-          searchPlaceholder="Buscar profesor por nombre o especialidad..."
-          emptyTitle="No se encontraron profesores con rol Profesor."
-          onToggle={async (id, checked) => {
-            if (checked) {
-              try {
-                const availability =
-                  await checkDraftProfessorAvailabilityClient(
-                    draftId,
-                    id,
-                    payload.schedules,
-                  );
-                if (!availability.available) {
-                  setProfessorConflict(availability.message);
-                  toast.error(
-                    availability.message ??
-                      "El profesor no está disponible en esa franja.",
-                  );
-                  return;
-                }
-              } catch {
-                setProfessorConflict(
-                  "No pudimos verificar la disponibilidad del profesor.",
-                );
-                toast.error(
-                  "No pudimos verificar la disponibilidad del profesor.",
-                );
-                return;
-              }
-            }
-            setProfessorConflict(null);
-            patch({
-              schedules: payload.schedules.map((schedule) => ({
-                ...schedule,
-                profesorIds: checked
-                  ? [...new Set([...schedule.profesorIds, id])]
-                  : schedule.profesorIds.filter((item) => item !== id),
-                teacherAssignments: schedule.teacherAssignments.map((assignment) => ({
-                  ...assignment,
-                  professorIds: checked ? assignment.professorIds : assignment.professorIds.filter((item) => item !== id),
-                })),
-              })),
-            });
-          }}
-        />
-        {professorConflict ? (
-          <p className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800">
-            <CircleAlert className="mt-0.5 size-5 shrink-0" />
-            {professorConflict}
-          </p>
-        ) : (
-          <p className="flex items-start gap-3 rounded-xl border border-[var(--brand-border)] bg-[var(--brand-panel)] p-4 text-sm text-[var(--brand-text)]">
-            <Check className="mt-0.5 size-5 shrink-0 text-[var(--brand-primary)]" />
-            Al seleccionar un profesor se verificará que no tenga otra actividad
-            superpuesta.
-          </p>
-        )}
-      </div>
-    );
-  if (step === 7)
+  if (step === 5)
     return <TeacherTurnDistribution payload={payload} patch={patch} professors={options.professors} />;
-  if (step === 8)
+  if (step === 6)
     return (
       <div className="space-y-4">
         <Missing text="Este paso es opcional. Si no seleccionás ningún público, la actividad estará disponible para todas las personas." />
@@ -829,7 +633,7 @@ function StepContent({
         />
       </div>
     );
-  if (step === 9)
+  if (step === 7)
     return (
       <div className="space-y-4">
         <Missing text="Este paso es opcional. Si no seleccionás ninguno, la actividad se publicará sin requisitos." />
@@ -872,125 +676,11 @@ function StepContent({
         />
       </div>
     );
-  if (step === 10)
+  if (step === 8)
     return <ReservationSettings payload={payload} patch={patch} />;
   return <Review payload={payload} pending={pending} onGoToStep={onGoToStep} />;
 }
 
-// Posible código legado: conservar hasta completar la migración a WeeklySchedules.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function Schedules({
-  payload,
-  patch,
-}: {
-  payload: ActivityDraftPayload;
-  patch: (value: Partial<ActivityDraftPayload>) => void;
-}) {
-  const add = () =>
-    patch({
-      schedules: [
-        ...payload.schedules,
-        {
-          establecimientoId: payload.establecimientoIds[0] ?? "",
-          diaSemana: "LUNES",
-          horaInicio: "09:00",
-          horaFin: "10:00",
-          espacio: null,
-          cupoMaximo: payload.cupo ?? 1,
-          profesorIds: [],
-          recursoIds: [],
-          teacherAssignments: [],
-        },
-      ],
-    });
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button variant="outline" onClick={add}>
-          <Plus />
-          Agregar horario
-        </Button>
-      </div>
-      {payload.schedules.map((item, index) => (
-        <div
-          key={index}
-          className="grid gap-3 rounded-2xl border border-[var(--brand-border-soft)] bg-[var(--brand-page)] p-4 md:grid-cols-[1fr_1fr_1fr_1.2fr_auto]"
-        >
-          <Pick
-            value={item.diaSemana}
-            onChange={(diaSemana) =>
-              patch({
-                schedules: payload.schedules.map((entry, i) =>
-                  i === index
-                    ? { ...entry, diaSemana: diaSemana as ActivityDraftPayload["schedules"][number]["diaSemana"] }
-                    : entry,
-                ),
-              })
-            }
-            options={[
-              "LUNES",
-              "MARTES",
-              "MIERCOLES",
-              "JUEVES",
-              "VIERNES",
-              "SABADO",
-              "DOMINGO",
-            ].map((value) => [value, value])}
-          />
-          <Input
-            type="time"
-            value={item.horaInicio}
-            onChange={(e) =>
-              patch({
-                schedules: payload.schedules.map((entry, i) =>
-                  i === index
-                    ? { ...entry, horaInicio: e.target.value }
-                    : entry,
-                ),
-              })
-            }
-          />
-          <Input
-            type="time"
-            value={item.horaFin}
-            onChange={(e) =>
-              patch({
-                schedules: payload.schedules.map((entry, i) =>
-                  i === index ? { ...entry, horaFin: e.target.value } : entry,
-                ),
-              })
-            }
-          />
-          <Input
-            placeholder="Espacio"
-            value={item.espacio ?? ""}
-            onChange={(e) =>
-              patch({
-                schedules: payload.schedules.map((entry, i) =>
-                  i === index ? { ...entry, espacio: e.target.value } : entry,
-                ),
-              })
-            }
-          />
-          <Button
-            variant="outline"
-            className="text-red-700"
-            onClick={() =>
-              patch({
-                schedules: payload.schedules.filter((_, i) => i !== index),
-              })
-            }
-          >
-            <Trash2 />
-          </Button>
-        </div>
-      ))}
-      {!payload.schedules.length ? (
-        <Missing text="Todavía no configuraste horarios. Podés continuar y completarlos más adelante." />
-      ) : null}
-    </div>
-  );
-}
 function Review({
   payload,
   pending,
@@ -1127,51 +817,6 @@ function Field({
     </div>
   );
 }
-function IconField({
-  label,
-  icon,
-  children,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-2">
-      <Label className="font-bold text-[var(--brand-ink)]">{label}</Label>
-      <div className="relative">
-        <span className="pointer-events-none absolute left-3.5 top-3.5 z-10 text-[var(--brand-primary)] [&_svg]:size-5">
-          {icon}
-        </span>
-        <div className="[&_button]:pl-11">{children}</div>
-      </div>
-    </div>
-  );
-}
-function Pick({
-  value,
-  onChange,
-  options,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  options: string[][];
-}) {
-  return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className={inputClass}>
-        <SelectValue placeholder="Seleccionar" />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map(([key, label]) => (
-          <SelectItem key={key} value={key}>
-            {label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
 function Missing({ text }: { text: string }) {
   return (
     <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
@@ -1192,9 +837,7 @@ function stepDescription(step: number) {
     "Elegí cómo se ofrecerá la actividad.",
     "Completá los datos que identifican la propuesta.",
     "Seleccioná dónde se desarrollará.",
-    "Definí días y franjas disponibles.",
-    "Configurá capacidad y recursos físicos.",
-    "Asigná profesores aprobados cuando estén disponibles.",
+    "Cargá cada horario con sus días, sede, profesores, recursos y cupo.",
     "Distribuí los profesores seleccionados entre los turnos.",
     "Indicá quiénes pueden participar.",
     "Seleccioná documentación, elementos y condiciones.",
