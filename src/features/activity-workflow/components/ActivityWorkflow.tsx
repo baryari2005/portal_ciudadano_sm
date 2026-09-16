@@ -784,7 +784,7 @@ function Review({
           }
         />
         <Summary
-          label="Cupo"
+          label="Cupo máximo"
           value={
             payload.requiereReserva
               ? String(payload.cupo ?? "Pendiente")

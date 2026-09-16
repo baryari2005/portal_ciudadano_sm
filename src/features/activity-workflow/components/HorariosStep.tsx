@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarClock, Check, CircleAlert, Clock3, Loader2, Plus, Trash2, X } from "lucide-react";
+import { CalendarClock, Check, CircleAlert, Clock3, Loader2, Plus, Trash2, UsersRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -119,12 +119,19 @@ export function HorariosStep({
     setConflict(null);
   }
 
+  // El cupo general de la actividad se deriva del mayor cupo entre sus horarios
+  // (se usa como referencia en el resumen; cada horario mantiene el suyo propio).
+  function withDerivedCupo(schedules: Schedule[]): Partial<ActivityDraftPayload> {
+    const cupo = schedules.length ? Math.max(...schedules.map((item) => item.cupoMaximo)) : null;
+    return { schedules, cupo };
+  }
+
   function removeGroup(group: Group) {
-    patch({ schedules: payload.schedules.filter((item) => groupKey(item) !== group.key) });
+    patch(withDerivedCupo(payload.schedules.filter((item) => groupKey(item) !== group.key)));
   }
 
   function saveEditor() {
-    if (!editor || !editor.days.size || editor.horaFin <= editor.horaInicio) return;
+    if (!editor || !editor.days.size || editor.horaFin <= editor.horaInicio || editor.cupoMaximo < 1) return;
     const previousRows = editor.originalKey ? payload.schedules.filter((item) => groupKey(item) === editor.originalKey) : [];
     const previousByDay = new Map(previousRows.map((row) => [row.diaSemana, row]));
     const rest = editor.originalKey ? payload.schedules.filter((item) => groupKey(item) !== editor.originalKey) : payload.schedules;
@@ -143,7 +150,7 @@ export function HorariosStep({
         teacherAssignments: previous?.teacherAssignments ?? [],
       };
     });
-    patch({ schedules: [...rest, ...nextRows] });
+    patch(withDerivedCupo([...rest, ...nextRows]));
     closeEditor();
   }
 
@@ -188,21 +195,6 @@ export function HorariosStep({
 
   return (
     <div className="space-y-6">
-      <div className="max-w-xs space-y-2">
-        <Label className="font-bold text-[var(--brand-ink)]">Cupo general</Label>
-        <Input
-          type="number"
-          min={1}
-          disabled={!payload.requiereReserva}
-          value={payload.cupo ?? ""}
-          onChange={(event) => {
-            const cupo = event.target.value ? Number(event.target.value) : null;
-            patch({ cupo, schedules: payload.schedules.map((item) => ({ ...item, cupoMaximo: cupo || 1 })) });
-          }}
-          className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)]"
-        />
-      </div>
-
       <div className="space-y-3">
         {groups.map((group) => {
           const establishment = establishments.find((item) => item.id === group.establecimientoId);
@@ -259,7 +251,7 @@ export function HorariosStep({
       {editor ? (
         <div className="fixed inset-0 z-50 flex justify-end">
           <button type="button" aria-label="Cerrar" onClick={closeEditor} className="absolute inset-0 bg-black/45" />
-          <aside className="relative flex h-full w-full max-w-[460px] flex-col bg-white shadow-2xl">
+          <aside className="relative flex h-full w-full max-w-[600px] flex-col bg-white shadow-2xl">
             <div className="flex items-start justify-between gap-3 border-b border-[var(--brand-border-soft)] p-6">
               <div className="flex items-start gap-3">
                 <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--brand-border-soft)] text-[var(--brand-primary)]">
@@ -292,7 +284,7 @@ export function HorariosStep({
                 {!editor.days.size ? <p className="mt-2 text-xs font-medium text-amber-800">Elegí al menos un día.</p> : null}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label className="font-bold text-[var(--brand-ink)]">Hora de inicio</Label>
                   <div className="relative mt-2">
@@ -307,15 +299,25 @@ export function HorariosStep({
                     <Input type="time" min={editor.horaInicio} value={editor.horaFin} onChange={(event) => setEditor((current) => current && { ...current, horaFin: event.target.value })} className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9" />
                   </div>
                 </div>
+                <div>
+                  <Label className="font-bold text-[var(--brand-ink)]">Cupo</Label>
+                  <div className="relative mt-2">
+                    <UsersRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--brand-primary)]" />
+                    <Input type="number" min={1} value={editor.cupoMaximo} onChange={(event) => setEditor((current) => current && { ...current, cupoMaximo: Number(event.target.value) || 1 })} className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9" />
+                  </div>
+                </div>
               </div>
               {editor.horaFin <= editor.horaInicio ? (
                 <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">La hora de finalización debe ser posterior a la de inicio.</p>
+              ) : null}
+              {editor.cupoMaximo < 1 ? (
+                <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">El cupo de este horario debe ser al menos 1.</p>
               ) : null}
 
               {showEstablishments ? (
                 <div>
                   <Label className="font-bold text-[var(--brand-ink)]">Sede de este horario</Label>
-                  <div className="mt-2 grid gap-2">
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
                     {payload.establecimientoIds.map((establishmentId) => {
                       const establishment = establishments.find((item) => item.id === establishmentId);
                       return (
@@ -333,7 +335,7 @@ export function HorariosStep({
 
               <div>
                 <Label className="font-bold text-[var(--brand-ink)]">Profesores de este horario</Label>
-                <div className="mt-2 grid gap-2">
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
                   {teacherProfessors.map((professor) => (
                     <CheckCard
                       key={professor.id}
@@ -355,7 +357,7 @@ export function HorariosStep({
                 <Label className="font-bold text-[var(--brand-ink)]">
                   {showEstablishments ? `Recursos en ${establishments.find((item) => item.id === editor.establecimientoId)?.nombre ?? "esta sede"}` : "Recursos"}
                 </Label>
-                <div className="mt-2 grid gap-2">
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
                   {editorResources.map((resource) => (
                     <CheckCard
                       key={resource.id}
@@ -371,7 +373,7 @@ export function HorariosStep({
 
             <div className="flex gap-3 border-t border-[var(--brand-border-soft)] p-5">
               <Button type="button" variant="outline" className="flex-1" onClick={closeEditor}>Cancelar</Button>
-              <Button type="button" className="flex-1 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]" disabled={!editor.days.size || editor.horaFin <= editor.horaInicio} onClick={saveEditor}>
+              <Button type="button" className="flex-1 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]" disabled={!editor.days.size || editor.horaFin <= editor.horaInicio || editor.cupoMaximo < 1} onClick={saveEditor}>
                 <Check />
                 Guardar horario
               </Button>

@@ -25,7 +25,7 @@ export function activityDraftPending(payload: ActivityDraftPayload) {
   if (!payload.establecimientoIds.length) pending.push({ step: 3, key: "establecimiento", label: "Seleccionar al menos una sede" });
   if (!payload.schedules.length) pending.push({ step: 4, key: "horarios", label: "Configurar al menos un horario" });
   if (payload.schedules.some((schedule) => !schedule.establecimientoId)) pending.push({ step: 4, key: "establecimiento-horario", label: "Asignar una sede a cada horario" });
-  if (payload.requiereReserva && (!payload.cupo || payload.cupo < 1)) pending.push({ step: 4, key: "cupo", label: "Definir el cupo" });
+  if (payload.requiereReserva && payload.schedules.some((schedule) => !schedule.cupoMaximo || schedule.cupoMaximo < 1)) pending.push({ step: 4, key: "cupo", label: "Definir el cupo de cada horario" });
   const needsTeacher = payload.modalidadOperacion && !["ACCESO_LIBRE", "TURNO_PUNTUAL"].includes(payload.modalidadOperacion);
   const usesTurns = ["TURNO_RECURRENTE", "TURNO_PUNTUAL"].includes(payload.modalidadOperacion ?? "");
   const uncoveredTeacherSlot = payload.schedules.some((schedule) => effectiveTeacherAssignments(schedule, payload.duracionTurnoMinutos, payload.intervaloTurnoMinutos, usesTurns).some((assignment) => assignment.professorIds.length === 0));
