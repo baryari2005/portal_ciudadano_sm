@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarClock, Check, CircleAlert, Clock3, Loader2, Plus, Trash2, UsersRound, X } from "lucide-react";
+import { CalendarClock, Check, CircleAlert, Clock3, Loader2, Plus, TimerReset, Trash2, UsersRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCard } from "./CheckCard";
+import { SearchableCheckList } from "./SearchableCheckList";
 import { checkDraftProfessorAvailabilityClient } from "../services/activity-drafts.service";
+import { buildTeacherSlots } from "../helpers/teacher-slot-assignments";
 import type { ActivityDraftPayload } from "../types/activity-draft.types";
 import type { Establecimiento } from "@/features/establecimientos/types/establecimiento.types";
 import type { Profesor } from "@/features/profesores/types/profesor.types";
@@ -15,6 +16,7 @@ import type { Resource } from "@/features/resources/types/resource.types";
 
 type Schedule = ActivityDraftPayload["schedules"][number];
 type Day = Schedule["diaSemana"];
+type TeacherSlotAssignment = Schedule["teacherAssignments"][number];
 
 const days: Array<[Day, string, string]> = [
   ["LUNES", "LUN", "Lunes"],
@@ -35,6 +37,7 @@ type Group = {
   profesorIds: string[];
   recursoIds: string[];
   cupoMaximo: number;
+  duracionTurnoMinutos: number | null;
 };
 
 function groupKey(item: Pick<Schedule, "horaInicio" | "horaFin" | "establecimientoId">) {
@@ -45,7 +48,7 @@ function groupSchedules(schedules: Schedule[]): Group[] {
   const map = new Map<string, Group>();
   for (const item of schedules) {
     const key = groupKey(item);
-    const group = map.get(key) ?? { key, horaInicio: item.horaInicio, horaFin: item.horaFin, establecimientoId: item.establecimientoId, days: new Set<Day>(), profesorIds: item.profesorIds, recursoIds: item.recursoIds, cupoMaximo: item.cupoMaximo };
+    const group = map.get(key) ?? { key, horaInicio: item.horaInicio, horaFin: item.horaFin, establecimientoId: item.establecimientoId, days: new Set<Day>(), profesorIds: item.profesorIds, recursoIds: item.recursoIds, cupoMaximo: item.cupoMaximo, duracionTurnoMinutos: item.duracionTurnoMinutos };
     group.days.add(item.diaSemana);
     map.set(key, group);
   }
@@ -70,6 +73,9 @@ type Editor = {
   profesorIds: string[];
   recursoIds: string[];
   cupoMaximo: number;
+  duracionTurnoMinutos: number | null;
+  intervaloTurnoMinutos: number;
+  teacherAssignments: TeacherSlotAssignment[];
 };
 
 export function HorariosStep({
@@ -99,18 +105,20 @@ export function HorariosStep({
     );
   }
 
+  const usesTurns = ["TURNO_RECURRENTE", "TURNO_PUNTUAL"].includes(payload.modalidadOperacion ?? "");
   const groups = groupSchedules(payload.schedules);
   const showEstablishments = payload.establecimientoIds.length > 1;
   const teacherProfessors = professors.filter((professor) => ["teacher", "profesor"].includes(professor.usuario.rol?.codigo));
 
   function openNew() {
     const { horaInicio, horaFin } = nextDefaultRange(groups);
-    setEditor({ originalKey: null, days: new Set(), horaInicio, horaFin, establecimientoId: payload.establecimientoIds[0] ?? "", profesorIds: [], recursoIds: [], cupoMaximo: payload.cupo ?? 1 });
+    setEditor({ originalKey: null, days: new Set(), horaInicio, horaFin, establecimientoId: payload.establecimientoIds[0] ?? "", profesorIds: [], recursoIds: [], cupoMaximo: payload.cupo ?? 1, duracionTurnoMinutos: payload.duracionTurnoMinutos, intervaloTurnoMinutos: payload.intervaloTurnoMinutos, teacherAssignments: [] });
     setConflict(null);
   }
 
   function openExisting(group: Group) {
-    setEditor({ originalKey: group.key, days: new Set(group.days), horaInicio: group.horaInicio, horaFin: group.horaFin, establecimientoId: group.establecimientoId, profesorIds: [...group.profesorIds], recursoIds: [...group.recursoIds], cupoMaximo: group.cupoMaximo });
+    const previousRows = payload.schedules.filter((item) => groupKey(item) === group.key);
+    setEditor({ originalKey: group.key, days: new Set(group.days), horaInicio: group.horaInicio, horaFin: group.horaFin, establecimientoId: group.establecimientoId, profesorIds: [...group.profesorIds], recursoIds: [...group.recursoIds], cupoMaximo: group.cupoMaximo, duracionTurnoMinutos: group.duracionTurnoMinutos, intervaloTurnoMinutos: previousRows[0]?.intervaloTurnoMinutos ?? 0, teacherAssignments: previousRows[0]?.teacherAssignments ?? [] });
     setConflict(null);
   }
 
@@ -119,15 +127,16 @@ export function HorariosStep({
     setConflict(null);
   }
 
-  // El cupo general de la actividad se deriva del mayor cupo entre sus horarios
-  // (se usa como referencia en el resumen; cada horario mantiene el suyo propio).
-  function withDerivedCupo(schedules: Schedule[]): Partial<ActivityDraftPayload> {
+  // El cupo y la duración de turno general de la actividad se derivan de sus
+  // horarios (se usan como referencia/valor por defecto; cada horario mantiene lo suyo propio).
+  function withDerivedDefaults(schedules: Schedule[]): Partial<ActivityDraftPayload> {
     const cupo = schedules.length ? Math.max(...schedules.map((item) => item.cupoMaximo)) : null;
-    return { schedules, cupo };
+    const reference = schedules.find((item) => item.duracionTurnoMinutos);
+    return { schedules, cupo, duracionTurnoMinutos: reference?.duracionTurnoMinutos ?? null, intervaloTurnoMinutos: reference?.intervaloTurnoMinutos ?? 0 };
   }
 
   function removeGroup(group: Group) {
-    patch(withDerivedCupo(payload.schedules.filter((item) => groupKey(item) !== group.key)));
+    patch(withDerivedDefaults(payload.schedules.filter((item) => groupKey(item) !== group.key)));
   }
 
   function saveEditor() {
@@ -145,12 +154,14 @@ export function HorariosStep({
         horaFin: editor.horaFin,
         espacio: previous?.espacio ?? null,
         cupoMaximo: editor.cupoMaximo,
+        duracionTurnoMinutos: editor.duracionTurnoMinutos,
+        intervaloTurnoMinutos: editor.intervaloTurnoMinutos,
         profesorIds: editor.profesorIds,
         recursoIds: editor.recursoIds,
-        teacherAssignments: previous?.teacherAssignments ?? [],
+        teacherAssignments: editor.teacherAssignments,
       };
     });
-    patch(withDerivedCupo([...rest, ...nextRows]));
+    patch(withDerivedDefaults([...rest, ...nextRows]));
     closeEditor();
   }
 
@@ -170,7 +181,7 @@ export function HorariosStep({
       setCheckingProfessor(true);
       setConflict(null);
       try {
-        const rowsForCheck: Schedule[] = [...editor.days].map((day) => ({ establecimientoId: editor.establecimientoId, diaSemana: day, horaInicio: editor.horaInicio, horaFin: editor.horaFin, espacio: null, cupoMaximo: editor.cupoMaximo, profesorIds: [], recursoIds: [], teacherAssignments: [] }));
+        const rowsForCheck: Schedule[] = [...editor.days].map((day) => ({ establecimientoId: editor.establecimientoId, diaSemana: day, horaInicio: editor.horaInicio, horaFin: editor.horaFin, espacio: null, cupoMaximo: editor.cupoMaximo, duracionTurnoMinutos: editor.duracionTurnoMinutos, intervaloTurnoMinutos: editor.intervaloTurnoMinutos, profesorIds: [], recursoIds: [], teacherAssignments: [] }));
         const availability = await checkDraftProfessorAvailabilityClient(draftId, professorId, rowsForCheck);
         if (!availability.available) {
           setConflict(availability.message ?? "El profesor no está disponible en ese horario.");
@@ -184,14 +195,42 @@ export function HorariosStep({
       }
       setCheckingProfessor(false);
     }
-    setEditor((current) => current && { ...current, profesorIds: checked ? [...new Set([...current.profesorIds, professorId])] : current.profesorIds.filter((id) => id !== professorId) });
+    setEditor((current) => current && {
+      ...current,
+      profesorIds: checked ? [...new Set([...current.profesorIds, professorId])] : current.profesorIds.filter((id) => id !== professorId),
+      teacherAssignments: checked ? current.teacherAssignments : current.teacherAssignments.map((assignment) => ({ ...assignment, professorIds: assignment.professorIds.filter((id) => id !== professorId) })),
+    });
   }
 
   function toggleResource(resourceId: string, checked: boolean) {
     setEditor((current) => current && { ...current, recursoIds: checked ? [...new Set([...current.recursoIds, resourceId])] : current.recursoIds.filter((id) => id !== resourceId) });
   }
 
+  function updateTurnoSettings(duracionTurnoMinutos: number | null, intervaloTurnoMinutos: number) {
+    setEditor((current) => current && { ...current, duracionTurnoMinutos, intervaloTurnoMinutos, teacherAssignments: [] });
+  }
+
+  function slotProfessorIds(slot: { startTime: string; endTime: string }) {
+    if (!editor) return [];
+    const saved = editor.teacherAssignments.find((assignment) => assignment.startTime === slot.startTime && assignment.endTime === slot.endTime);
+    return saved?.professorIds ?? [];
+  }
+
+  function toggleSlotProfessor(slot: { startTime: string; endTime: string }, professorId: string, checked: boolean) {
+    setEditor((current) => {
+      if (!current) return current;
+      const existing = current.teacherAssignments.find((assignment) => assignment.startTime === slot.startTime && assignment.endTime === slot.endTime);
+      const nextProfessorIds = checked
+        ? [...new Set([...(existing?.professorIds ?? []), professorId])]
+        : (existing?.professorIds ?? []).filter((id) => id !== professorId);
+      const others = current.teacherAssignments.filter((assignment) => !(assignment.startTime === slot.startTime && assignment.endTime === slot.endTime));
+      return { ...current, teacherAssignments: [...others, { startTime: slot.startTime, endTime: slot.endTime, professorIds: nextProfessorIds }] };
+    });
+  }
+
   const editorResources = editor ? resources.filter((resource) => resource.establecimientoId === editor.establecimientoId && resource.estado === "ACTIVO") : [];
+  const editorProfessors = editor ? teacherProfessors.filter((professor) => editor.profesorIds.includes(professor.id)) : [];
+  const turnoSlots = editor && usesTurns ? buildTeacherSlots({ horaInicio: editor.horaInicio, horaFin: editor.horaFin }, editor.duracionTurnoMinutos, editor.intervaloTurnoMinutos, true) : [];
 
   return (
     <div className="space-y-6">
@@ -222,6 +261,7 @@ export function HorariosStep({
                 </span>
                 <span className="mt-1 block truncate text-sm text-[var(--brand-muted)]">
                   {group.profesorIds.length} profesor{group.profesorIds.length === 1 ? "" : "es"} · {group.recursoIds.length ? `${group.recursoIds.length} recurso${group.recursoIds.length === 1 ? "" : "s"}` : "Sin recursos"} · Cupo {group.cupoMaximo}
+                  {usesTurns && group.duracionTurnoMinutos ? ` · Turnos de ${group.duracionTurnoMinutos} min` : ""}
                 </span>
               </span>
               <span
@@ -314,37 +354,50 @@ export function HorariosStep({
                 <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">El cupo de este horario debe ser al menos 1.</p>
               ) : null}
 
+              {usesTurns ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-bold text-[var(--brand-ink)]">Duración del turno (min)</Label>
+                    <div className="relative mt-2">
+                      <Clock3 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--brand-primary)]" />
+                      <Input type="number" min={15} step={15} value={editor.duracionTurnoMinutos ?? ""} onChange={(event) => updateTurnoSettings(event.target.value ? Number(event.target.value) : null, editor.intervaloTurnoMinutos)} className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9" />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="font-bold text-[var(--brand-ink)]">Intervalo entre turnos (min)</Label>
+                    <div className="relative mt-2">
+                      <TimerReset className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--brand-primary)]" />
+                      <Input type="number" min={0} step={5} value={editor.intervaloTurnoMinutos} onChange={(event) => updateTurnoSettings(editor.duracionTurnoMinutos, Math.max(0, Number(event.target.value) || 0))} className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] pl-9" />
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
               {showEstablishments ? (
                 <div>
                   <Label className="font-bold text-[var(--brand-ink)]">Sede de este horario</Label>
-                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                    {payload.establecimientoIds.map((establishmentId) => {
-                      const establishment = establishments.find((item) => item.id === establishmentId);
-                      return (
-                        <CheckCard
-                          key={establishmentId}
-                          checked={editor.establecimientoId === establishmentId}
-                          label={establishment?.nombre ?? establishmentId}
-                          onChange={(checked) => { if (checked) setEditor((current) => current && { ...current, establecimientoId: establishmentId, recursoIds: [] }); }}
-                        />
-                      );
-                    })}
+                  <div className="mt-2">
+                    <SearchableCheckList
+                      items={payload.establecimientoIds.map((id) => ({ id, label: establishments.find((item) => item.id === id)?.nombre ?? id }))}
+                      selectedIds={[editor.establecimientoId]}
+                      searchPlaceholder="Buscar sede..."
+                      emptyText="No se encontraron sedes."
+                      onToggle={(id, checked) => { if (checked) setEditor((current) => current && { ...current, establecimientoId: id, recursoIds: [] }); }}
+                    />
                   </div>
                 </div>
               ) : null}
 
               <div>
                 <Label className="font-bold text-[var(--brand-ink)]">Profesores de este horario</Label>
-                <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                  {teacherProfessors.map((professor) => (
-                    <CheckCard
-                      key={professor.id}
-                      checked={editor.profesorIds.includes(professor.id)}
-                      label={`${professor.usuario.nombre ?? ""} ${professor.usuario.apellido ?? ""}`.trim() || "Profesor"}
-                      onChange={(checked) => void toggleProfessor(professor.id, checked)}
-                    />
-                  ))}
-                  {!teacherProfessors.length ? <p className="text-sm text-[var(--brand-muted)]">No hay profesores disponibles.</p> : null}
+                <div className="mt-2">
+                  <SearchableCheckList
+                    items={teacherProfessors.map((professor) => ({ id: professor.id, label: `${professor.usuario.nombre ?? ""} ${professor.usuario.apellido ?? ""}`.trim() || "Profesor" }))}
+                    selectedIds={editor.profesorIds}
+                    searchPlaceholder="Buscar profesor..."
+                    emptyText="No hay profesores disponibles."
+                    onToggle={(id, checked) => void toggleProfessor(id, checked)}
+                  />
                 </div>
                 {checkingProfessor ? (
                   <p className="mt-2 flex items-center gap-2 text-xs font-medium text-[var(--brand-primary)]"><Loader2 className="size-3.5 animate-spin" />Verificando disponibilidad...</p>
@@ -357,18 +410,38 @@ export function HorariosStep({
                 <Label className="font-bold text-[var(--brand-ink)]">
                   {showEstablishments ? `Recursos en ${establishments.find((item) => item.id === editor.establecimientoId)?.nombre ?? "esta sede"}` : "Recursos"}
                 </Label>
-                <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                  {editorResources.map((resource) => (
-                    <CheckCard
-                      key={resource.id}
-                      checked={editor.recursoIds.includes(resource.id)}
-                      label={`${resource.nombre} · ${resource.capacidadUnidades} u.`}
-                      onChange={(checked) => toggleResource(resource.id, checked)}
-                    />
-                  ))}
-                  {!editorResources.length ? <p className="text-sm text-[var(--brand-muted)]">No hay recursos activos para esta sede.</p> : null}
+                <div className="mt-2">
+                  <SearchableCheckList
+                    items={editorResources.map((resource) => ({ id: resource.id, label: `${resource.nombre} · ${resource.capacidadUnidades} u.` }))}
+                    selectedIds={editor.recursoIds}
+                    searchPlaceholder="Buscar recurso..."
+                    emptyText="No hay recursos activos para esta sede."
+                    onToggle={toggleResource}
+                  />
                 </div>
               </div>
+
+              {usesTurns && editor.duracionTurnoMinutos && editorProfessors.length ? (
+                <div className="border-t border-[var(--brand-border)] pt-5">
+                  <Label className="font-bold text-[var(--brand-ink)]">Distribución por turno</Label>
+                  <p className="mt-1 text-sm text-[var(--brand-muted)]">Asigná quién de los profesores elegidos dicta cada turno.</p>
+                  <div className="mt-3 space-y-2">
+                    {turnoSlots.map((slot) => (
+                      <div key={`${slot.startTime}-${slot.endTime}`} className="rounded-xl border border-[var(--brand-border-soft)] bg-[var(--brand-page)] p-3">
+                        <strong className="text-sm text-[var(--brand-ink)]">{slot.startTime}–{slot.endTime}</strong>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {editorProfessors.map((professor) => (
+                            <label key={professor.id} className="flex cursor-pointer items-center gap-2 rounded-full border border-[var(--brand-border)] bg-white px-3 py-1.5 text-xs font-bold text-[var(--brand-primary)]">
+                              <Checkbox checked={slotProfessorIds(slot).includes(professor.id)} onCheckedChange={(checked) => toggleSlotProfessor(slot, professor.id, checked === true)} />
+                              {professor.usuario.nombre} {professor.usuario.apellido}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="flex gap-3 border-t border-[var(--brand-border-soft)] p-5">

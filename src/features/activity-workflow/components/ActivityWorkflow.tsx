@@ -33,7 +33,6 @@ import { GeneralInformation } from "./GeneralInformation";
 import { HorariosStep } from "./HorariosStep";
 import { WorkflowSelectionBrowser } from "./WorkflowSelectionBrowser";
 import { ReservationSettings } from "./ReservationSettings";
-import { TeacherTurnDistribution } from "./TeacherTurnDistribution";
 import {
   adminPrimaryButtonClass,
   adminSecondaryButtonClass,
@@ -78,7 +77,6 @@ const stepIcons = [
   FileText,
   Building2,
   CalendarDays,
-  Clock3,
   UsersRound,
   FileCheck2,
   Clock3,
@@ -90,7 +88,6 @@ const steps = [
   "Información",
   "Establecimiento",
   "Horarios",
-  "Distribución docente",
   "Dirigido a",
   "Requisitos",
   "Reservas",
@@ -598,8 +595,6 @@ function StepContent({
       />
     );
   if (step === 5)
-    return <TeacherTurnDistribution payload={payload} patch={patch} professors={options.professors} />;
-  if (step === 6)
     return (
       <div className="space-y-4">
         <Missing text="Este paso es opcional. Si no seleccionás ningún público, la actividad estará disponible para todas las personas." />
@@ -633,7 +628,7 @@ function StepContent({
         />
       </div>
     );
-  if (step === 7)
+  if (step === 6)
     return (
       <div className="space-y-4">
         <Missing text="Este paso es opcional. Si no seleccionás ninguno, la actividad se publicará sin requisitos." />
@@ -676,7 +671,7 @@ function StepContent({
         />
       </div>
     );
-  if (step === 8)
+  if (step === 7)
     return <ReservationSettings payload={payload} patch={patch} />;
   return <Review payload={payload} pending={pending} onGoToStep={onGoToStep} />;
 }
@@ -837,8 +832,7 @@ function stepDescription(step: number) {
     "Elegí cómo se ofrecerá la actividad.",
     "Completá los datos que identifican la propuesta.",
     "Seleccioná dónde se desarrollará.",
-    "Cargá cada horario con sus días, sede, profesores, recursos y cupo.",
-    "Distribuí los profesores seleccionados entre los turnos.",
+    "Cargá cada horario con sus días, sede, profesores, recursos, cupo y turnos.",
     "Indicá quiénes pueden participar.",
     "Seleccioná documentación, elementos y condiciones.",
     "Definí vigencia, turnos y cancelaciones.",
