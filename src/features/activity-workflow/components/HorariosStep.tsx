@@ -70,6 +70,19 @@ function conflictingDays(editor: Editor, groups: Group[]): Set<Day> {
   return conflicts;
 }
 
+// Un mismo profesor no puede dictar dos horarios superpuestos de la misma
+// actividad aunque sean en sedes distintas, así que este chequeo ignora la sede.
+function professorConflictingDays(professorId: string, editor: Editor, groups: Group[]): Set<Day> {
+  const conflicts = new Set<Day>();
+  for (const group of groups) {
+    if (group.key === editor.originalKey) continue;
+    if (!group.profesorIds.includes(professorId)) continue;
+    if (!rangesOverlap(editor.horaInicio, editor.horaFin, group.horaInicio, group.horaFin)) continue;
+    for (const day of group.days) if (editor.days.has(day)) conflicts.add(day);
+  }
+  return conflicts;
+}
+
 function nextDefaultRange(groups: Group[]): { horaInicio: string; horaFin: string } {
   const used = new Set(groups.map((group) => group.horaInicio));
   for (let hour = 8; hour <= 20; hour += 1) {
@@ -149,6 +162,7 @@ export function HorariosStep({
 
   function saveEditor() {
     if (!editor || !editor.days.size || editor.horaFin <= editor.horaInicio || editor.cupoMaximo < 1 || conflictingDays(editor, groups).size) return;
+    if (editor.profesorIds.some((professorId) => professorConflictingDays(professorId, editor, groups).size)) return;
     const previousRows = editor.originalKey ? payload.schedules.filter((item) => groupKey(item) === editor.originalKey) : [];
     const previousByDay = new Map(previousRows.map((row) => [row.diaSemana, row]));
     const rest = editor.originalKey ? payload.schedules.filter((item) => groupKey(item) !== editor.originalKey) : payload.schedules;
@@ -186,6 +200,12 @@ export function HorariosStep({
   async function toggleProfessor(professorId: string, checked: boolean) {
     if (!editor) return;
     if (checked && editor.days.size) {
+      const draftConflictDays = professorConflictingDays(professorId, editor, groups);
+      if (draftConflictDays.size) {
+        const label = days.filter(([value]) => draftConflictDays.has(value)).map(([, , dayLabel]) => dayLabel).join(", ");
+        setConflict(`Este profesor ya está asignado a otro horario de esta actividad que se superpone (${label}), en otra sede.`);
+        return;
+      }
       setCheckingProfessor(true);
       setConflict(null);
       try {
@@ -242,6 +262,16 @@ export function HorariosStep({
   const editorConflicts = editor ? conflictingDays(editor, groups) : new Set<Day>();
   const editorConflictLabel = editorConflicts.size
     ? days.filter(([value]) => editorConflicts.has(value)).map(([, , label]) => label).join(", ")
+    : "";
+  const editorProfessorConflictIds = editor
+    ? editor.profesorIds.filter((professorId) => professorConflictingDays(professorId, editor, groups).size)
+    : [];
+  const editorProfessorConflictLabel = editorProfessorConflictIds.length
+    ? editorProfessorConflictIds
+        .map((professorId) => teacherProfessors.find((professor) => professor.id === professorId))
+        .filter((professor): professor is Profesor => Boolean(professor))
+        .map((professor) => `${professor.usuario.nombre ?? ""} ${professor.usuario.apellido ?? ""}`.trim() || "Profesor")
+        .join(", ")
     : "";
 
   return (
@@ -370,6 +400,11 @@ export function HorariosStep({
                   Ya existe un horario en esta sede que se superpone en: {editorConflictLabel}. Cambiá el rango horario o los días.
                 </p>
               ) : null}
+              {editorProfessorConflictIds.length ? (
+                <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
+                  {editorProfessorConflictLabel} ya está asignado/a a otro horario de esta actividad en otra sede que se superpone. Cambiá el rango horario, los días o el profesor.
+                </p>
+              ) : null}
 
               {usesTurns ? (
                 <div className="grid grid-cols-2 gap-4">
@@ -463,7 +498,7 @@ export function HorariosStep({
 
             <div className="flex gap-3 border-t border-[var(--brand-border-soft)] p-5">
               <Button type="button" variant="outline" className="flex-1" onClick={closeEditor}>Cancelar</Button>
-              <Button type="button" className="flex-1 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]" disabled={!editor.days.size || editor.horaFin <= editor.horaInicio || editor.cupoMaximo < 1 || editorConflicts.size > 0} onClick={saveEditor}>
+              <Button type="button" className="flex-1 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]" disabled={!editor.days.size || editor.horaFin <= editor.horaInicio || editor.cupoMaximo < 1 || editorConflicts.size > 0 || editorProfessorConflictIds.length > 0} onClick={saveEditor}>
                 <Check />
                 Guardar horario
               </Button>

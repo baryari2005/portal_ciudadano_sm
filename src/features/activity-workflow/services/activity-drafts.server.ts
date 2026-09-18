@@ -26,6 +26,7 @@ export function activityDraftPending(payload: ActivityDraftPayload) {
   if (payload.schedules.some((schedule) => !schedule.establecimientoId)) pending.push({ step: 3, key: "establecimiento-horario", label: "Asignar una sede a cada horario" });
   if (payload.requiereReserva && payload.schedules.some((schedule) => !schedule.cupoMaximo || schedule.cupoMaximo < 1)) pending.push({ step: 3, key: "cupo", label: "Definir el cupo de cada horario" });
   if (hasOverlappingSchedules(payload.schedules)) pending.push({ step: 3, key: "horario-solapado", label: "Corregir horarios superpuestos en la misma sede" });
+  if (hasOverlappingProfessorSchedules(payload.schedules)) pending.push({ step: 3, key: "profesor-solapado", label: "Corregir un profesor asignado a horarios superpuestos" });
   const needsTeacher = payload.modalidadOperacion && !["ACCESO_LIBRE", "TURNO_PUNTUAL"].includes(payload.modalidadOperacion);
   const usesTurns = ["TURNO_RECURRENTE", "TURNO_PUNTUAL"].includes(payload.modalidadOperacion ?? "");
   const uncoveredTeacherSlot = payload.schedules.some((schedule) => effectiveTeacherAssignments(schedule, schedule.duracionTurnoMinutos, schedule.intervaloTurnoMinutos, usesTurns).some((assignment) => assignment.professorIds.length === 0));
@@ -48,6 +49,21 @@ function hasOverlappingSchedules(schedules: ActivityDraftPayload["schedules"]) {
       const b = schedules[j];
       if (a.diaSemana !== b.diaSemana || a.establecimientoId !== b.establecimientoId) continue;
       if (a.horaInicio < b.horaFin && b.horaInicio < a.horaFin) return true;
+    }
+  }
+  return false;
+}
+
+// Un mismo profesor no puede dictar dos horarios superpuestos de la misma
+// actividad aunque sean en sedes distintas, así que este chequeo ignora la sede.
+function hasOverlappingProfessorSchedules(schedules: ActivityDraftPayload["schedules"]) {
+  for (let i = 0; i < schedules.length; i++) {
+    for (let j = i + 1; j < schedules.length; j++) {
+      const a = schedules[i];
+      const b = schedules[j];
+      if (a.diaSemana !== b.diaSemana) continue;
+      if (a.horaInicio >= b.horaFin || b.horaInicio >= a.horaFin) continue;
+      if (a.profesorIds.some((profesorId) => b.profesorIds.includes(profesorId))) return true;
     }
   }
   return false;
