@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Ban, CheckCircle2, ChevronRight, CircleX, History, Search } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { CatalogEmptyState, CatalogFilterPopover, CatalogSearchInput } from "@/features/activity-catalogs/components/CatalogPrimitives";
+import { cn } from "@/lib/utils";
 import { useAccessEstablishment } from "../hooks/useAccessEstablishment";
 import { listAccessHistory } from "../services/access.service";
 import { AccessShell } from "./AccessShell";
@@ -36,7 +39,35 @@ function MobileHistoryCard({row}:{row:Row}){
   return <Link href={`/reception/${row.id}`} className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 rounded-2xl border border-[var(--brand-border-soft)] bg-white p-3 shadow-sm"><span className={`grid size-10 shrink-0 place-items-center rounded-full border ${tone}`}><Icon className="size-5"/></span><span className="min-w-0"><span className="block truncate text-sm font-extrabold text-[var(--brand-primary)]">{row.nombreSnapshot??"No identificado"}</span><span className="mt-0.5 block truncate text-[11px] text-[var(--brand-muted)]">DNI {row.documentoSnapshot||"No informado"}</span><span className="mt-1 block min-w-0 truncate text-[10px] font-medium text-[var(--brand-ink)]"><span>{formatReason(row.motivo)}</span><span className="text-[var(--brand-muted)]"> · {origins[row.origen]??row.origen}</span></span></span><span className="flex shrink-0 items-center gap-1.5"><span className="flex flex-col items-end gap-1.5"><span className={`inline-flex rounded-full border px-2 py-0.5 text-[9px] font-extrabold ${tone}`}>{badge}</span><span className="whitespace-nowrap text-[10px] text-[var(--brand-muted)]">{compactDate}</span></span><ChevronRight className="size-4 shrink-0 text-[var(--brand-secondary)]"/></span></Link>;
 }
 
-function DesktopHistory(props:HistoryProps){if(!props.establishmentId)return <div className="grid min-h-64 place-items-center rounded-3xl border border-dashed border-[var(--brand-secondary)]/40 bg-white text-[var(--brand-text)]">Seleccioná un establecimiento.</div>;return <div className="grid gap-4"><div className="grid gap-3 sm:grid-cols-[1fr_180px_180px]"><Input value={props.search} onChange={event=>props.setSearch(event.target.value)} placeholder="Buscar persona o DNI..."/><ResultSelect {...props}/><OriginSelect {...props}/></div><section className="overflow-hidden rounded-3xl border border-[var(--brand-secondary)]/25 bg-white"><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="bg-[var(--brand-panel)] text-[var(--brand-primary)]"><tr><th className="p-4">Fecha y hora</th><th className="p-4">Persona</th><th className="p-4">Resultado</th><th className="p-4">Motivo</th><th className="p-4">Origen</th><th className="p-4">Estado</th></tr></thead><tbody>{props.items.map(row=><tr key={row.id} className="border-t border-[var(--brand-secondary)]/15"><td className="p-4"><Link className="font-semibold text-[var(--brand-primary)] hover:underline" href={`/reception/${row.id}`}>{new Date(row.fechaHora).toLocaleString("es-AR")}</Link></td><td className="p-4">{row.nombreSnapshot??"No identificado"}<small className="block text-[var(--brand-text)]">{row.documentoSnapshot}</small></td><td className="p-4">{row.resultado==="PERMITIDO"?"Permitido":"Rechazado"}</td><td className="p-4">{formatReason(row.motivo)}</td><td className="p-4">{origins[row.origen]??row.origen}</td><td className="p-4">{row.anuladoAt?"Anulado":"Vigente"}</td></tr>)}</tbody></table>{!props.items.length?<div className="grid min-h-40 place-items-center text-[var(--brand-text)]">No hay accesos para mostrar.</div>:null}</div></section></div>}
+function DesktopHistory(props:HistoryProps){
+  if(!props.establishmentId)return <div className="grid min-h-64 place-items-center rounded-3xl border border-dashed border-[var(--brand-border)] bg-white text-center text-sm font-semibold text-[var(--brand-text)]/70">Seleccioná un establecimiento.</div>;
+  const filters=[
+    {id:"access-result",title:"Resultado",value:props.result,options:[{value:"",label:"Todos"},{value:"PERMITIDO",label:"Permitidos"},{value:"RECHAZADO",label:"Rechazados"}],onChange:props.setResult},
+    {id:"access-origin",title:"Origen",value:props.origin,options:[{value:"",label:"Todos"},{value:"QR_DIGITAL",label:"QR digital"},{value:"CARNET_FISICO",label:"Carnet físico"},{value:"MANUAL",label:"Manual"},{value:"QR",label:"QR anterior"}],onChange:props.setOrigin},
+  ];
+  return <div className="grid gap-4">
+    <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]"><CatalogSearchInput value={props.search} onChange={props.setSearch} placeholder="Buscar persona o DNI..."/><CatalogFilterPopover sections={filters}/></div>
+    <div className="grid gap-3">
+      {props.items.map(row=><DesktopHistoryCard key={row.id} row={row}/>)}
+      {!props.items.length?<CatalogEmptyState title="No hay accesos para mostrar." description="Los ingresos registrados aparecerán en este listado." filtered={Boolean(props.search.trim())||Boolean(props.result)||Boolean(props.origin)}/>:null}
+    </div>
+  </div>;
+}
+
+function DesktopHistoryCard({row}:{row:Row}){
+  const annulled=Boolean(row.anuladoAt),allowed=row.resultado==="PERMITIDO",Icon=annulled?Ban:allowed?CheckCircle2:CircleX;
+  const badge=annulled?"Anulado":allowed?"Permitido":"Rechazado";
+  const tone=annulled||allowed?"border-[var(--brand-secondary)]/40 bg-[var(--brand-highlight)] text-[var(--brand-primary)]":"border-red-300 bg-red-50 text-red-800";
+  return <Link href={`/reception/${row.id}`} data-admin-list-card="" className="grid w-full self-start grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-[var(--brand-border-soft)] bg-white p-3 text-left transition hover:border-[var(--brand-secondary)] hover:shadow-sm">
+    <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-[var(--brand-primary)] text-white shadow-sm"><Icon className="size-6"/></span>
+    <span className="min-w-0">
+      <span className="flex flex-wrap items-center gap-2"><span className="truncate font-extrabold text-[var(--brand-ink)]">{row.nombreSnapshot??"No identificado"}</span><Badge variant="outline" className={cn("w-fit rounded-full px-2.5 py-1 font-bold",tone)}>{badge}</Badge></span>
+      <span className="mt-1 block text-sm font-semibold text-[var(--brand-text)]">{new Date(row.fechaHora).toLocaleString("es-AR")} · {origins[row.origen]??row.origen}</span>
+      <span className="mt-1 block truncate text-xs text-[var(--brand-muted)]">DNI {row.documentoSnapshot||"No informado"} · {formatReason(row.motivo)}</span>
+    </span>
+    <ChevronRight className="size-5 text-[var(--brand-secondary)]"/>
+  </Link>;
+}
 
 function ResultSelect({result,setResult}:HistoryProps){return <select value={result} onChange={event=>setResult(event.target.value)} className="h-11 min-w-0 rounded-xl border border-[var(--brand-secondary)]/35 bg-white px-2 text-xs text-[var(--brand-primary)]"><option value="">Todos los resultados</option><option value="PERMITIDO">Permitidos</option><option value="RECHAZADO">Rechazados</option></select>}
 function OriginSelect({origin,setOrigin}:HistoryProps){return <select value={origin} onChange={event=>setOrigin(event.target.value)} className="h-11 min-w-0 rounded-xl border border-[var(--brand-secondary)]/35 bg-white px-2 text-xs text-[var(--brand-primary)]"><option value="">Todos los orígenes</option><option value="QR_DIGITAL">QR digital</option><option value="CARNET_FISICO">Carnet físico</option><option value="MANUAL">Manual</option><option value="QR">QR anterior</option></select>}
