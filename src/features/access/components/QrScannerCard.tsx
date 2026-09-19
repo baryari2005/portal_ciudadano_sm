@@ -3,6 +3,8 @@
 import {
   AlertCircle,
   Camera,
+  Flashlight,
+  FlashlightOff,
   Loader2,
   QrCode,
   Search,
@@ -20,8 +22,11 @@ type Props = {
   videoRef: RefObject<HTMLVideoElement | null>;
   status: QrScannerStatus;
   scanning: boolean;
+  hasFlash: boolean;
+  flashOn: boolean;
   onStart: () => void;
   onStop: () => void;
+  onToggleFlash: () => void;
 };
 
 const statusContent: Record<
@@ -104,8 +109,11 @@ export function QrScannerCard({
   videoRef,
   status,
   scanning,
+  hasFlash,
+  flashOn,
   onStart,
   onStop,
+  onToggleFlash,
 }: Props) {
   const showInvalid = status === "invalid";
   const showFallback = fallbackStatuses.includes(status);
@@ -137,6 +145,17 @@ export function QrScannerCard({
                   </p>
                 </div>
               </div>
+            ) : null}
+
+            {scanning && hasFlash ? (
+              <button
+                type="button"
+                onClick={onToggleFlash}
+                aria-label={flashOn ? "Apagar linterna" : "Encender linterna"}
+                className="absolute right-4 top-4 grid size-10 place-items-center rounded-full bg-black/40 text-white backdrop-blur"
+              >
+                {flashOn ? <FlashlightOff className="h-5 w-5" /> : <Flashlight className="h-5 w-5" />}
+              </button>
             ) : null}
 
             <div className="pointer-events-none absolute inset-8 rounded-[22px] border-2 border-[var(--brand-accent)] shadow-[0_0_0_999px_rgba(0,0,0,0.28)]" />
@@ -202,6 +221,16 @@ export function QrScannerCard({
               <Square className="h-5 w-5" />
               Detener escaneo
             </Button>
+            {scanning && hasFlash ? (
+              <Button
+                variant="outline"
+                className="h-12 rounded-xl border-[var(--brand-border)] bg-white font-bold text-[var(--brand-ink)] hover:bg-[var(--brand-page)]"
+                onClick={onToggleFlash}
+              >
+                {flashOn ? <FlashlightOff className="h-5 w-5" /> : <Flashlight className="h-5 w-5" />}
+                {flashOn ? "Apagar linterna" : "Encender linterna"}
+              </Button>
+            ) : null}
             <Button
               asChild
               variant="outline"
