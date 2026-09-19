@@ -3,6 +3,20 @@ import { prisma } from "@/lib/db";
 import { CatalogConflictError, CatalogNotFoundError, CatalogValidationError } from "@/lib/errors/catalog-errors";
 import { createNotifications, notifyAdministrators } from "@/features/notifications/services/notifications.server";
 import { releaseReservationResources, reserveAutomaticResources } from "@/features/resources/services/resource-booking.server";
+import { assertNoEnrollmentConflicts } from "@/features/enrollments/services/enrollments.server";
+
+// Una persona no puede estar en dos lugares al mismo tiempo: además del chequeo por
+// día de la semana contra sus inscripciones recurrentes, las reservas de clases puntuales
+// (turno puntual / evento único) se comparan por fecha calendario exacta entre sí.
+async function assertNoCitizenClassConflict(tx: Prisma.TransactionClient, userId: string, session: Awaited<ReturnType<typeof lockedClass>>) {
+  const requestedDate = session.fecha.toISOString().slice(0, 10);
+  const others = await tx.reservaClase.findMany({
+    where: { usuarioId: userId, estado: { in: ["RESERVADA", "LISTA_ESPERA", "OFRECIDA"] }, claseActividadId: { not: session.id } },
+    select: { claseActividad: { select: { fecha: true, horaInicio: true, horaFin: true, horarioActividad: { select: { actividad: { select: { nombre: true } } } } } } },
+  });
+  const conflict = others.find((item) => item.claseActividad.fecha.toISOString().slice(0, 10) === requestedDate && session.horaInicio < item.claseActividad.horaFin && item.claseActividad.horaInicio < session.horaFin);
+  if (conflict) throw new CatalogConflictError(`Ya tenés una reserva en “${conflict.claseActividad.horarioActividad.actividad.nombre}” el ${requestedDate} de ${conflict.claseActividad.horaInicio} a ${conflict.claseActividad.horaFin}.`);
+}
 
 async function lockedClass(tx: Prisma.TransactionClient, classId: string) {
   await tx.$queryRaw`SELECT "id" FROM "ClaseActividad" WHERE "id" = ${classId} FOR UPDATE`;
@@ -47,6 +61,8 @@ export async function reserveCitizenClass(userId: string, classId: string) {
     if (!enrollment) throw new CatalogValidationError("Primero debés completar la inscripción y la documentación requerida.");
     const existing = await tx.reservaClase.findUnique({ where: { claseActividadId_usuarioId: { claseActividadId: classId, usuarioId: userId } } });
     if (existing && !["CANCELADA", "AUSENCIA_INFORMADA"].includes(existing.estado)) throw new CatalogConflictError("Ya tenés una reserva o lugar en espera para esta clase.");
+    await assertNoEnrollmentConflicts(tx, userId, [{ scheduleId: session.horarioActividadId, day: session.horarioActividad.diaSemana, startTime: session.horaInicio, endTime: session.horaFin }], enrollment.id);
+    await assertNoCitizenClassConflict(tx, userId, session);
     const cap = await availability(tx, session);
     const status = cap.available > 0 ? "RESERVADA" as const : "LISTA_ESPERA" as const;
     const now = new Date();
