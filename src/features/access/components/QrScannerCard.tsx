@@ -158,8 +158,13 @@ export function QrScannerCard({
               </button>
             ) : null}
 
-            <div className="pointer-events-none absolute inset-8 rounded-[22px] border-2 border-[var(--brand-accent)] shadow-[0_0_0_999px_rgba(0,0,0,0.28)]" />
-            <div className="pointer-events-none absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-white/35" />
+            <div className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[58%] max-w-72 -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-white/15 shadow-[0_0_0_999px_rgba(0,0,0,0.38)]">
+              <span className="absolute -left-0.5 -top-0.5 size-12 rounded-tl-[28px] border-l-4 border-t-4 border-[var(--brand-accent)]" />
+              <span className="absolute -right-0.5 -top-0.5 size-12 rounded-tr-[28px] border-r-4 border-t-4 border-[var(--brand-accent)]" />
+              <span className="absolute -bottom-0.5 -left-0.5 size-12 rounded-bl-[28px] border-b-4 border-l-4 border-[var(--brand-accent)]" />
+              <span className="absolute -bottom-0.5 -right-0.5 size-12 rounded-br-[28px] border-b-4 border-r-4 border-[var(--brand-accent)]" />
+              {scanning ? <span className="absolute left-3 right-3 top-1/2 h-0.5 animate-pulse bg-[var(--brand-accent)] shadow-[0_0_12px_var(--brand-accent)]" /> : null}
+            </div>
           </div>
         </div>
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Ban, CheckCircle2, ChevronRight, CircleX, History, Search } from "lucide-react";
+import { AdminFormCard } from "@/components/shared/admin-patterns";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { CatalogEmptyState, CatalogFilterPopover, CatalogSearchInput } from "@/features/activity-catalogs/components/CatalogPrimitives";
@@ -45,13 +46,13 @@ function DesktopHistory(props:HistoryProps){
     {id:"access-result",title:"Resultado",value:props.result,options:[{value:"",label:"Todos"},{value:"PERMITIDO",label:"Permitidos"},{value:"RECHAZADO",label:"Rechazados"}],onChange:props.setResult},
     {id:"access-origin",title:"Origen",value:props.origin,options:[{value:"",label:"Todos"},{value:"QR_DIGITAL",label:"QR digital"},{value:"CARNET_FISICO",label:"Carnet físico"},{value:"MANUAL",label:"Manual"},{value:"QR",label:"QR anterior"}],onChange:props.setOrigin},
   ];
-  return <div className="grid gap-4">
+  return <AdminFormCard title="Movimientos registrados" description="Buscá por persona o DNI y filtrá por resultado u origen.">
     <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]"><CatalogSearchInput value={props.search} onChange={props.setSearch} placeholder="Buscar persona o DNI..."/><CatalogFilterPopover sections={filters}/></div>
-    <div className="grid gap-3">
+    <div className="mt-5 grid gap-3">
       {props.items.map(row=><DesktopHistoryCard key={row.id} row={row}/>)}
       {!props.items.length?<CatalogEmptyState title="No hay accesos para mostrar." description="Los ingresos registrados aparecerán en este listado." filtered={Boolean(props.search.trim())||Boolean(props.result)||Boolean(props.origin)}/>:null}
     </div>
-  </div>;
+  </AdminFormCard>;
 }
 
 function DesktopHistoryCard({row}:{row:Row}){

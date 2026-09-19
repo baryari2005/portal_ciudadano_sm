@@ -4,6 +4,7 @@ import { ArrowLeft, IdCard, Info, Mail, Search, UserRound, Phone } from "lucide-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { AdminFormCard } from "@/components/shared/admin-patterns";
 import { MobilePersonSearchResultCard } from "@/components/shared/MobilePersonSearchResultCard";
 import { CatalogSearchInput } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { ReceptionMobileHeader } from "@/features/reception/components/mobile/ReceptionMobileHeader";
@@ -52,9 +53,9 @@ function MobileManualResult({result,onReset}:{result:AccessValidationResponse;on
 function ManualFact({icon:Icon,label,value}:{icon:typeof UserRound;label:string;value:string}){return <div className="flex min-w-0 items-start gap-3 rounded-2xl bg-[var(--brand-control)] p-3"><Icon className="mt-0.5 size-5 shrink-0 text-[var(--brand-secondary)]"/><div className="min-w-0"><dt className="text-[10px] font-extrabold uppercase text-[var(--brand-muted)]">{label}</dt><dd className="mt-1 break-words text-sm font-bold text-[var(--brand-ink)]">{value}</dd></div></div>}
 
 function DesktopManual({query,items,selected,observation,loading,onQuery,onSelect,onObservation,onRegister}:{query:string;items:SearchPerson[];selected:SearchPerson|null;observation:string;loading:boolean;onQuery:(value:string)=>void;onSelect:(person:SearchPerson)=>void;onObservation:(value:string)=>void;onRegister:(decision:"ALLOW"|"REJECT")=>Promise<void>}){
-  return <div className="grid gap-5">
+  return <AdminFormCard title="Buscar persona" description="Buscá por DNI, nombre, apellido, email o identificador y registrá el ingreso.">
     <CatalogSearchInput value={query} onChange={onQuery} placeholder="Buscar por DNI, nombre, apellido, email o ID..." />
-    <div className="grid min-h-96 gap-6 lg:grid-cols-2">
+    <div className="mt-5 grid min-h-96 gap-6 lg:grid-cols-2">
       <section className="rounded-3xl border border-[var(--brand-border-soft)] bg-white p-4 shadow-sm">
         {loading && !items.length ? <div className="h-60 animate-pulse rounded-2xl bg-[var(--brand-panel)]"/> : items.length ? <div className="grid gap-2">{items.map((item) => <button key={item.id} type="button" data-admin-list-card="" onClick={() => onSelect(item)} className={cn("flex w-full self-start items-center gap-3 rounded-2xl border p-3 text-left transition", selected?.id === item.id ? "border-[var(--brand-primary)] bg-[var(--brand-panel)] shadow-sm" : "border-[var(--brand-border-soft)] bg-white hover:border-[var(--brand-secondary)] hover:shadow-sm")}><AccessPersonAvatar person={item}/><span className="min-w-0"><strong className="block truncate font-extrabold text-[var(--brand-ink)]">{[item.nombre, item.apellido].filter(Boolean).join(" ")}</strong><span className="mt-1 block truncate text-xs text-[var(--brand-muted)]">DNI {item.dni || "No informado"} · {item.estado}</span></span></button>)}</div> : <div className="grid min-h-60 place-items-center text-center text-sm font-semibold text-[var(--brand-text)]/70">Ingresá al menos dos caracteres.</div>}
       </section>
@@ -67,5 +68,5 @@ function DesktopManual({query,items,selected,observation,loading,onQuery,onSelec
         </div> : <div className="grid min-h-60 place-items-center text-center text-sm font-semibold text-[var(--brand-text)]/70">Seleccioná una persona.</div>}
       </section>
     </div>
-  </div>;
+  </AdminFormCard>;
 }
