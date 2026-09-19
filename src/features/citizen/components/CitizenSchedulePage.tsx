@@ -234,10 +234,19 @@ function CalendarView({ month, items, selectedId, onSelect }: { month: Date; ite
   for (let day = first; day <= last; day = addDays(day, 1)) days.push(day);
   const eventsByDate = new Map<string, CitizenScheduleItem[]>();
   for (const item of items) eventsByDate.set(item.date, [...(eventsByDate.get(item.date) ?? []), item]);
+  const todayKey = format(startOfDay(new Date()), "yyyy-MM-dd");
+
+  if (!items.length) {
+    return (
+      <div className="grid min-h-64 place-items-center rounded-3xl border border-dashed border-[var(--brand-border)] bg-white/70 p-8 text-center">
+        <div><SearchX className="mx-auto size-9 text-[var(--brand-secondary)]" /><p className="mt-3 font-extrabold text-[var(--brand-primary)]">No hay clases este mes</p><p className="mt-1 text-sm text-[var(--brand-muted)]">Podés consultar el mes anterior o el siguiente.</p></div>
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-x-auto rounded-3xl border border-[var(--brand-border-soft)] bg-white shadow-sm">
-      <div className="min-w-[760px]">
+      <div className="min-w-[620px]">
         <div className="grid grid-cols-7 bg-[var(--brand-panel)]">
           {WEEK_DAYS.map((day) => <div key={day} className="border-b border-r border-[var(--brand-border-soft)] px-2 py-3 text-center text-xs font-extrabold uppercase text-[var(--brand-primary)] last:border-r-0">{day}</div>)}
         </div>
@@ -245,9 +254,10 @@ function CalendarView({ month, items, selectedId, onSelect }: { month: Date; ite
           {days.map((day) => {
             const dateKey = format(day, "yyyy-MM-dd");
             const inMonth = day.getMonth() === month.getMonth();
+            const isToday = dateKey === todayKey;
             return (
-              <div key={dateKey} className={cn("min-h-36 border-b border-r border-[var(--brand-border-soft)] p-2", inMonth ? "bg-white" : "bg-[#F7F7F7] text-[var(--brand-neutral)]")}>
-                <time dateTime={dateKey} className="text-xs font-extrabold">{format(day, "d")}</time>
+              <div key={dateKey} className={cn("min-h-32 border-b border-r border-[var(--brand-border-soft)] p-1.5 sm:p-2", isToday ? "bg-[var(--brand-highlight)]" : inMonth ? "bg-white" : "bg-[#F7F7F7] text-[var(--brand-neutral)]")}>
+                <time dateTime={dateKey} className={cn("grid size-6 place-items-center text-xs font-extrabold", isToday && "rounded-full bg-[var(--brand-primary)] text-white")}>{format(day, "d")}</time>
                 <div className="mt-2 grid gap-1.5">
                   {(eventsByDate.get(dateKey) ?? []).map((item) => {
                     const visual = STATUS_VISUAL[item.displayStatus];
