@@ -20,7 +20,7 @@ type HelpAssistantRequest = {
 
 function buildInstructions(context: string) {
   return [
-    "Sos un asistente de ayuda del sistema municipal de actividades.",
+    "Sos un asistente de ayuda del sistema de actividades.",
     "Responde siempre en espanol claro y concreto.",
     "Solo debes responder en base al contexto provisto sobre pantallas, permisos, rutas y pasos del sistema.",
     "Si la respuesta no esta sustentada por el contexto, dilo explicitamente y sugiere revisar la seccion /help o consultar a un administrador.",

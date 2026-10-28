@@ -1,18 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowLeft, IdCard, Info, Mail, Search, UserRound, Phone } from "lucide-react";
+import { toast } from "sonner";
+import { ArrowLeft, Info, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { ManualAccessDecisionControls } from "./ManualAccessDecisionControls";
 import { AdminFormCard } from "@/components/shared/admin-patterns";
-import { MobilePersonSearchResultCard } from "@/components/shared/MobilePersonSearchResultCard";
 import { CatalogSearchInput } from "@/features/activity-catalogs/components/CatalogPrimitives";
 import { ReceptionMobileHeader } from "@/features/reception/components/mobile/ReceptionMobileHeader";
 import { cn } from "@/lib/utils";
 import { useAccessEstablishment } from "../hooks/useAccessEstablishment";
 import { registerManualAccess, searchAccessPeople } from "../services/access.service";
 import type { AccessPerson, AccessValidationResponse } from "../types/access.types";
-import { AccessPersonAvatar } from "./AccessPersonAvatar";
+import { AccessPersonCard } from "./AccessPersonCard";
 import { AccessResultCard } from "./AccessResultCard";
 import { AccessShell } from "./AccessShell";
 type SearchPerson = AccessPerson & { validation: AccessValidationResponse };
@@ -31,7 +31,28 @@ function Manual({establishment}:{establishment:ReturnType<typeof useAccessEstabl
   const [observation, setObservation] = useState("");
   const [result, setResult] = useState<AccessValidationResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  useEffect(() => { const q = query.trim(); if (!establishmentId || q.length < 2) { setItems([]); return; } const timeout = window.setTimeout(() => { setLoading(true); void searchAccessPeople(establishmentId, q).then((response) => { setItems(response.data); setSelected(response.data[0] ?? null); }).finally(() => setLoading(false)); }, 350); return () => window.clearTimeout(timeout); }, [establishmentId, query]);
+  useEffect(() => {
+    let active = true;
+    const q = query.trim();
+    setItems([]);
+    setSelected(null);
+    setLoading(false);
+    if (!establishmentId || q.length < 2) return;
+    setLoading(true);
+    const timeout = window.setTimeout(() => {
+      void searchAccessPeople(establishmentId, q)
+        .then((response) => {
+          if (!active) return;
+          setItems(response.data);
+          setSelected(response.data[0] ?? null);
+        })
+        .catch(() => {
+          if (active) toast.error("No pudimos buscar personas. Intentá nuevamente.");
+        })
+        .finally(() => { if (active) setLoading(false); });
+    }, 350);
+    return () => { active = false; window.clearTimeout(timeout); };
+  }, [establishmentId, query]);
   async function register(decision: "ALLOW" | "REJECT") { if (!selected || observation.trim().length < 5) return; setLoading(true); try { setResult(await registerManualAccess({ establishmentId, userId: selected.id, decision, observation })); } finally { setLoading(false); } }
   function reset(){setResult(null);setObservation("");setMobileDetail(false)}
   const unavailable=<div className="grid min-h-64 place-items-center rounded-3xl border border-dashed border-[var(--brand-border)] bg-white px-5 text-center text-sm font-semibold text-[var(--brand-text)]/70">Seleccioná un establecimiento para buscar.</div>;
@@ -40,31 +61,28 @@ function Manual({establishment}:{establishment:ReturnType<typeof useAccessEstabl
 
 function MobileManualSearch({query,items,loading,onQuery,onSelect}:{query:string;items:SearchPerson[];loading:boolean;onQuery:(value:string)=>void;onSelect:(person:SearchPerson)=>void}){
   const searched=query.trim().length>=2;
-  return <main className="min-h-[calc(100dvh-80px-env(safe-area-inset-top))] overflow-x-hidden bg-[var(--brand-page)] px-4 pb-[calc(92px+env(safe-area-inset-bottom))] pt-5"><header className="flex items-start gap-3"><span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[var(--brand-panel)] text-[var(--brand-primary)]"><Search className="size-6"/></span><div><h1 className="text-xl font-extrabold text-[var(--brand-primary)]">Búsqueda manual</h1><p className="mt-1 text-sm leading-5 text-[var(--brand-muted)]">Buscá por DNI, nombre, apellido, email o identificador.</p></div></header><div className="relative mt-5"><Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[var(--brand-primary)]"/><Input value={query} onChange={(event)=>onQuery(event.target.value)} placeholder="Buscar por DNI, nombre, apellido o email..." className="h-12 rounded-2xl border-[var(--brand-secondary)]/35 bg-white pl-12"/></div><section className="mt-4 grid gap-3">{loading&&!items.length?<div className="h-32 animate-pulse rounded-2xl bg-[var(--brand-panel)]"/>:items.length?items.map((item)=>{const name=[item.nombre,item.apellido].filter(Boolean).join(" ")||"Persona sin nombre";return <MobilePersonSearchResultCard key={item.id} name={name} documentNumber={item.dni} email={item.email} avatarUrl={item.profilePhotoUrl} onClick={()=>onSelect(item)}/>}):<div className="rounded-2xl border border-dashed border-[var(--brand-border)] bg-white/70 p-5 text-center text-sm text-[var(--brand-muted)]">{searched?"No se encontraron personas.":"Ingresá al menos dos caracteres para comenzar la búsqueda."}</div>}</section></main>;
+  return <main className="min-h-[calc(100dvh-80px-env(safe-area-inset-top))] overflow-x-hidden bg-[var(--brand-page)] px-4 pb-[calc(92px+env(safe-area-inset-bottom))] pt-5"><header className="flex items-start gap-3"><span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[var(--brand-panel)] text-[var(--brand-primary)]"><Search className="size-6"/></span><div><h1 className="text-xl font-extrabold text-[var(--brand-primary)]">Búsqueda manual</h1><p className="mt-1 text-sm leading-5 text-[var(--brand-muted)]">Buscá por DNI, nombre, apellido, email o identificador.</p></div></header><div className="relative mt-5"><Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[var(--brand-primary)]"/><Input value={query} onChange={(event)=>onQuery(event.target.value)} placeholder="Buscar por DNI, nombre, apellido o email..." className="h-12 rounded-2xl border-[var(--brand-secondary)]/35 bg-white pl-12"/></div><section className="mt-4 grid gap-3">{loading&&!items.length?<div className="h-32 animate-pulse rounded-2xl bg-[var(--brand-panel)]"/>:items.length?items.map((item)=><button key={item.id} type="button" onClick={()=>onSelect(item)} className="min-w-0 w-full rounded-3xl text-left transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]"><AccessPersonCard person={item} mobile /></button>):<div className="rounded-2xl border border-dashed border-[var(--brand-border)] bg-white/70 p-5 text-center text-sm text-[var(--brand-muted)]">{searched?"No se encontraron personas.":"Ingresá al menos dos caracteres para comenzar la búsqueda."}</div>}</section></main>;
 }
 
 function MobileManualValidation({person,observation,loading,onObservation,onBack,onRegister}:{person:SearchPerson;observation:string;loading:boolean;onObservation:(value:string)=>void;onBack:()=>void;onRegister:(decision:"ALLOW"|"REJECT")=>Promise<void>}){
-  const name=[person.nombre,person.apellido].filter(Boolean).join(" ")||"Persona sin nombre",valid=person.validation.allowed;
-  return <main className="min-h-[calc(100dvh-80px-env(safe-area-inset-top))] overflow-x-hidden bg-[var(--brand-page)] px-4 pb-[calc(96px+env(safe-area-inset-bottom))] pt-4"><header className="flex items-center gap-3 border-b border-[var(--brand-border-soft)] pb-4"><button type="button" onClick={onBack} className="grid size-10 shrink-0 place-items-center rounded-full text-[var(--brand-primary)]" aria-label="Volver a resultados"><ArrowLeft/></button><div><h1 className="text-xl font-extrabold text-[var(--brand-primary)]">Validación manual</h1><p className="text-sm text-[var(--brand-muted)]">Persona identificada</p></div></header><section className="mt-4 rounded-3xl border border-[var(--brand-border-soft)] bg-white p-4 shadow-sm"><div className="flex min-w-0 items-center gap-3"><AccessPersonAvatar person={person}/><div className="min-w-0"><h2 className="break-words text-lg font-extrabold leading-5 text-[var(--brand-primary)]">{name}</h2><p className="mt-1 text-xs leading-4 text-[var(--brand-muted)]">Persona identificada para validación presencial</p></div></div></section><section className="mt-3 rounded-3xl border border-[var(--brand-border-soft)] bg-white p-4 shadow-sm"><dl className="grid gap-2"><ManualFact icon={Mail} label="Email" value={person.email||"No informado"}/><ManualFact icon={IdCard} label="DNI" value={person.dni||"No informado"}/><ManualFact icon={Phone} label="Teléfono" value="No informado"/></dl></section><section className={`mt-4 flex items-start gap-3 rounded-2xl border p-4 ${valid?"border-[var(--brand-border-soft)] bg-[var(--brand-panel)]":"border-destructive/25 bg-destructive/5"}`}><Info className={`mt-0.5 size-5 shrink-0 ${valid?"text-[var(--brand-secondary)]":"text-destructive"}`}/><div><h3 className="font-extrabold text-[var(--brand-primary)]">Validación actual</h3><p className="mt-1 text-sm leading-5 text-[var(--brand-ink)]">{person.validation.message}</p>{person.validation.matchedSession?<p className="mt-2 text-xs text-[var(--brand-muted)]">Próxima clase: {person.validation.matchedSession.activityName}</p>:null}</div></section><section className="mt-4 rounded-3xl border border-[var(--brand-border-soft)] bg-white p-4"><Textarea value={observation} onChange={(event)=>onObservation(event.target.value)} placeholder="Observación obligatoria para el registro manual" className="min-h-32 w-full resize-y rounded-xl border-[var(--brand-border)] bg-[var(--brand-control)]"/><p className="mt-2 text-xs text-[var(--brand-muted)]">Mínimo 5 caracteres. La acción quedará auditada.</p><div className="mt-4 grid grid-cols-2 gap-2"><Button disabled={loading||observation.trim().length<5} onClick={()=>void onRegister("ALLOW")} className="h-12 rounded-xl bg-[var(--brand-primary)] px-2 font-bold text-white">Permitir ingreso</Button><Button variant="outline" disabled={loading||observation.trim().length<5} onClick={()=>void onRegister("REJECT")} className="h-12 rounded-xl border-[var(--brand-primary)] bg-white px-2 font-bold text-[var(--brand-primary)]">Rechazar ingreso</Button></div></section></main>;
+  const valid=person.validation.allowed;
+  const showValidation = valid || !["SIN_INSCRIPCION", "INSCRIPCION_NO_CONFIRMADA", "SIN_CLASE_HABILITADA", "FUERA_DE_HORARIO", "CLASE_SUSPENDIDA", "CLASE_CANCELADA", "ESTABLECIMIENTO_INCORRECTO"].includes(person.validation.reason);
+  return <main className="min-h-[calc(100dvh-80px-env(safe-area-inset-top))] overflow-x-hidden bg-[var(--brand-page)] px-4 pb-[calc(96px+env(safe-area-inset-bottom))] pt-4"><header className="flex items-center gap-3 border-b border-[var(--brand-border-soft)] pb-4"><button type="button" onClick={onBack} className="grid size-10 shrink-0 place-items-center rounded-full text-[var(--brand-primary)]" aria-label="Volver a resultados"><ArrowLeft/></button><div><h1 className="text-xl font-extrabold text-[var(--brand-primary)]">Validación manual</h1><p className="text-sm text-[var(--brand-muted)]">Persona identificada</p></div></header><div className="mt-4"><AccessPersonCard person={person} mobile showPhone /></div>{showValidation ? <section className={`mt-4 flex items-start gap-3 rounded-2xl border p-4 ${valid?"border-[var(--brand-border-soft)] bg-[var(--brand-panel)]":"border-destructive/25 bg-destructive/5"}`}><Info className={`mt-0.5 size-5 shrink-0 ${valid?"text-[var(--brand-secondary)]":"text-destructive"}`}/><div><h3 className="font-extrabold text-[var(--brand-primary)]">Validación actual</h3><p className="mt-1 text-sm leading-5 text-[var(--brand-ink)]">{person.validation.message}</p>{person.validation.matchedSession?<p className="mt-2 text-xs text-[var(--brand-muted)]">Próxima clase: {person.validation.matchedSession.activityName}</p>:null}</div></section> : null}<section className="mt-4 rounded-3xl border border-[var(--brand-border-soft)] bg-white p-4"><ManualAccessDecisionControls observation={observation} loading={loading} onObservation={onObservation} onRegister={onRegister} mobile/></section></main>;
 }
 
 function MobileManualResult({result,onReset}:{result:AccessValidationResponse;onReset:()=>void}){return <main className="min-h-[calc(100dvh-80px-env(safe-area-inset-top))] bg-[var(--brand-page)] p-4 pb-[calc(96px+env(safe-area-inset-bottom))]"><AccessResultCard result={result} compactMobile/><Button className="mt-3 h-12 w-full rounded-xl" variant="outline" onClick={onReset}>Nueva búsqueda</Button></main>}
 
-function ManualFact({icon:Icon,label,value}:{icon:typeof UserRound;label:string;value:string}){return <div className="flex min-w-0 items-start gap-3 rounded-2xl bg-[var(--brand-control)] p-3"><Icon className="mt-0.5 size-5 shrink-0 text-[var(--brand-secondary)]"/><div className="min-w-0"><dt className="text-[10px] font-extrabold uppercase text-[var(--brand-muted)]">{label}</dt><dd className="mt-1 break-words text-sm font-bold text-[var(--brand-ink)]">{value}</dd></div></div>}
-
 function DesktopManual({query,items,selected,observation,loading,onQuery,onSelect,onObservation,onRegister}:{query:string;items:SearchPerson[];selected:SearchPerson|null;observation:string;loading:boolean;onQuery:(value:string)=>void;onSelect:(person:SearchPerson)=>void;onObservation:(value:string)=>void;onRegister:(decision:"ALLOW"|"REJECT")=>Promise<void>}){
   return <AdminFormCard title="Buscar persona" description="Buscá por DNI, nombre, apellido, email o identificador y registrá el ingreso.">
     <CatalogSearchInput value={query} onChange={onQuery} placeholder="Buscar por DNI, nombre, apellido, email o ID..." />
-    <div className="mt-5 grid min-h-96 gap-6 lg:grid-cols-2">
-      <section className="rounded-3xl border border-[var(--brand-border-soft)] bg-white p-4 shadow-sm">
-        {loading && !items.length ? <div className="h-60 animate-pulse rounded-2xl bg-[var(--brand-panel)]"/> : items.length ? <div className="grid gap-2">{items.map((item) => <button key={item.id} type="button" data-admin-list-card="" onClick={() => onSelect(item)} className={cn("flex w-full self-start items-center gap-3 rounded-2xl border p-3 text-left transition", selected?.id === item.id ? "border-[var(--brand-primary)] bg-[var(--brand-panel)] shadow-sm" : "border-[var(--brand-border-soft)] bg-white hover:border-[var(--brand-secondary)] hover:shadow-sm")}><AccessPersonAvatar person={item}/><span className="min-w-0"><strong className="block truncate font-extrabold text-[var(--brand-ink)]">{[item.nombre, item.apellido].filter(Boolean).join(" ")}</strong><span className="mt-1 block truncate text-xs text-[var(--brand-muted)]">DNI {item.dni || "No informado"} · {item.estado}</span></span></button>)}</div> : <div className="grid min-h-60 place-items-center text-center text-sm font-semibold text-[var(--brand-text)]/70">Ingresá al menos dos caracteres.</div>}
+    <div className="mt-5 grid min-h-96 items-start gap-6 xl:grid-cols-2">
+      <section className="min-w-0 rounded-3xl border border-[var(--brand-border-soft)] bg-white p-4 shadow-sm">
+        {loading && !items.length ? <div className="h-60 animate-pulse rounded-2xl bg-[var(--brand-panel)]"/> : items.length ? <div className="grid gap-2">{items.map((item) => <button key={item.id} type="button" data-admin-list-card="" onClick={() => onSelect(item)} className={cn("min-w-0 w-full self-start rounded-2xl border p-1 text-left transition", selected?.id === item.id ? "border-[var(--brand-primary)] bg-[var(--brand-panel)] shadow-sm" : "border-[var(--brand-border-soft)] bg-white hover:border-[var(--brand-secondary)] hover:shadow-sm")}><AccessPersonCard person={item} showContact showStatus /></button>)}</div> : <div className="grid min-h-60 place-items-center text-center text-sm font-semibold text-[var(--brand-text)]/70">Ingresá al menos dos caracteres.</div>}
       </section>
-      <section className="rounded-3xl border border-[var(--brand-border-soft)] bg-[var(--brand-panel)] p-5 shadow-sm sm:p-7">
+      <section className="min-w-0 rounded-3xl border border-[var(--brand-border-soft)] bg-white p-6 shadow-sm">
         {selected ? <div className="grid gap-4">
-          <div><h2 className="text-2xl font-extrabold text-[var(--brand-primary)]">{[selected.nombre, selected.apellido].filter(Boolean).join(" ")}</h2><p className="mt-2 text-sm font-semibold text-[var(--brand-text)]">Validación actual: {selected.validation.message}</p>{selected.validation.matchedSession ? <p className="mt-1 text-sm font-semibold text-[var(--brand-text)]">Próxima clase: {selected.validation.matchedSession.activityName}</p> : null}</div>
-          <Textarea value={observation} onChange={(event) => onObservation(event.target.value)} placeholder="Observación obligatoria para el registro manual" className="min-h-28 rounded-xl border-[var(--brand-border)] bg-white"/>
-          <p className="text-xs text-[var(--brand-muted)]">Mínimo 5 caracteres. La acción quedará auditada.</p>
-          <div className="flex gap-3"><Button disabled={loading || observation.trim().length < 5} onClick={() => void onRegister("ALLOW")} className="h-11 rounded-xl bg-[var(--brand-primary)] font-bold text-white hover:bg-[var(--brand-primary-hover)]">Permitir ingreso</Button><Button variant="outline" disabled={loading || observation.trim().length < 5} onClick={() => void onRegister("REJECT")} className="h-11 rounded-xl border-[var(--brand-primary)] bg-white font-bold text-[var(--brand-primary)]">Rechazar ingreso</Button></div>
+          <div className="min-w-0 [overflow-wrap:anywhere]"><AccessPersonCard person={selected} showContact showStatus /><p className="mt-2 text-sm font-semibold text-[var(--brand-text)]">Validación actual: {selected.validation.message}</p>{selected.validation.matchedSession ? <p className="mt-1 text-sm font-semibold text-[var(--brand-text)]">Próxima clase: {selected.validation.matchedSession.activityName}</p> : null}</div>
+          <ManualAccessDecisionControls observation={observation} loading={loading} onObservation={onObservation} onRegister={onRegister}/>
         </div> : <div className="grid min-h-60 place-items-center text-center text-sm font-semibold text-[var(--brand-text)]/70">Seleccioná una persona.</div>}
       </section>
     </div>

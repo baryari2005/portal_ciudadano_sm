@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const data = await createActividad(parsed.data);
+    const data = await createActividad(parsed.data, user.id);
     await createAuditLog({actorId:user.id,action:"CREAR",entityType:"ACTIVIDAD",entityId:data.id,entityName:data.nombre,origin:"ADMINISTRACION",requestContext:getAuditRequestContext(req.headers)});
     return NextResponse.json({ data }, { status: 201 });
   } catch (error) {

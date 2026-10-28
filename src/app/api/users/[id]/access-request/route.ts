@@ -10,6 +10,7 @@ import {
 import { getAuditRequestContext } from "@/features/audit-log/helpers/audit-log.helpers";
 import { createAuditLog } from "@/features/audit-log/services/audit-log.server";
 import { requireAccessRequestReviewPermission, requireAuth } from "@/lib/server-auth";
+import { mapApiRouteError } from "@/lib/api/route-error";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,17 +18,20 @@ export const dynamic = "force-dynamic";
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(req: NextRequest, context: RouteContext) {
-  const reviewer = await requireAuth(req);
-  requireAccessRequestReviewPermission(reviewer);
-  const { id } = await context.params;
-  return NextResponse.json({ data: await listAccessRequests(id) });
+  try {
+    const reviewer = await requireAuth(req);
+    requireAccessRequestReviewPermission(reviewer);
+    const { id } = await context.params;
+    return NextResponse.json({ data: await listAccessRequests(id) });
+  } catch (error) {
+    return mapApiRouteError(error, "No pudimos cargar las solicitudes de acceso.");
+  }
 }
 
 export async function PATCH(req: NextRequest, context: RouteContext) {
-  const reviewer = await requireAuth(req);
-  requireAccessRequestReviewPermission(reviewer);
-
   try {
+    const reviewer = await requireAuth(req);
+    requireAccessRequestReviewPermission(reviewer);
     const { id } = await context.params;
     const payload = accessRequestReviewSchema.parse(await req.json());
     const result = await reviewAccessRequest({
@@ -53,6 +57,9 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
     return NextResponse.json(result);
   } catch (error) {
+    if (error instanceof Error && ["UNAUTHORIZED", "FORBIDDEN", "ACCOUNT_NOT_ALLOWED"].includes(error.message)) {
+      return mapApiRouteError(error, "No pudimos revisar la solicitud.");
+    }
     if (error instanceof ZodError) {
       return NextResponse.json(
         { message: error.issues.map((issue) => issue.message).join(", ") },

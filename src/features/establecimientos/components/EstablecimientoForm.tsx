@@ -280,7 +280,7 @@ export function EstablecimientoForm({ mode, defaultValues }: Props) {
                 value={form.nombre}
                 onChange={(event) => setValue("nombre", event.target.value)}
                 className={inputClass}
-                placeholder="Ej: Centro Municipal"
+                placeholder="Ej: MAS - Casa central"
               />
             </Field>
 

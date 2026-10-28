@@ -1,3 +1,6 @@
+import { inTransaction } from "@/lib/prisma-transaction";
+import { activityConfigurations, withActivityValidity, writeActivityConfiguration } from "@/features/activity-configuration/services/activity-configuration.server";
+import { configurationDates } from "@/features/activity-configuration/helpers/activity-configuration";
 import { randomUUID } from "crypto";
 import {
   ActividadCategoria,
@@ -343,6 +346,24 @@ async function futureSessionIds(tx: Prisma.TransactionClient, actividadId: strin
   return rows.map((item) => item.id);
 }
 
+async function cancelSessionsOutsideValidity(tx:Prisma.TransactionClient,id:string,start:Date|null,end:Date|null,excludedDates:string[]){
+        const candidates = await futureSessionIds(tx, id);
+        const outside: Prisma.ClaseActividadWhereInput[] = [];
+        if (start) outside.push({fecha:{lt:start}});
+        if (end) outside.push({fecha:{gt:end}});
+        const excluded=excludedDates;
+        if(excluded.length) outside.push({fecha:{in:excluded.map(date=>new Date(`${date}T00:00:00Z`))}});
+        if(outside.length && candidates.length){
+          const sessions=await tx.claseActividad.findMany({where:{id:{in:candidates},OR:outside},select:{id:true}});
+          const ids=sessions.map(item=>item.id);
+          const reason="Fuera de la vigencia de la actividad";
+          await tx.reservaRecurso.updateMany({where:{reservaClase:{claseActividadId:{in:ids}},estado:{not:"CANCELADA"}},data:{estado:"CANCELADA"}});
+          await tx.reservaClase.updateMany({where:{claseActividadId:{in:ids},estado:{in:["RESERVADA","LISTA_ESPERA","OFRECIDA"]}},data:{estado:"CANCELADA",canceladoAt:new Date(),motivoCancelacion:reason}});
+          await tx.claseActividad.updateMany({where:{id:{in:ids}},data:{estado:"CANCELADA",motivoCancelacion:reason}});
+          await tx.bloqueoRecurso.deleteMany({where:{claseActividadId:{in:ids}}});
+        }
+}
+
 async function propagateActivityState(tx: Prisma.TransactionClient, actividadId: string, previous: ActividadEstado, next: ActividadEstado) {
   if (previous === next) return;
   const ids = await futureSessionIds(tx, actividadId);
@@ -355,6 +376,7 @@ async function propagateActivityState(tx: Prisma.TransactionClient, actividadId:
     await tx.reservaRecurso.updateMany({ where: { reservaClase: { claseActividadId: { in: ids } }, estado: { not: "CANCELADA" } }, data: { estado: "CANCELADA" } });
     await tx.reservaClase.updateMany({ where: { claseActividadId: { in: ids }, estado: { in: ["RESERVADA", "LISTA_ESPERA", "OFRECIDA"] } }, data: { estado: "CANCELADA", canceladoAt: operationalNow().now, motivoCancelacion: ACTIVITY_STATE_REASON } });
     await tx.claseActividad.updateMany({ where: { id: { in: ids } }, data: { estado: "CANCELADA", motivoCancelacion: ACTIVITY_STATE_REASON } });
+    await tx.bloqueoRecurso.deleteMany({where:{claseActividadId:{in:ids}}});
   } else if (next === ActividadEstado.ACTIVA) {
     await tx.claseActividad.updateMany({ where: { id: { in: ids }, estado: "SUSPENDIDA", motivoCancelacion: ACTIVITY_STATE_REASON }, data: { estado: "PROGRAMADA", motivoCancelacion: null } });
   }
@@ -442,19 +464,20 @@ export async function listActividades(filters: ActividadFilters = {}) {
     orderBy: { nombre: "asc" },
     include: actividadInclude,
   });
-  return records.map(mapActividad);
+  const configurations = await activityConfigurations(prisma,records.map(record=>record.id));
+  return records.map(record=>({...mapActividad(record),...configurationDates(configurations.get(record.id)??null)}));
 }
 
-export async function getActividad(id: string) {
-  const record = await prisma.actividad.findUnique({
+export async function getActividad(id: string, client: DbClient = prisma) {
+  const record = await client.actividad.findUnique({
     where: { id },
     include: actividadInclude,
   });
-  return record ? mapActividad(record) : null;
+  return record ? {...mapActividad(record),...await withActivityValidity(client,{id:record.id})} : null;
 }
 
-export async function createActividad(input: ActividadInput) {
-  return prisma.$transaction(
+export async function createActividad(input: ActividadInput, actorId?: string, draftId?: string, client: DbClient = prisma) {
+  return inTransaction(client,
     async (tx) => {
       const category = await validateCategory(tx, input.categoriaActividadId);
       const publics = await validatePublics(tx, input.publicosObjetivoIds);
@@ -491,6 +514,7 @@ export async function createActividad(input: ActividadInput) {
           horasCancelacionJustificada: input.horasCancelacionJustificada,
           modalidadOperacion: input.modalidadOperacion,
           vigenciaReserva: input.vigenciaReserva,
+
           duracionTurnoMinutos: input.duracionTurnoMinutos,
           intervaloTurnoMinutos: input.intervaloTurnoMinutos,
           anticipacionReservaDias: input.anticipacionReservaDias,
@@ -498,6 +522,8 @@ export async function createActividad(input: ActividadInput) {
           requiereReserva: input.requiereReserva,
         },
       });
+      if(draftId)await tx.actividadBorrador.update({where:{id:draftId},data:{actividadId:id}});
+      await writeActivityConfiguration(tx,id,{startDate:input.fechaInicio,endDate:input.fechaFin??null,excludedDates:input.fechasExcluidas??[]},actorId);
       await replaceSchedulesAndAssignees(tx, id, input, input.cupo ?? 1);
       await syncPublics(tx, id, new Set(), input.publicosObjetivoIds);
       await validateAndSyncRequirements(tx, id, input.requirements);
@@ -506,20 +532,22 @@ export async function createActividad(input: ActividadInput) {
         where: { id },
         include: actividadInclude,
       });
-      return mapActividad(record);
+      return {...mapActividad(record),...await withActivityValidity(tx,{id:record.id})};
     },
     { maxWait: 10_000, timeout: 30_000 },
   );
 }
 
-export async function updateActividad(id: string, input: ActividadInput) {
-  return prisma.$transaction(
+export async function updateActividad(id: string, input: ActividadInput, actorId?: string, client: DbClient = prisma) {
+  return inTransaction(client,
     async (tx) => {
-      const current = await tx.actividad.findUnique({
+      await tx.$queryRaw`SELECT id FROM "Actividad" WHERE id = ${id} FOR UPDATE`;
+      const currentRecord = await tx.actividad.findUnique({
         where: { id },
         include: { publicosObjetivo: true, requisitos: true },
       });
-      if (!current) throw new CatalogNotFoundError("Actividad no encontrada.");
+      if (!currentRecord) throw new CatalogNotFoundError("Actividad no encontrada.");
+      const current = await withActivityValidity(tx,currentRecord);
 
       const category = await validateCategory(
         tx,
@@ -568,6 +596,7 @@ export async function updateActividad(id: string, input: ActividadInput) {
           horasCancelacionJustificada: input.horasCancelacionJustificada,
           modalidadOperacion: input.modalidadOperacion,
           vigenciaReserva: input.vigenciaReserva,
+
           duracionTurnoMinutos: input.duracionTurnoMinutos,
           intervaloTurnoMinutos: input.intervaloTurnoMinutos,
           anticipacionReservaDias: input.anticipacionReservaDias,
@@ -575,7 +604,9 @@ export async function updateActividad(id: string, input: ActividadInput) {
           requiereReserva: input.requiereReserva,
         },
       });
+      await writeActivityConfiguration(tx,id,{startDate:input.fechaInicio,endDate:input.fechaFin??null,excludedDates:input.fechasExcluidas??[]},actorId);
       await replaceSchedulesAndAssignees(tx, id, input, input.cupo ?? 1);
+      if(input.fechaInicio!==undefined||input.fechaFin!==undefined||input.fechasExcluidas!==undefined)await cancelSessionsOutsideValidity(tx,id,input.fechaInicio?new Date(`${input.fechaInicio}T00:00:00Z`):current.fechaInicio,input.fechaFin===undefined?current.fechaFin:input.fechaFin?new Date(`${input.fechaFin}T00:00:00Z`):null,input.fechasExcluidas??current.fechasExcluidas);
       await propagateActivityState(tx, id, current.estado, estado);
       await notifyActivityChange(tx, id, input.nombre, estado !== current.estado ? `La actividad cambió su estado a ${toLegacyStateText(estado)}. Revisá tus próximas clases.` : "La programación de la actividad fue actualizada. Revisá los días y horarios de tus próximas clases.");
       await syncPublics(tx, id, currentPublicIds, input.publicosObjetivoIds);
@@ -585,21 +616,26 @@ export async function updateActividad(id: string, input: ActividadInput) {
         where: { id },
         include: actividadInclude,
       });
-      return mapActividad(record);
+      return {...mapActividad(record),...await withActivityValidity(tx,{id:record.id})};
     },
     { maxWait: 10_000, timeout: 30_000 },
   );
 }
 
-export async function patchActividad(id: string, input: UpdateActividadInput) {
-  return prisma.$transaction(
+export async function patchActividad(id: string, input: UpdateActividadInput, actorId?: string, client: DbClient = prisma) {
+  return inTransaction(client,
     async (tx) => {
-      const current = await tx.actividad.findUnique({
+      await tx.$queryRaw`SELECT id FROM "Actividad" WHERE id = ${id} FOR UPDATE`;
+      const currentRecord = await tx.actividad.findUnique({
         where: { id },
         include: { publicosObjetivo: true, requisitos: true },
       });
-      if (!current) throw new CatalogNotFoundError("Actividad no encontrada.");
+      if (!currentRecord) throw new CatalogNotFoundError("Actividad no encontrada.");
+      const current = await withActivityValidity(tx,currentRecord);
 
+      const validityStart = input.fechaInicio ? new Date(`${input.fechaInicio}T00:00:00Z`) : current.fechaInicio;
+      const validityEnd = input.fechaFin === undefined ? current.fechaFin : input.fechaFin ? new Date(`${input.fechaFin}T00:00:00Z`) : null;
+      if (validityEnd && (!validityStart || validityEnd < validityStart)) throw new CatalogValidationError("La fecha final debe ser posterior o igual a la inicial.");
       let category;
       if (input.categoriaActividadId !== undefined) {
         category = await validateCategory(
@@ -741,15 +777,22 @@ export async function patchActividad(id: string, input: UpdateActividadInput) {
       if (input.publicosObjetivoIds !== undefined) {
         await syncPublics(tx, id, currentPublicIds, input.publicosObjetivoIds);
       }
+      const validityChanged=validityStart?.getTime()!==current.fechaInicio?.getTime()||validityEnd?.getTime()!==current.fechaFin?.getTime()||(input.fechasExcluidas!==undefined&&JSON.stringify([...input.fechasExcluidas].sort())!==JSON.stringify([...current.fechasExcluidas].sort()));
+      if (input.fechaInicio!==undefined || input.fechaFin!==undefined || input.fechasExcluidas!==undefined) {
+        await writeActivityConfiguration(tx,id,{...(input.fechaInicio!==undefined?{startDate:input.fechaInicio}:{}),...(input.fechaFin!==undefined?{endDate:input.fechaFin}:{}),...(input.fechasExcluidas!==undefined?{excludedDates:input.fechasExcluidas}:{})},actorId);
+      }
+      if (validityChanged) {
+        await cancelSessionsOutsideValidity(tx,id,validityStart,validityEnd,input.fechasExcluidas??current.fechasExcluidas);
+      }
       await propagateActivityState(tx, id, current.estado, finalState);
-      const operationalChange = input.horarios !== undefined || input.cupo !== undefined || finalState !== current.estado;
+      const operationalChange = validityChanged || input.horarios !== undefined || input.cupo !== undefined || finalState !== current.estado;
       if (operationalChange) await notifyActivityChange(tx, id, input.nombre ?? current.nombre, finalState !== current.estado ? `La actividad cambió su estado a ${toLegacyStateText(finalState)}. Revisá tus próximas clases.` : "La programación de la actividad fue actualizada. Revisá los días y horarios de tus próximas clases.");
 
       const record = await tx.actividad.findUniqueOrThrow({
         where: { id },
         include: actividadInclude,
       });
-      return mapActividad(record);
+      return {...mapActividad(record),...await withActivityValidity(tx,{id:record.id})};
     },
     { maxWait: 10_000, timeout: 30_000 },
   );

@@ -8,12 +8,13 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { CatalogLoadingState } from "@/features/activity-catalogs/components/CatalogPrimitives";
+import { DEFAULT_EXPERIENCE_PALETTE } from "@/features/general-settings/constants/experience-palettes";
 import { useCan } from "@/hooks/useCan";
 import { getUserQrStatusClient, issueUserQrClient, revokeUserQrClient } from "../services/attendance-qr.service";
 import type { UserQrCredentialSummary } from "../types/attendance-qr.types";
 
 const actionClassName = "h-12 rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)] px-7 text-base font-bold text-[var(--brand-primary)] shadow-sm hover:bg-[var(--brand-panel)]";
-const qrOptions = { width: 420, margin: 2, color: { dark: "var(--brand-heading)", light: "#FFFFFF" } };
+const qrOptions = { width: 420, margin: 2, color: { dark: DEFAULT_EXPERIENCE_PALETTE.heading, light: "#FFFFFF" } };
 
 export function UserQrCredentialCard({ userId, onLoadingChange }: { userId: string; onLoadingChange?: (loading: boolean) => void }) {
   const canAssign = useCan("usuarios", "asignar");

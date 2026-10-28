@@ -7,6 +7,7 @@ import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { MobileProfileLogoutButton } from "@/features/shared-account/components/MobileProfileLogoutButton";
 
 export type CitizenMobileProfileData = {
   nombre: string | null;
@@ -71,6 +72,7 @@ export function CitizenMobileProfile({ data, onEdit, onChangePassword, experienc
       <ProfileRow icon={Mail} title="Correo electrónico" lines={[data.email]} />
       <ProfileRow icon={ShieldPlus} title="Contacto de emergencia" lines={[data.contactoEmergenciaNombre || "Sin informar", data.contactoEmergenciaTelefono || ""]} />
       <ProfileRow icon={HeartPulse} title="Cobertura médica" lines={[data.coberturaMedica?.nombre || "Sin informar", data.numeroAfiliado ? `Afiliado N.º ${data.numeroAfiliado}` : ""]} />
+      <MobileProfileLogoutButton />
     </div>
 
     <footer className="fixed inset-x-0 bottom-[var(--mobile-profile-nav-h)] z-30 grid grid-cols-2 gap-2 border-t border-[var(--brand-border-soft)] bg-[#F9FAF5]/95 p-3 shadow-[0_-8px_24px_rgba(29,79,54,0.10)] backdrop-blur">

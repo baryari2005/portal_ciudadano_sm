@@ -1,8 +1,11 @@
+import { ensureActivitySessions } from "@/features/activity-sessions/services/activity-sessions.server";
+import { z } from "zod";
 import { AccesoMotivo, AccesoOrigen, AccesoResultado, Prisma } from "@prisma/client";
 import { createAuditLogTx } from "@/features/audit-log/services/audit-log.server";
 import { hashDigitalAccessQrToken } from "./digital-access-qr.server";
 import { prisma } from "@/lib/db";
-import { CatalogNotFoundError, CatalogValidationError } from "@/lib/errors/catalog-errors";
+import { CatalogConflictError, CatalogNotFoundError, CatalogValidationError } from "@/lib/errors/catalog-errors";
+import { manualRegisterSchema } from "../schemas/access.schema";
 import type { AccessEvaluation, AccessOrigin, AccessPerson, AccessReason, AccessValidationResponse } from "../types/access.types";
 
 const EARLY_MINUTES = Number(process.env.ACCESS_EARLY_MINUTES ?? 30);
@@ -24,6 +27,10 @@ function localParts(now: Date) {
   const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
+async function ensureAccessSessions(establishmentId:string){
+  const today=localParts(new Date());
+  await ensureActivitySessions({establishmentId,dateFrom:today,dateTo:today});
+}
 function localDateTime(date: string, time: string) { return new Date(`${date}T${time}:00-03:00`); }
 function person(user: { id: string; nombre: string | null; apellido: string | null; documento: string | null; email?: string; estado?: string; avatarUrl: string | null; fotoPerfilUrl: string | null }): AccessPerson {
   return { id: user.id, nombre: user.nombre, apellido: user.apellido, dni: user.documento ?? "", email: user.email, estado: user.estado, avatarUrl: user.avatarUrl, profilePhotoUrl: user.fotoPerfilUrl };
@@ -42,10 +49,11 @@ export async function evaluateAccess(user: { id: string; estado: string; deleted
   const participation = await db.usuario.findUnique({ where: { id: user.id }, select: { estadoParticipacion: true } });
   if (!participation || participation.estadoParticipacion !== "HABILITADO") return evaluation("USUARIO_INACTIVO");
   const date = localParts(now);
-  const dayStart = localDateTime(date, "00:00");
-  const dayEnd = localDateTime(date, "23:59");
+  // fecha is PostgreSQL DATE, not an instant. A local end-of-day converted to
+  // UTC falls on tomorrow and accidentally includes tomorrow's classes.
+  const sessionDate = new Date(`${date}T00:00:00.000Z`);
   const sessions = await db.claseActividad.findMany({
-    where: { fecha: { gte: dayStart, lte: dayEnd }, horarioActividad: { inscripciones: { some: { usuarioId: user.id } } } },
+    where: { fecha: sessionDate, horarioActividad: { inscripciones: { some: { usuarioId: user.id } } } },
     include: { reservas: { where: { usuarioId: user.id }, select: { estado: true }, take: 1 }, horarioActividad: { include: { actividad: { select: { nombre: true, modalidadInscripcion: true } }, inscripciones: { where: { usuarioId: user.id }, take: 1 } } } },
     orderBy: { horaInicio: "asc" },
   });
@@ -103,14 +111,83 @@ async function markTodayAttendancesFromAccess(tx: Tx, input: { userId: string; e
   return attendances.length;
 }
 
-async function saveAccess(tx: Tx, input: { user?: AccessPerson; establishmentId: string; evaluation: AccessEvaluation; origin: AccesoOrigen; actorId: string; observation?: string; requestContext?: RequestContext }) {
+async function saveAccess(tx: Tx, input: { user?: AccessPerson; establishmentId: string; evaluation: AccessEvaluation; origin: AccesoOrigen; actorId: string; observation?: string; requestContext?: RequestContext; automaticAttendance?: boolean; qrAttemptId?: string; validationReason?: AccessReason }) {
   const record = await tx.registroAcceso.create({ data: { usuarioId: input.user?.id, establecimientoId: input.establishmentId, claseActividadId: input.evaluation.matchedSession?.id, inscripcionId: input.evaluation.matchedEnrollmentId, resultado: input.evaluation.result as AccesoResultado, motivo: input.evaluation.reason as AccesoMotivo, origen: input.origin, registradoPorId: input.actorId, nombreSnapshot: input.user ? [input.user.nombre, input.user.apellido].filter(Boolean).join(" ") : null, documentoSnapshot: input.user?.dni || null, observaciones: input.observation } });
-  const automaticAttendances = input.evaluation.result === "PERMITIDO" && input.user ? await markTodayAttendancesFromAccess(tx, { userId: input.user.id, establishmentId: input.establishmentId, actorId: input.actorId, occurredAt: record.fechaHora }) : 0;
-  await createAuditLogTx(tx, { actorId: input.actorId, action: input.evaluation.result === "PERMITIDO" ? "CREAR" : "RECHAZAR", entityType: "REGISTRO_ACCESO", entityId: record.id, entityName: input.user ? `Ingreso · ${record.nombreSnapshot}` : "Intento de ingreso no identificado", metadata: { resultado: record.resultado, motivo: record.motivo, origen: record.origen, establecimientoId: record.establecimientoId, asistenciasAutomaticas: automaticAttendances }, origin: ["QR", "QR_DIGITAL", "CARNET_FISICO"].includes(input.origin) ? "QR" : "ADMINISTRACION", requestContext: input.requestContext });
+  const automaticAttendances = input.automaticAttendance !== false && input.evaluation.result === "PERMITIDO" && input.user ? await markTodayAttendancesFromAccess(tx, { userId: input.user.id, establishmentId: input.establishmentId, actorId: input.actorId, occurredAt: record.fechaHora }) : 0;
+  await createAuditLogTx(tx, { actorId: input.actorId, action: input.evaluation.result === "PERMITIDO" ? "CREAR" : "RECHAZAR", entityType: "REGISTRO_ACCESO", entityId: record.id, entityName: input.user ? `Ingreso · ${record.nombreSnapshot}` : "Intento de ingreso no identificado", metadata: { resultado: record.resultado, motivo: record.motivo, origen: record.origen, establecimientoId: record.establecimientoId, asistenciasAutomaticas: automaticAttendances, ...(input.qrAttemptId ? { qrAttemptId: input.qrAttemptId, validationReason: input.validationReason, decisionMode: "QR_EXCEPTION" } : {}) }, origin: ["QR", "QR_DIGITAL", "CARNET_FISICO"].includes(input.origin) ? "QR" : "ADMINISTRACION", requestContext: input.requestContext });
   return record;
 }
 
 type PhysicalCardPayload = { type: "MASM_ACCESS_CARD"; userId: string; username: string; dni: string };
+
+const exceptionalReasons = new Set<AccessReason>(["SIN_INSCRIPCION", "INSCRIPCION_NO_CONFIRMADA", "SIN_CLASE_HABILITADA", "FUERA_DE_HORARIO", "CLASE_SUSPENDIDA", "CLASE_CANCELADA", "ESTABLECIMIENTO_INCORRECTO"]);
+const pendingAttemptSchema = z.object({
+  flow: z.literal("QR_EXCEPTION_PENDING"), userId: z.string().uuid(), establishmentId: z.string(),
+  reason: z.string(), origin: z.enum(["QR", "QR_DIGITAL", "CARNET_FISICO"]),
+  credential: z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("PERSISTENT"), id: z.string() }),
+    z.object({ kind: z.literal("DIGITAL"), id: z.string(), usedAt: z.string().datetime() }),
+    z.object({ kind: z.literal("PHYSICAL"), proof: z.string() }),
+  ]),
+});
+type AttemptCredential = z.infer<typeof pendingAttemptSchema>["credential"];
+const physicalIdentityProof = (payload: PhysicalCardPayload) => hashDigitalAccessQrToken(JSON.stringify([payload.userId, payload.username, payload.dni]));
+
+async function pendingQrDecision(tx: Tx, input: { user: AccessPerson; establishmentId: string; result: AccessEvaluation; origin: "QR" | "QR_DIGITAL" | "CARNET_FISICO"; credential: AttemptCredential; actorId: string; requestContext?: RequestContext }): Promise<AccessValidationResponse> {
+  // This is an identified scan event, not a rejected physical access.
+  const attempt = await createAuditLogTx(tx, {
+    actorId: input.actorId, action: "EMITIR", entityType: "REGISTRO_ACCESO", origin: "QR",
+    entityName: "Identificación QR pendiente de decisión",
+    metadata: { flow: "QR_EXCEPTION_PENDING", userId: input.user.id, establishmentId: input.establishmentId, reason: input.result.reason, origin: input.origin, credential: input.credential },
+    requestContext: input.requestContext,
+  });
+  return { ...input.result, result: "PENDIENTE", occurredAt: attempt.createdAt.toISOString(), user: input.user, pendingDecision: { attemptId: attempt.id, establishmentId: input.establishmentId } };
+}
+
+type ManualAccessInput = z.infer<typeof manualRegisterSchema>;
+function manualDecision(base: AccessEvaluation, decision: ManualAccessInput["decision"]): AccessEvaluation {
+  return decision === "ALLOW" ? { ...base, allowed: true, result: "PERMITIDO", reason: "ACCESO_MANUAL_AUTORIZADO", message: reasonMessages.ACCESO_MANUAL_AUTORIZADO } : { ...base, allowed: false, result: "RECHAZADO", reason: "ACCESO_MANUAL_RECHAZADO", message: reasonMessages.ACCESO_MANUAL_RECHAZADO };
+}
+
+async function registerQrManualAccess(input: ManualAccessInput, actorId: string, requestContext?: RequestContext) {
+  return prisma.$transaction(async tx => {
+    // READ COMMITTED plus this durable row lock makes retries/concurrent decisions
+    // observe the same first committed result, including across server processes.
+    await tx.$queryRaw`SELECT id FROM "RegistroAuditoria" WHERE id = ${input.qrAttemptId!} FOR UPDATE`;
+    const row = await tx.registroAuditoria.findUnique({ where: { id: input.qrAttemptId! } });
+    const parsed = pendingAttemptSchema.safeParse(row?.metadata);
+    if (!row || row.entidadTipo !== "REGISTRO_ACCESO" || row.accion !== "EMITIR" || row.actorId !== actorId || !parsed.success) throw new Error("FORBIDDEN");
+    const attempt = parsed.data;
+    if (attempt.userId !== input.userId || attempt.establishmentId !== input.establishmentId || !exceptionalReasons.has(attempt.reason as AccessReason)) throw new Error("FORBIDDEN");
+    await activeEstablishment(input.establishmentId, tx);
+    const prior = await tx.registroAuditoria.findFirst({ where: { entidadTipo: "REGISTRO_ACCESO", accion: { in: ["CREAR", "RECHAZAR"] }, metadata: { path: ["qrAttemptId"], equals: row.id } } });
+    if (prior?.entidadId) {
+      const saved = await tx.registroAcceso.findUniqueOrThrow({ where: { id: prior.entidadId }, include: { usuario: true } });
+      if (saved.resultado !== (input.decision === "ALLOW" ? "PERMITIDO" : "RECHAZADO")) throw new CatalogConflictError("Este intento ya tiene una decisión registrada.");
+      return { ...evaluation(saved.motivo), allowed: saved.resultado === "PERMITIDO", result: saved.resultado, accessRecordId: saved.id, occurredAt: saved.fechaHora.toISOString(), user: saved.usuario ? person(saved.usuario) : undefined };
+    }
+    if (Date.now() - row.createdAt.getTime() > 15 * 60_000) throw new CatalogValidationError("La decisión pendiente venció. Volvé a escanear la credencial.");
+    await tx.$queryRaw`SELECT id FROM "Usuario" WHERE id = ${input.userId}::uuid FOR UPDATE`;
+    const user = await tx.usuario.findUnique({ where: { id: input.userId }, select: { id: true, userId: true, nombre: true, apellido: true, documento: true, email: true, estado: true, avatarUrl: true, fotoPerfilUrl: true, deletedAt: true } });
+    if (!user) throw new CatalogNotFoundError("Usuario no encontrado.");
+    const credential = attempt.credential;
+    if (credential.kind === "PERSISTENT") {
+      await tx.$queryRaw`SELECT id FROM "UsuarioQrCredencial" WHERE id = ${credential.id} FOR UPDATE`;
+      const current = await tx.usuarioQrCredencial.findUnique({ where: { id: credential.id } });
+      if (!current || current.usuarioId !== user.id || current.estado !== "ACTIVO") throw new CatalogConflictError(reasonMessages.QR_REVOCADO);
+    } else if (credential.kind === "DIGITAL") {
+      await tx.$queryRaw`SELECT id FROM "AccesoQrDigital" WHERE id = ${credential.id} FOR UPDATE`;
+      const current = await tx.accesoQrDigital.findUnique({ where: { id: credential.id } });
+      if (!current || current.usuarioId !== user.id || current.estado !== "CONSUMIDO" || current.consumidoAt?.toISOString() !== credential.usedAt) throw new CatalogConflictError("La credencial ya no corresponde al intento identificado.");
+    } else if (physicalIdentityProof({ type: "MASM_ACCESS_CARD", userId: user.id, username: user.userId, dni: user.documento ?? "" }) !== credential.proof) throw new CatalogConflictError("La identidad de la credencial cambió. Volvé a identificar a la persona.");
+    const base = await evaluateAccess(user, input.establishmentId, new Date(), attempt.origin, tx);
+    if (!base.allowed && !exceptionalReasons.has(base.reason)) throw new CatalogValidationError(base.message);
+    // Exceptional physical access is deliberately unrelated to a class attendance.
+    const result = manualDecision(evaluation(attempt.reason as AccessReason), input.decision);
+    const record = await saveAccess(tx, { user: person(user), establishmentId: input.establishmentId, evaluation: result, origin: attempt.origin, actorId, observation: input.observation, requestContext, automaticAttendance: false, qrAttemptId: row.id, validationReason: attempt.reason as AccessReason });
+    return { ...result, accessRecordId: record.id, occurredAt: record.fechaHora.toISOString(), user: person(user) };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
+}
 
 function parsePhysicalCardPayload(value: string): PhysicalCardPayload | null {
   try {
@@ -131,11 +208,13 @@ async function validatePhysicalCardAccess(tx: Tx, establishmentId: string, paylo
   }
   const accessPerson = person(user);
   const result = await evaluateAccess(user, establishmentId, new Date(), "CARNET_FISICO", tx);
+  if (exceptionalReasons.has(result.reason)) return pendingQrDecision(tx, { user: accessPerson, establishmentId, result, origin: "CARNET_FISICO", credential: { kind: "PHYSICAL", proof: physicalIdentityProof(payload) }, actorId, requestContext });
   const record = await saveAccess(tx, { user: accessPerson, establishmentId, evaluation: result, origin: "CARNET_FISICO", actorId, requestContext });
   return { ...result, accessRecordId: record.id, occurredAt: record.fechaHora.toISOString(), user: accessPerson };
 }
 
 export async function validateQrAccess(establishmentId: string, qrToken: string, actorId: string, requestContext?: RequestContext): Promise<AccessValidationResponse> {
+  await ensureAccessSessions(establishmentId);
   return prisma.$transaction(async (tx) => {
     await activeEstablishment(establishmentId, tx);
     const physicalCard = parsePhysicalCardPayload(qrToken);
@@ -145,6 +224,7 @@ export async function validateQrAccess(establishmentId: string, qrToken: string,
       const accessPerson = person(persistentCredential.usuario);
       const result = persistentCredential.estado === "ACTIVO" ? await evaluateAccess(persistentCredential.usuario, establishmentId, new Date(), "QR", tx) : evaluation("QR_REVOCADO");
       if (persistentCredential.estado === "ACTIVO") await tx.usuarioQrCredencial.update({ where: { id: persistentCredential.id }, data: { ultimoUsoAt: new Date() } });
+      if (persistentCredential.estado === "ACTIVO" && exceptionalReasons.has(result.reason)) return pendingQrDecision(tx, { user: accessPerson, establishmentId, result, origin: "QR", credential: { kind: "PERSISTENT", id: persistentCredential.id }, actorId, requestContext });
       const record = await saveAccess(tx, { user: accessPerson, establishmentId, evaluation: result, origin: "QR", actorId, requestContext });
       return { ...result, accessRecordId: record.id, occurredAt: record.fechaHora.toISOString(), user: accessPerson };
     }
@@ -152,31 +232,38 @@ export async function validateQrAccess(establishmentId: string, qrToken: string,
     if (!credential) { const result = evaluation("QR_INVALIDO"); const record = await saveAccess(tx, { establishmentId, evaluation: result, origin: qrToken.startsWith("masm_access_") ? "QR_DIGITAL" : "QR", actorId, requestContext }); return { ...result, accessRecordId: record.id, occurredAt: record.fechaHora.toISOString() }; }
     const accessPerson = person(credential.usuario);
     const result = credential.estado === "ACTIVO" ? await evaluateAccess(credential.usuario, establishmentId, new Date(), "QR_DIGITAL", tx) : evaluation(credential.estado === "CONSUMIDO" ? "QR_USADO" : "QR_REVOCADO");
+    const consumedAt = new Date();
     if (credential.estado === "ACTIVO") {
-      const consumed = await tx.accesoQrDigital.updateMany({ where: { id: credential.id, estado: "ACTIVO" }, data: { estado: "CONSUMIDO", consumidoAt: new Date() } });
+      const consumed = await tx.accesoQrDigital.updateMany({ where: { id: credential.id, estado: "ACTIVO" }, data: { estado: "CONSUMIDO", consumidoAt: consumedAt } });
       if (consumed.count !== 1) throw new CatalogValidationError("El QR digital ya fue utilizado.");
     }
+    if (credential.estado === "ACTIVO" && exceptionalReasons.has(result.reason)) return pendingQrDecision(tx, { user: accessPerson, establishmentId, result, origin: "QR_DIGITAL", credential: { kind: "DIGITAL", id: credential.id, usedAt: consumedAt.toISOString() }, actorId, requestContext });
     const record = await saveAccess(tx, { user: accessPerson, establishmentId, evaluation: result, origin: "QR_DIGITAL", actorId, requestContext });
     return { ...result, accessRecordId: record.id, occurredAt: record.fechaHora.toISOString(), user: accessPerson };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
 export async function searchAccessUsers(query: string, establishmentId: string, page = 1, pageSize = 8) {
+  await ensureAccessSessions(establishmentId);
   await activeEstablishment(establishmentId);
   const q = query.trim();
-  const where: Prisma.UsuarioWhereInput = { OR: [{ documento: { contains: q } }, { nombre: { contains: q, mode: "insensitive" } }, { apellido: { contains: q, mode: "insensitive" } }, { email: { contains: q, mode: "insensitive" } }, { id: q.length >= 30 ? q : undefined }] };
+  const isUserId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(q);
+  const where: Prisma.UsuarioWhereInput = { OR: [{ documento: { contains: q } }, { nombre: { contains: q, mode: "insensitive" } }, { apellido: { contains: q, mode: "insensitive" } }, { email: { contains: q, mode: "insensitive" } }, ...(isUserId ? [{ id: q }] : [])] };
   const [total, users] = await prisma.$transaction([prisma.usuario.count({ where }), prisma.usuario.findMany({ where, orderBy: [{ apellido: "asc" }, { nombre: "asc" }], skip: (page - 1) * pageSize, take: pageSize, select: { id: true, nombre: true, apellido: true, documento: true, email: true, estado: true, avatarUrl: true, fotoPerfilUrl: true, deletedAt: true } })]);
   const items = await Promise.all(users.map(async (user) => ({ ...person(user), validation: await evaluateAccess(user, establishmentId, new Date(), "MANUAL") })));
   return { items, meta: { total, page, pageSize, pageCount: Math.max(1, Math.ceil(total / pageSize)) } };
 }
 
-export async function registerManualAccess(input: { establishmentId: string; userId: string; decision: "ALLOW" | "REJECT"; observation: string }, actorId: string, requestContext?: RequestContext) {
+export async function registerManualAccess(raw: ManualAccessInput, actorId: string, requestContext?: RequestContext) {
+  const input = manualRegisterSchema.parse(raw);
+  if (input.qrAttemptId) return registerQrManualAccess(input, actorId, requestContext);
+  await ensureAccessSessions(input.establishmentId);
   return prisma.$transaction(async (tx) => {
     await activeEstablishment(input.establishmentId, tx);
     const user = await tx.usuario.findUnique({ where: { id: input.userId }, select: { id: true, nombre: true, apellido: true, documento: true, email: true, estado: true, avatarUrl: true, fotoPerfilUrl: true, deletedAt: true } });
     if (!user) throw new CatalogNotFoundError("Usuario no encontrado.");
     const base = await evaluateAccess(user, input.establishmentId, new Date(), "MANUAL", tx);
-    const result: AccessEvaluation = input.decision === "ALLOW" ? { ...base, allowed: true, result: "PERMITIDO", reason: "ACCESO_MANUAL_AUTORIZADO", message: reasonMessages.ACCESO_MANUAL_AUTORIZADO } : { ...base, allowed: false, result: "RECHAZADO", reason: "ACCESO_MANUAL_RECHAZADO", message: reasonMessages.ACCESO_MANUAL_RECHAZADO };
+    const result = manualDecision(base, input.decision);
     const record = await saveAccess(tx, { user: person(user), establishmentId: input.establishmentId, evaluation: result, origin: "MANUAL", actorId, observation: input.observation, requestContext });
     return { ...result, accessRecordId: record.id, occurredAt: record.fechaHora.toISOString(), user: person(user) };
   });
@@ -192,6 +279,7 @@ export async function getAccessRecord(id: string) { const record = await prisma.
 export async function updateAccessRecord(id: string, observations: string, actorId: string, requestContext?: RequestContext) { return prisma.$transaction(async (tx) => { const before = await tx.registroAcceso.findUnique({ where: { id } }); if (!before) throw new CatalogNotFoundError("Registro de acceso no encontrado."); if (before.anuladoAt) throw new CatalogValidationError("No se puede corregir un registro anulado."); const record = await tx.registroAcceso.update({ where: { id }, data: { observaciones: observations } }); await createAuditLogTx(tx, { actorId, action: "EDITAR", entityType: "REGISTRO_ACCESO", entityId: id, changes: { observaciones: { before: before.observaciones, after: observations } }, origin: "ADMINISTRACION", requestContext }); return record; }); }
 export async function annulAccessRecord(id: string, reason: string, actorId: string, requestContext?: RequestContext) { return prisma.$transaction(async (tx) => { const before = await tx.registroAcceso.findUnique({ where: { id } }); if (!before) throw new CatalogNotFoundError("Registro de acceso no encontrado."); if (before.anuladoAt) throw new CatalogValidationError("El registro ya está anulado."); const record = await tx.registroAcceso.update({ where: { id }, data: { anuladoAt: new Date(), anuladoPorId: actorId, motivoAnulacion: reason } }); await createAuditLogTx(tx, { actorId, action: "ANULAR", entityType: "REGISTRO_ACCESO", entityId: id, changes: { anuladoAt: { before: null, after: record.anuladoAt }, motivoAnulacion: { before: null, after: reason } }, origin: "ADMINISTRACION", requestContext }); return record; }); }
 export async function getAccessHome(establishmentId: string) {
+  await ensureAccessSessions(establishmentId);
   const establishment = await activeEstablishment(establishmentId);
   const now = new Date();
   const today = localParts(now);

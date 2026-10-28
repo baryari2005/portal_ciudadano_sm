@@ -31,6 +31,9 @@ export type ActividadAsignado = {
 };
 
 export type Actividad = {
+  vigenciaConfirmada?: boolean;
+  fechaInicio?: string | null;
+  fechaFin?: string | null;
   id: string;
   nombre: string;
   descripcionCorta: string | null;

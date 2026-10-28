@@ -18,6 +18,7 @@ export function buildTeacherSlots(schedule: Pick<Schedule, "horaInicio" | "horaF
 export function effectiveTeacherAssignments(schedule: Schedule, duration: number | null, gap: number, usesTurns: boolean): TeacherSlotAssignment[] {
   return buildTeacherSlots(schedule, duration, gap, usesTurns).map((slot) => {
     const saved = schedule.teacherAssignments.find((item) => item.startTime === slot.startTime && item.endTime === slot.endTime);
-    return { ...slot, professorIds: [...new Set(saved?.professorIds ?? (usesTurns ? [] : schedule.profesorIds))] };
+    const professorIds = usesTurns ? saved?.professorIds ?? [] : schedule.profesorIds;
+    return { ...slot, professorIds: [...new Set(professorIds.filter((id) => schedule.profesorIds.includes(id)))] };
   });
 }

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { CatalogNotFoundError, CatalogValidationError } from "@/lib/errors/catalog-errors";
 import { TEACHER_SESSION_ACCESS_DENIED_MESSAGE } from "../constants/teacher-errors";
 import { createNotifications, getUnreadCount, listUserNotifications, notifyAdministrators } from "@/features/notifications/services/notifications.server";
-import { listActivitySessions, getActivitySession } from "@/features/activity-sessions/services/activity-sessions.server";
+import { listActivitySessions, getActivitySession, ensureActivitySessions } from "@/features/activity-sessions/services/activity-sessions.server";
 import { createAuditLog } from "@/features/audit-log/services/audit-log.server";
 import type { ActivitySessionStatus } from "@/features/activity-sessions/types/activity-session.types";
 import { getEnrollmentDocumentationSummaries } from "@/features/enrollment-documents/services/enrollment-documents.server";
@@ -160,10 +160,14 @@ export async function assertTeacherCitizenAccess(userId: string, citizenId: stri
   if (!linked) throw new TeacherSessionAccessError();
 }
 
-export async function assertTeacherEnrollmentAccess(userId: string, enrollmentId: string, establishmentId?: string) {
+export async function teacherEnrollmentScope(userId: string, establishmentId?: string): Promise<Prisma.InscripcionWhereInput> {
   const teacher = await requireTeacherProfile(userId);
   const scope = await teacherEstablishmentScope(userId, establishmentId);
-  const linked = await prisma.inscripcion.count({ where: { id: enrollmentId, OR: [{ horarioActividad: { clases: { some: { establecimientoId: scope, profesores: { some: { profesorId: teacher.id } } } } } }, { horarios: { some: { horarioActividad: { clases: { some: { establecimientoId: scope, profesores: { some: { profesorId: teacher.id } } } } } } } }] } });
+  return { OR: [{ horarioActividad: { clases: { some: { establecimientoId: scope, profesores: { some: { profesorId: teacher.id } } } } } }, { horarios: { some: { horarioActividad: { clases: { some: { establecimientoId: scope, profesores: { some: { profesorId: teacher.id } } } } } } } }] };
+}
+
+export async function assertTeacherEnrollmentAccess(userId: string, enrollmentId: string, establishmentId?: string) {
+  const linked = await prisma.inscripcion.count({ where: { id: enrollmentId, ...await teacherEnrollmentScope(userId, establishmentId) } });
   if (!linked) throw new TeacherSessionAccessError();
 }
 
@@ -211,6 +215,7 @@ export async function getTeacherSummary(userId: string, establishmentId?: string
   const teacher = await requireTeacherProfile(userId);
   const scope = await teacherEstablishmentScope(userId, establishmentId);
   const today = new Date(); today.setHours(0, 0, 0, 0); const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+  await ensureActivitySessions({establishmentId:scope,professorId:teacher.id});
   const ownership = { establecimientoId: scope, ...teacherSessionAssignment(teacher.id) };
   const sessionSummaryInclude = { horarioActividad: { include: { actividad: { select: { nombre: true, imagenUrl: true } }, inscripciones: { where: { estado: "CONFIRMADA" as const }, select: { id: true } } } }, establecimiento: { select: { nombre: true } } };
   const [todaySessions, todayClasses, upcomingSessions, nextSession, pendingRosters, unreadCount, schedulesChanged] = await Promise.all([

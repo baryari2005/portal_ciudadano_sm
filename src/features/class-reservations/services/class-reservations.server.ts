@@ -1,5 +1,7 @@
+import { withActivityValidity } from "@/features/activity-configuration/services/activity-configuration.server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { serializableTransaction } from "@/lib/db/serializable-transaction";
 import { CatalogConflictError, CatalogNotFoundError, CatalogValidationError } from "@/lib/errors/catalog-errors";
 import { createNotifications, notifyAdministrators } from "@/features/notifications/services/notifications.server";
 import { releaseReservationResources, reserveAutomaticResources } from "@/features/resources/services/resource-booking.server";
@@ -19,9 +21,14 @@ async function assertNoCitizenClassConflict(tx: Prisma.TransactionClient, userId
 }
 
 async function lockedClass(tx: Prisma.TransactionClient, classId: string) {
+  const parent=await tx.claseActividad.findUnique({where:{id:classId},select:{horarioActividad:{select:{actividadId:true}}}});
+  if(!parent)throw new CatalogNotFoundError("Clase no encontrada.");
+  await tx.$queryRaw`SELECT id FROM "Actividad" WHERE id = ${parent.horarioActividad.actividadId} FOR UPDATE`;
   await tx.$queryRaw`SELECT "id" FROM "ClaseActividad" WHERE "id" = ${classId} FOR UPDATE`;
   const row = await tx.claseActividad.findUnique({ where: { id: classId }, include: { horarioActividad: { include: { actividad: true, recursos: { include: { recurso: true } } } }, establecimiento: true } });
   if (!row) throw new CatalogNotFoundError("Clase no encontrada.");
+  const activity=await withActivityValidity(tx,row.horarioActividad.actividad);
+  if(row.horarioActividad.estado!=="ACTIVO"||!["ACTIVA","SIN_CUPO","COMPLETA"].includes(activity.estado)||(activity.fechaInicio&&row.fecha<activity.fechaInicio)||(activity.fechaFin&&row.fecha>activity.fechaFin))throw new CatalogValidationError("La actividad no admite reservas.");
   if (row.estado !== "PROGRAMADA") throw new CatalogValidationError("La clase no admite reservas.");
   return row;
 }
@@ -52,7 +59,7 @@ async function offerReleasedSeat(tx: Prisma.TransactionClient, classId: string) 
 }
 
 export async function reserveCitizenClass(userId: string, classId: string) {
-  return prisma.$transaction(async (tx) => {
+  return serializableTransaction(prisma, async (tx) => {
     const session = await lockedClass(tx, classId);
     if (session.horarioActividad.actividad.modalidadInscripcion !== "POR_CLASE") throw new CatalogValidationError("Esta actividad no utiliza reservas por clase.");
     const user = await tx.usuario.findUnique({ where: { id: userId }, select: { estadoParticipacion: true } });
@@ -69,11 +76,11 @@ export async function reserveCitizenClass(userId: string, classId: string) {
     const saved = existing ? await tx.reservaClase.update({ where: { id: existing.id }, data: { estado: status, inscripcionId: enrollment.id, confirmadoAt: status === "RESERVADA" ? now : null, posicionEsperaAt: status === "LISTA_ESPERA" ? now : null, canceladoAt: null, motivoCancelacion: null, cancelacionJustificada: null } }) : await tx.reservaClase.create({ data: { claseActividadId: classId, usuarioId: userId, inscripcionId: enrollment.id, estado: status, confirmadoAt: status === "RESERVADA" ? now : null, posicionEsperaAt: status === "LISTA_ESPERA" ? now : null } });
     if (status === "RESERVADA") await reserveAutomaticResources(tx, session, saved.id, userId);
     return saved;
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  });
 }
 
 export async function confirmOfferedSeat(userId: string, classId: string) {
-  return prisma.$transaction(async (tx) => {
+  return serializableTransaction(prisma, async (tx) => {
     const session = await lockedClass(tx, classId);
     const reservation = await tx.reservaClase.findUnique({ where: { claseActividadId_usuarioId: { claseActividadId: classId, usuarioId: userId } } });
     if (!reservation || reservation.estado !== "OFRECIDA") throw new CatalogValidationError("No tenés una oferta vigente para esta clase.");
@@ -87,11 +94,11 @@ export async function confirmOfferedSeat(userId: string, classId: string) {
       await createNotifications(others.map((item) => ({ userId: item.usuarioId, type: "GENERAL" as const, title: "Cupo ocupado", message: "Otra persona confirmó antes el cupo disponible. Continuás en la lista de espera.", priority: "NORMAL" as const, actionUrl: "/citizen/schedule", actionLabel: "Ver próximas clases", entityType: "class_reservation", entityId: item.id, deduplicationKey: `class-seat-taken:${item.id}:${saved.updatedAt.getTime()}` })), tx);
     }
     return saved;
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  });
 }
 
 export async function cancelCitizenClass(userId: string, classId: string, reason: string, proofUrl?: string | null) {
-  return prisma.$transaction(async (tx) => {
+  return serializableTransaction(prisma, async (tx) => {
     const session = await lockedClass(tx, classId);
     const enrollment = await tx.inscripcion.findFirst({ where: { usuarioId: userId, estado: "CONFIRMADA", AND: [{ OR: [{ horarioActividadId: session.horarioActividadId }, { horarios: { some: { horarioActividadId: session.horarioActividadId } } }] }, { OR: [{ fechaFin: null }, { fechaFin: { gte: session.fecha } }] }] }, select: { id: true } });
     if (!enrollment) throw new CatalogValidationError("No estás inscripto en esta clase.");
@@ -107,5 +114,5 @@ export async function cancelCitizenClass(userId: string, classId: string, reason
     await notifyAdministrators({ type: "GENERAL", title: justified ? "Inasistencia justificada" : "Cancelación tardía de clase", message: `${[citizen.nombre, citizen.apellido].filter(Boolean).join(" ")} canceló su participación en ${session.horarioActividad.actividad.nombre}. Motivo: ${reason.trim()}`, priority: justified ? "NORMAL" : "ALTA", actionUrl: `/attendance/${classId}`, actionLabel: "Ver asistencia", entityType: "class_reservation", entityId: saved.id, deduplicationKey: `class-cancelled:${saved.id}:${now.getTime()}` }, tx);
     if (!current || current.estado === "RESERVADA") await offerReleasedSeat(tx, classId);
     return saved;
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  });
 }

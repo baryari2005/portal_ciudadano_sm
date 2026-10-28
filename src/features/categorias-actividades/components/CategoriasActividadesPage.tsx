@@ -99,7 +99,7 @@ export function CategoriasActividadesPage() {
       <CatalogPageHeader
         icon={Tags}
         title="Categorías de actividades"
-        description="Organizá el catálogo utilizado para clasificar las propuestas municipales."
+        description="Organizá el catálogo utilizado para clasificar las actividades."
         total={catalog.items.length}
         createLabel="Crear categoría"
         canCreate={canCreate}
@@ -126,7 +126,7 @@ export function CategoriasActividadesPage() {
           ) : catalog.filteredItems.length === 0 ? (
             <CatalogEmptyState
               title="No se encontraron categorías."
-              description="Creá una categoría para organizar las actividades municipales."
+              description="Creá una categoría para organizar las actividades."
               filtered={filtersApplied}
             />
           ) : (

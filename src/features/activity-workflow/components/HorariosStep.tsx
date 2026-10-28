@@ -302,7 +302,7 @@ export function HorariosStep({
                   ) : null}
                 </span>
                 <span className="mt-1 block truncate text-sm text-[var(--brand-muted)]">
-                  {group.profesorIds.length} profesor{group.profesorIds.length === 1 ? "" : "es"} · {group.recursoIds.length ? `${group.recursoIds.length} recurso${group.recursoIds.length === 1 ? "" : "s"}` : "Sin recursos"} · Cupo {group.cupoMaximo}
+                  {group.profesorIds.length ? `${group.profesorIds.length} profesor${group.profesorIds.length === 1 ? "" : "es"}` : "Sin profesor asignado"} · {group.recursoIds.length ? `${group.recursoIds.length} recurso${group.recursoIds.length === 1 ? "" : "s"}` : "Sin recursos"} · Cupo {group.cupoMaximo}
                   {usesTurns && group.duracionTurnoMinutos ? ` · Turnos de ${group.duracionTurnoMinutos} min` : ""}
                 </span>
               </span>
@@ -441,7 +441,7 @@ export function HorariosStep({
               ) : null}
 
               <div>
-                <Label className="font-bold text-[var(--brand-ink)]">Profesores de este horario</Label>
+                <Label className="font-bold text-[var(--brand-ink)]">Profesores de este horario (opcional)</Label>
                 <div className="mt-2">
                   <SearchableCheckList
                     items={teacherProfessors.map((professor) => ({ id: professor.id, label: `${professor.usuario.nombre ?? ""} ${professor.usuario.apellido ?? ""}`.trim() || "Profesor" }))}
@@ -476,7 +476,7 @@ export function HorariosStep({
               {usesTurns && editor.duracionTurnoMinutos && editorProfessors.length ? (
                 <div className="border-t border-[var(--brand-border)] pt-5">
                   <Label className="font-bold text-[var(--brand-ink)]">Distribución por turno</Label>
-                  <p className="mt-1 text-sm text-[var(--brand-muted)]">Asigná quién de los profesores elegidos dicta cada turno.</p>
+                  <p className="mt-1 text-sm text-[var(--brand-muted)]">Podés asignar profesores a cada turno o dejarlo sin profesor asignado.</p>
                   <div className="mt-3 space-y-2">
                     {turnoSlots.map((slot) => (
                       <div key={`${slot.startTime}-${slot.endTime}`} className="rounded-xl border border-[var(--brand-border-soft)] bg-[var(--brand-page)] p-3">

@@ -1,3 +1,6 @@
+import { inTransaction, type DatabaseClient } from "@/lib/prisma-transaction";
+import { readActivityConfiguration, activityConfigurations } from "@/features/activity-configuration/services/activity-configuration.server";
+import { configurationDates, scheduleAssignments } from "@/features/activity-configuration/helpers/activity-configuration";
 /* eslint-disable @typescript-eslint/no-explicit-any -- Entrada normalizada del validador legado. */
 import { ClaseActividadEstado, DiaSemana, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
@@ -30,47 +33,135 @@ async function counts(tx:Prisma.TransactionClient,sessions:ActivitySessionRow[])
   return result;
 }
 function map(row:ActivitySessionRow,summary:Counts){const c=summary.get(row.id)??{confirmedCount:0,waitlistCount:0};return{id:row.id,date:dateText(row.fecha),startTime:row.horaInicio,endTime:row.horaFin,status:row.estado,space:row.espacio,capacity:row.cupoMaximo,cancellationReason:row.motivoCancelacion,observations:row.observaciones,activitySchedule:{id:row.horarioActividad.id,day:row.horarioActividad.diaSemana,activity:{id:row.horarioActividad.actividad.id,name:row.horarioActividad.actividad.nombre}},establishment:{id:row.establecimiento.id,name:row.establecimiento.nombre,address:row.establecimiento.direccion},professors:row.profesores.map(x=>({id:x.profesor.id,fullName:[x.profesor.usuario.nombre,x.profesor.usuario.apellido].filter(Boolean).join(" "),specialty:x.profesor.especialidad,status:x.profesor.estado,isPrimary:x.esPrincipal})),enrollmentSummary:c,createdAt:row.createdAt,updatedAt:row.updatedAt};}
-async function schedule(tx:Prisma.TransactionClient,id:string){const item=await tx.horarioActividad.findUnique({where:{id},include:{profesores:true,actividad:true,recursos:{include:{recurso:true}}}});if(!item)throw new CatalogNotFoundError("Horario no encontrado.");if(["CANCELADO","FINALIZADO"].includes(item.estado))throw new CatalogValidationError("El horario no admite nuevas clases.");return item;}
+async function schedule(tx:Prisma.TransactionClient,id:string){const item=await tx.horarioActividad.findUnique({where:{id},include:{profesores:true,actividad:true,recursos:{include:{recurso:true}}}});if(!item)throw new CatalogNotFoundError("Horario no encontrado.");if(item.estado!=="ACTIVO" || !["ACTIVA","SIN_CUPO","COMPLETA"].includes(item.actividad.estado))throw new CatalogValidationError("El horario no admite nuevas clases.");const configuration=await readActivityConfiguration(tx,item.actividadId);return {...item,actividad:{...item.actividad,...configurationDates(configuration)},teacherAssignments:scheduleAssignments(configuration,item)};}
 function validateDay(date:string,day:DiaSemana){if(dateValue(date).getUTCDay()!==dayIndex[day])throw new CatalogValidationError("La fecha no coincide con el día semanal del horario.");}
 async function validateProfessors(tx:Prisma.TransactionClient,ids:string[],oldIds=new Set<string>()){if(new Set(ids).size!==ids.length)throw new CatalogValidationError("No repitas profesores.");const rows=await tx.profesor.findMany({where:{id:{in:ids}},include:{usuario:{select:{nombre:true,apellido:true}}}});if(rows.length!==ids.length)throw new CatalogValidationError("Uno o más profesores no existen.");const invalid=rows.find(x=>x.estado!=="ACTIVO"&&!oldIds.has(x.id));if(invalid)throw new CatalogValidationError("No se pueden agregar profesores inactivos o suspendidos.");}
 async function conflicts(tx:Prisma.TransactionClient,input:any,excludeId?:string){if(["CANCELADA","SUSPENDIDA"].includes(input.status))return;const rows=await tx.claseActividad.findMany({where:{id:excludeId?{not:excludeId}:undefined,fecha:dateValue(input.date),estado:{notIn:["CANCELADA","SUSPENDIDA"]},horaInicio:{lt:input.endTime},horaFin:{gt:input.startTime},OR:[{establecimientoId:input.establishmentId},{profesores:{some:{profesorId:{in:input.professorIds}}}}]},include:{horarioActividad:{include:{actividad:true}},establecimiento:true,profesores:{include:{profesor:{include:{usuario:true}}}}}});for(const row of rows){const teacher=row.profesores.find(x=>input.professorIds.includes(x.profesorId));if(teacher)throw new CatalogConflictError(`${teacher.profesor.usuario.nombre} ${teacher.profesor.usuario.apellido} ya tiene ${row.horarioActividad.actividad.nombre} de ${row.horaInicio} a ${row.horaFin}.`);if(input.space&&row.establecimientoId===input.establishmentId&&normalized(row.espacio)===normalized(input.space))throw new CatalogConflictError(`El espacio ${input.space} ya está ocupado de ${row.horaInicio} a ${row.horaFin}.`);}}
-async function createInTx(tx:Prisma.TransactionClient,raw:CreateActivitySessionInput){const parsed=createActivitySessionSchema.parse(raw),source=await schedule(tx,parsed.activityScheduleId);validateDay(parsed.date,source.diaSemana);const professorIds=parsed.professorIds??source.profesores.map(x=>x.profesorId),primaryProfessorId=parsed.primaryProfessorId===undefined?(source.profesores.find(x=>x.esPrincipal)?.profesorId??null):parsed.primaryProfessorId;const input={...parsed,startTime:parsed.startTime??source.horaInicio,endTime:parsed.endTime??source.horaFin,establishmentId:parsed.establishmentId??source.establecimientoId,space:parsed.space===undefined?source.espacio:clean(parsed.space),capacity:parsed.capacity??source.cupoMaximo,observations:clean(parsed.observations),status:parsed.status??"PROGRAMADA",professorIds,primaryProfessorId};if(input.startTime>=input.endTime)throw new CatalogValidationError("La hora final debe ser posterior a la inicial.");if(primaryProfessorId&&!professorIds.includes(primaryProfessorId))throw new CatalogValidationError("El profesor principal debe estar seleccionado.");await validateProfessors(tx,professorIds);await conflicts(tx,input);const row=await tx.claseActividad.create({data:{horarioActividadId:input.activityScheduleId,fecha:dateValue(input.date),horaInicio:input.startTime,horaFin:input.endTime,establecimientoId:input.establishmentId,espacio:input.space,cupoMaximo:input.capacity,estado:input.status,motivoCancelacion:input.status==="CANCELADA"?input.cancellationReason:null,observaciones:input.observations,profesores:{create:professorIds.map(id=>({profesorId:id,esPrincipal:id===primaryProfessorId}))}},include});if(!["TURNO_RECURRENTE","TURNO_PUNTUAL","ACCESO_LIBRE"].includes(source.actividad.modalidadOperacion)&&input.status==="PROGRAMADA"&&source.recursos.length)await tx.bloqueoRecurso.createMany({data:source.recursos.map(item=>({recursoId:item.recursoId,claseActividadId:row.id,fecha:dateValue(input.date),horaInicio:input.startTime,horaFin:input.endTime,cantidad:item.cantidadReservada,motivo:`${source.actividad.nombre} · clase programada`,origen:"CLASE"}))});return row;}
-export async function createActivitySession(input:CreateActivitySessionInput){return prisma.$transaction(async tx=>{const row=await createInTx(tx,input),summary=await counts(tx,[row]);return map(row,summary);});}
-export async function generateActivitySessions(raw:GenerateActivitySessionsInput){const input=generateActivitySessionsSchema.parse(raw);return prisma.$transaction(async tx=>{const source=await schedule(tx,input.activityScheduleId),excluded=new Set(input.excludedDates),dates:string[]=[];for(let cursor=dateValue(input.dateFrom);cursor<=dateValue(input.dateTo);cursor=new Date(cursor.getTime()+86400000)){const text=dateText(cursor);if(cursor.getUTCDay()===dayIndex[source.diaSemana]&&!excluded.has(text))dates.push(text);}const slotMode=["TURNO_RECURRENTE","TURNO_PUNTUAL"].includes(source.actividad.modalidadOperacion),duration=source.duracionTurnoMinutos??source.actividad.duracionTurnoMinutos,gap=source.intervaloTurnoMinutos??source.actividad.intervaloTurnoMinutos,slots:Array<{startTime:string;endTime:string}>=[];if(slotMode){if(!duration)throw new CatalogValidationError("La actividad requiere una duración de turno.");for(let start=timeMinutes(source.horaInicio);start+duration<=timeMinutes(source.horaFin);start+=duration+gap)slots.push({startTime:timeText(start),endTime:timeText(start+duration)});}else slots.push({startTime:source.horaInicio,endTime:source.horaFin});if(dates.length*slots.length>180)throw new CatalogValidationError("No se pueden generar más de 180 turnos por operación.");const existing=await tx.claseActividad.findMany({where:{horarioActividadId:input.activityScheduleId,fecha:{in:dates.map(dateValue)}},select:{fecha:true,horaInicio:true}}),existingSet=new Set(existing.map(x=>`${dateText(x.fecha)}:${x.horaInicio}`)),created:string[]=[],skipped:string[]=[];for(const date of dates)for(const slot of slots){const key=`${date}:${slot.startTime}`;if(existingSet.has(key)){skipped.push(key);continue;}await createInTx(tx,{activityScheduleId:input.activityScheduleId,date,startTime:slot.startTime,endTime:slot.endTime});created.push(key);}return{createdDates:created,skippedDates:skipped,excludedDates:input.excludedDates};},{timeout:30_000});}
-export async function generateActivitySessionsBulk(raw:GenerateActivitySessionsInput){
-  const input=generateActivitySessionsSchema.parse(raw);
-  return prisma.$transaction(async tx=>{
-    const source=await schedule(tx,input.activityScheduleId),excluded=new Set(input.excludedDates),dates:string[]=[];
-    for(let cursor=dateValue(input.dateFrom);cursor<=dateValue(input.dateTo);cursor=new Date(cursor.getTime()+86400000)){const text=dateText(cursor);if(cursor.getUTCDay()===dayIndex[source.diaSemana]&&!excluded.has(text))dates.push(text);}
-    const slotMode=["TURNO_RECURRENTE","TURNO_PUNTUAL"].includes(source.actividad.modalidadOperacion),duration=source.duracionTurnoMinutos??source.actividad.duracionTurnoMinutos,gap=source.intervaloTurnoMinutos??source.actividad.intervaloTurnoMinutos,slots:Array<{startTime:string;endTime:string}>=[];
-    if(slotMode){if(!duration)throw new CatalogValidationError("La actividad requiere una duración de turno.");for(let start=timeMinutes(source.horaInicio);start+duration<=timeMinutes(source.horaFin);start+=duration+gap)slots.push({startTime:timeText(start),endTime:timeText(start+duration)});}else slots.push({startTime:source.horaInicio,endTime:source.horaFin});
-    if(dates.length*slots.length>180)throw new CatalogValidationError("No se pueden generar más de 180 turnos por operación.");
-    const existing=await tx.claseActividad.findMany({where:{horarioActividadId:source.id,fecha:{in:dates.map(dateValue)}},select:{fecha:true,horaInicio:true}}),existingSet=new Set(existing.map(item=>`${dateText(item.fecha)}:${item.horaInicio}`));
-    const rows=dates.flatMap(date=>slots.filter(slot=>!existingSet.has(`${date}:${slot.startTime}`)).map(slot=>({horarioActividadId:source.id,fecha:dateValue(date),horaInicio:slot.startTime,horaFin:slot.endTime,establecimientoId:source.establecimientoId,espacio:source.espacio,cupoMaximo:source.cupoMaximo,estado:"PROGRAMADA" as const})));
-    if(rows.length)await tx.claseActividad.createMany({data:rows,skipDuplicates:true});
-    const created=await tx.claseActividad.findMany({where:{horarioActividadId:source.id,fecha:{in:dates.map(dateValue)}},select:{id:true,fecha:true,horaInicio:true,horaFin:true}});
-    const defaultProfessorIds=source.profesores.map(item=>item.profesorId),defaultPrimaryId=source.profesores.find(item=>item.esPrincipal)?.profesorId??null;
-    const classAssignments=created.flatMap(item=>{const slot=input.teacherAssignments?.find(assignment=>assignment.startTime===item.horaInicio&&assignment.endTime===item.horaFin),professorIds=slot?.professorIds??defaultProfessorIds,primaryId=slot?professorIds[0]??null:defaultPrimaryId;return professorIds.map(profesorId=>({claseActividadId:item.id,profesorId,esPrincipal:profesorId===primaryId}));});
-    if(classAssignments.length)await tx.claseActividadProfesor.createMany({data:classAssignments,skipDuplicates:true});
-    if(!slotMode&&source.actividad.modalidadOperacion!=="ACCESO_LIBRE"&&source.recursos.length&&created.length)await tx.bloqueoRecurso.createMany({data:created.flatMap(item=>source.recursos.map(resource=>({recursoId:resource.recursoId,claseActividadId:item.id,fecha:item.fecha,horaInicio:item.horaInicio,horaFin:item.horaFin,cantidad:resource.cantidadReservada,motivo:`${source.actividad.nombre} · clase programada`,origen:"CLASE" as const})))});
-    return{createdDates:rows.map(item=>`${dateText(item.fecha)}:${item.horaInicio}`),skippedDates:[...existingSet],excludedDates:input.excludedDates};
-  },{timeout:30_000});
+async function createInTx(tx:Prisma.TransactionClient,raw:CreateActivitySessionInput){const parsed=createActivitySessionSchema.parse(raw),source=await schedule(tx,parsed.activityScheduleId);validateDay(parsed.date,source.diaSemana);if(!source.actividad.vigenciaConfirmada)throw new CatalogValidationError("Confirmá la vigencia de la actividad antes de generar clases.");if((source.actividad.fechaInicio && dateValue(parsed.date)<source.actividad.fechaInicio)||(source.actividad.fechaFin && dateValue(parsed.date)>source.actividad.fechaFin)||source.actividad.fechasExcluidas.includes(parsed.date))throw new CatalogValidationError("La fecha no pertenece a la vigencia de la actividad.");const professorIds=parsed.professorIds??source.profesores.map(x=>x.profesorId),primaryProfessorId=parsed.primaryProfessorId===undefined?(source.profesores.find(x=>x.esPrincipal&&professorIds.includes(x.profesorId))?.profesorId??null):parsed.primaryProfessorId;const input={...parsed,startTime:parsed.startTime??source.horaInicio,endTime:parsed.endTime??source.horaFin,establishmentId:parsed.establishmentId??source.establecimientoId,space:parsed.space===undefined?source.espacio:clean(parsed.space),capacity:parsed.capacity??source.cupoMaximo,observations:clean(parsed.observations),status:parsed.status??"PROGRAMADA",professorIds,primaryProfessorId};if(input.startTime>=input.endTime)throw new CatalogValidationError("La hora final debe ser posterior a la inicial.");if(primaryProfessorId&&!professorIds.includes(primaryProfessorId))throw new CatalogValidationError("El profesor principal debe estar seleccionado.");await validateProfessors(tx,professorIds);await conflicts(tx,input);const row=await tx.claseActividad.create({data:{horarioActividadId:input.activityScheduleId,fecha:dateValue(input.date),horaInicio:input.startTime,horaFin:input.endTime,establecimientoId:input.establishmentId,espacio:input.space,cupoMaximo:input.capacity,estado:input.status,motivoCancelacion:input.status==="CANCELADA"?input.cancellationReason:null,observaciones:input.observations,profesores:{create:professorIds.map(id=>({profesorId:id,esPrincipal:id===primaryProfessorId}))}},include});if(!["TURNO_RECURRENTE","TURNO_PUNTUAL","ACCESO_LIBRE"].includes(source.actividad.modalidadOperacion)&&input.status==="PROGRAMADA"&&source.recursos.length)await tx.bloqueoRecurso.createMany({data:source.recursos.map(item=>({recursoId:item.recursoId,claseActividadId:row.id,fecha:dateValue(input.date),horaInicio:input.startTime,horaFin:input.endTime,cantidad:item.cantidadReservada,motivo:`${source.actividad.nombre} · clase programada`,origen:"CLASE"}))});return row;}
+export async function createActivitySession(input:CreateActivitySessionInput){return prisma.$transaction(async tx=>{
+const parent=await tx.horarioActividad.findUnique({where:{id:input.activityScheduleId},select:{actividadId:true}});
+if(!parent)throw new CatalogNotFoundError("Horario no encontrado.");
+await tx.$queryRaw`SELECT id FROM "Actividad" WHERE id = ${parent.actividadId} FOR UPDATE`;
+await tx.$queryRaw`SELECT id FROM "ActividadHorario" WHERE id = ${input.activityScheduleId} FOR UPDATE`;
+const row=await createInTx(tx,input),summary=await counts(tx,[row]);return map(row,summary);});}
+type SlotSource={horaInicio:string;horaFin:string;duracionTurnoMinutos:number|null;intervaloTurnoMinutos:number;actividad:{modalidadOperacion:string;duracionTurnoMinutos:number|null}};
+function sessionSlots(source:SlotSource){
+  const slotMode=["TURNO_RECURRENTE","TURNO_PUNTUAL"].includes(source.actividad.modalidadOperacion);
+    const duration=source.duracionTurnoMinutos??source.actividad.duracionTurnoMinutos,gap=source.intervaloTurnoMinutos;
+    const slots:Array<{startTime:string;endTime:string}>=[];
+    if(slotMode){
+      if(!duration||duration<=0||gap<0)throw new CatalogValidationError("La actividad requiere una duración de turno válida.");
+      for(let start=timeMinutes(source.horaInicio);start+duration<=timeMinutes(source.horaFin);start+=duration+gap)slots.push({startTime:timeText(start),endTime:timeText(start+duration)});
+    }else slots.push({startTime:source.horaInicio,endTime:source.horaFin});
+
+  return slots;
 }
 
-export async function syncGeneratedSessionTeachers(activityScheduleId:string,assignments:Array<{startTime:string;endTime:string;professorIds:string[]}>) {
+/** Materialization is serialized with activity state/validity changes and repeated queries. */
+export async function generateActivitySessions(raw:GenerateActivitySessionsInput){
+  const input=generateActivitySessionsSchema.parse(raw);
   return prisma.$transaction(async tx=>{
-    const professorIds=[...new Set(assignments.flatMap(item=>item.professorIds))];
-    await validateProfessors(tx,professorIds);
-    const today=new Date();today.setUTCHours(0,0,0,0);
-    const sessions=await tx.claseActividad.findMany({where:{horarioActividadId:activityScheduleId,fecha:{gte:today},estado:{notIn:["CANCELADA","FINALIZADA"]},asistenciaCerradaAt:null},select:{id:true,horaInicio:true,horaFin:true}});
-    for(const session of sessions){const assignment=assignments.find(item=>item.startTime===session.horaInicio&&item.endTime===session.horaFin);if(!assignment)continue;await tx.claseActividadProfesor.deleteMany({where:{claseActividadId:session.id}});if(assignment.professorIds.length)await tx.claseActividadProfesor.createMany({data:[...new Set(assignment.professorIds)].map((profesorId,index)=>({claseActividadId:session.id,profesorId,esPrincipal:index===0})),skipDuplicates:true});}
+    const initial=await tx.horarioActividad.findUnique({where:{id:input.activityScheduleId},select:{actividadId:true}});
+    if(!initial)throw new CatalogNotFoundError("Horario no encontrado.");
+    await tx.$queryRaw`SELECT id FROM "Actividad" WHERE id = ${initial.actividadId} FOR UPDATE`;
+    await tx.$queryRaw`SELECT id FROM "ActividadHorario" WHERE id = ${input.activityScheduleId} FOR UPDATE`;
+    const source=await schedule(tx,input.activityScheduleId);
+    const excluded=new Set([...input.excludedDates,...source.actividad.fechasExcluidas]);
+    const dates:string[]=[];
+    for(let cursor=dateValue(input.dateFrom);cursor<=dateValue(input.dateTo);cursor=new Date(cursor.getTime()+86400000)){
+      const text=dateText(cursor);
+      if(source.actividad.fechaInicio&&cursor<source.actividad.fechaInicio)continue;
+      if(source.actividad.fechaFin&&cursor>source.actividad.fechaFin)continue;
+      if(cursor.getUTCDay()===dayIndex[source.diaSemana]&&!excluded.has(text))dates.push(text);
+    }
+    const slots=sessionSlots(source);
+    const existing=await tx.claseActividad.findMany({where:{horarioActividadId:source.id,fecha:{in:dates.map(dateValue)}},select:{fecha:true,horaInicio:true}});
+    const existingSet=new Set(existing.map(x=>`${dateText(x.fecha)}:${x.horaInicio}`));
+    const assignments=input.teacherAssignments??source.teacherAssignments??[];
+    const created:string[]=[],skipped:string[]=[];
+    for(const date of dates)for(const slot of slots){
+      const key=`${date}:${slot.startTime}`;
+      if(existingSet.has(key)){skipped.push(key);continue;}
+      const assignment=assignments.find(item=>item.startTime===slot.startTime&&item.endTime===slot.endTime);
+      await createInTx(tx,{activityScheduleId:source.id,date,...slot,...(assignment?{professorIds:assignment.professorIds,primaryProfessorId:assignment.professorIds[0]??null}:{})});
+      created.push(key);
+    }
+    return{createdDates:created,skippedDates:skipped,excludedDates:[...excluded]};
+  },{timeout:60_000});
+}
+
+export const generateActivitySessionsBulk=generateActivitySessions;
+
+/** The default window only bounds work per read; explicit ranges may be any future period. */
+export async function ensureActivitySessions(filters:{dateFrom?:string;dateTo?:string;activityId?:string;activityScheduleId?:string;establishmentId?:string|{in:string[]};professorId?:string;scheduleIds?:string[]}={}){
+  const from=filters.dateFrom??(filters.dateTo?dateText(new Date(dateValue(filters.dateTo).getTime()-30*86400000)):dateText(new Date()));
+  const to=filters.dateTo??dateText(new Date(dateValue(from).getTime()+30*86400000));
+  if(dateValue(from)>dateValue(to))throw new CatalogValidationError("El rango de fechas es inválido.");
+  const schedules=await prisma.horarioActividad.findMany({where:{id:filters.activityScheduleId??(filters.scheduleIds?{in:filters.scheduleIds}:undefined),establecimientoId:filters.establishmentId,estado:"ACTIVO",actividadId:filters.activityId,actividad:{estado:{in:["ACTIVA","SIN_CUPO","COMPLETA"]},modalidadOperacion:{not:"ACCESO_LIBRE"}},...(filters.professorId?{profesores:{some:{profesorId:filters.professorId}}}:{})},select:{id:true,actividadId:true,diaSemana:true,horaInicio:true,horaFin:true,duracionTurnoMinutos:true,intervaloTurnoMinutos:true,actividad:{select:{modalidadOperacion:true,duracionTurnoMinutos:true}}}});
+  let createdCount=0,skippedCount=0;
+  const configurations=await activityConfigurations(prisma,schedules.map(item=>item.actividadId));
+  // Read existing keys once. Missing keys are still rechecked under the original locks.
+  const existing=schedules.length?await prisma.claseActividad.findMany({where:{horarioActividadId:{in:schedules.map(s=>s.id)},fecha:{gte:dateValue(from),lte:dateValue(to)}},select:{horarioActividadId:true,fecha:true,horaInicio:true}}):[];
+  const existingKeys=new Set(existing.map(c=>`${c.horarioActividadId}:${dateText(c.fecha)}:${c.horaInicio}`));
+  for(const candidate of schedules){
+    const validity=configurationDates(configurations.get(candidate.actividadId)??null);
+    if(!validity.vigenciaConfirmada)continue;
+    const source={...candidate,actividad:{...candidate.actividad,...validity}};
+    const slots=sessionSlots(source),excluded=new Set(validity.fechasExcluidas);
+    const start=source.actividad.fechaInicio&&source.actividad.fechaInicio>dateValue(from)?source.actividad.fechaInicio:dateValue(from);
+    const end=source.actividad.fechaFin&&source.actividad.fechaFin<dateValue(to)?source.actividad.fechaFin:dateValue(to);
+    for(let cursor=start;cursor<=end;cursor=new Date(cursor.getTime()+7*86400000)){
+      const chunkEnd=new Date(Math.min(end.getTime(),cursor.getTime()+6*86400000));
+      let missing=false,alreadyPresent=0;
+      for(let date=cursor;date<=chunkEnd;date=new Date(date.getTime()+86400000)){
+        if(date.getUTCDay()!==dayIndex[candidate.diaSemana]||excluded.has(dateText(date)))continue;
+        for(const slot of slots){if(existingKeys.has(`${candidate.id}:${dateText(date)}:${slot.startTime}`))alreadyPresent++;else missing=true;}
+      }
+      if(!missing){skippedCount+=alreadyPresent;continue;}
+      const result=await generateActivitySessions({activityScheduleId:source.id,dateFrom:dateText(cursor),dateTo:dateText(chunkEnd),excludedDates:[]});
+      createdCount+=result.createdDates.length;skippedCount+=result.skippedDates.length;
+    }
+  }
+  return{scheduleCount:schedules.length,createdCount,skippedCount};
+}
+
+type SessionTeacherAssignment={professorIds:string[];primaryProfessorId?:string|null};
+
+async function syncFutureSessionTeachers(
+  tx:Prisma.TransactionClient,
+  activityScheduleId:string,
+  assignmentFor:(session:{horaInicio:string;horaFin:string})=>SessionTeacherAssignment|undefined,
+){
+  const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Argentina/Buenos_Aires",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date());
+  const part=(type:string)=>parts.find(item=>item.type===type)?.value??"";
+  const today=dateValue(`${part("year")}-${part("month")}-${part("day")}`),time=`${part("hour")}:${part("minute")}`;
+  const sessions=await tx.claseActividad.findMany({where:{horarioActividadId:activityScheduleId,OR:[{fecha:{gt:today}},{fecha:today,horaInicio:{gte:time}}],estado:{in:["PROGRAMADA","SUSPENDIDA"]},asistenciaCerradaAt:null},select:{id:true,horaInicio:true,horaFin:true}});
+  for(const session of sessions){
+    const assignment=assignmentFor(session);
+    if(!assignment)continue;
+    const ids=[...new Set(assignment.professorIds)];
+    const primaryId=assignment.primaryProfessorId===undefined?ids[0]??null:assignment.primaryProfessorId;
+    await tx.claseActividadProfesor.deleteMany({where:{claseActividadId:session.id}});
+    if(ids.length)await tx.claseActividadProfesor.createMany({data:ids.map(profesorId=>({claseActividadId:session.id,profesorId,esPrincipal:profesorId===primaryId})),skipDuplicates:true});
+  }
+}
+
+export async function syncGeneratedSessionTeachers(activityScheduleId:string,assignments:Array<{startTime:string;endTime:string;professorIds:string[]}>, client: DatabaseClient = prisma) {
+  return inTransaction(client,async tx=>{
+    await validateProfessors(tx,[...new Set(assignments.flatMap(item=>item.professorIds))]);
+    await syncFutureSessionTeachers(tx,activityScheduleId,session=>assignments.find(item=>item.startTime===session.horaInicio&&item.endTime===session.horaFin));
   });
+}
+
+/** Schedule-level edits apply the selected roster to pending future classes only. */
+export async function syncScheduleSessionTeachers(tx:Prisma.TransactionClient,activityScheduleId:string,professorIds:string[],primaryProfessorId:string|null){
+  await syncFutureSessionTeachers(tx,activityScheduleId,()=>({professorIds,primaryProfessorId}));
 }
 
 export async function getActivitySession(id:string){return prisma.$transaction(async tx=>{const row=await tx.claseActividad.findUnique({where:{id},include});if(!row)return null;return map(row,await counts(tx,[row]));});}
 export async function updateActivitySession(id:string,patch:UpdateActivitySessionInput){return prisma.$transaction(async tx=>{
   const current=await tx.claseActividad.findUnique({where:{id},include:{profesores:true}});if(!current)throw new CatalogNotFoundError("Clase no encontrada.");
-  const professorIds=patch.professorIds??current.profesores.map(x=>x.profesorId),primaryProfessorId=patch.primaryProfessorId===undefined?(current.profesores.find(x=>x.esPrincipal)?.profesorId??null):patch.primaryProfessorId,input={date:dateText(current.fecha),startTime:patch.startTime??current.horaInicio,endTime:patch.endTime??current.horaFin,establishmentId:patch.establishmentId??current.establecimientoId,space:patch.space===undefined?current.espacio:clean(patch.space),status:patch.status??current.estado,professorIds,primaryProfessorId};
+  const professorIds=patch.professorIds??current.profesores.map(x=>x.profesorId),primaryProfessorId=patch.primaryProfessorId===undefined?(current.profesores.find(x=>x.esPrincipal&&professorIds.includes(x.profesorId))?.profesorId??null):patch.primaryProfessorId,input={date:dateText(current.fecha),startTime:patch.startTime??current.horaInicio,endTime:patch.endTime??current.horaFin,establishmentId:patch.establishmentId??current.establecimientoId,space:patch.space===undefined?current.espacio:clean(patch.space),status:patch.status??current.estado,professorIds,primaryProfessorId};
   if(input.startTime>=input.endTime)throw new CatalogValidationError("La hora final debe ser posterior.");if(primaryProfessorId&&!professorIds.includes(primaryProfessorId))throw new CatalogValidationError("El principal debe estar seleccionado.");if(["CANCELADA","SUSPENDIDA"].includes(input.status)&&!clean(patch.cancellationReason)&&!current.motivoCancelacion)throw new CatalogValidationError(input.status==="SUSPENDIDA"?"Indicá el motivo de suspensión de la clase.":"Indicá el motivo de cancelación de la clase.");
   await validateProfessors(tx,professorIds,new Set(current.profesores.map(x=>x.profesorId)));await conflicts(tx,input,id);const syncProfessors=patch.professorIds!==undefined||patch.primaryProfessorId!==undefined;if(syncProfessors)await tx.claseActividadProfesor.deleteMany({where:{claseActividadId:id}});
   const row=await tx.claseActividad.update({where:{id},data:{horaInicio:input.startTime,horaFin:input.endTime,establecimientoId:input.establishmentId,espacio:input.space,cupoMaximo:patch.capacity===undefined?undefined:patch.capacity,estado:input.status,motivoCancelacion:["CANCELADA","SUSPENDIDA"].includes(input.status)?(clean(patch.cancellationReason)??current.motivoCancelacion):null,observaciones:patch.observations===undefined?undefined:clean(patch.observations),...(syncProfessors?{profesores:{create:professorIds.map(pid=>({profesorId:pid,esPrincipal:pid===primaryProfessorId}))}}:{})},include});
@@ -81,4 +172,4 @@ export async function updateActivitySession(id:string,patch:UpdateActivitySessio
 });}
 export const changeActivitySessionStatus=(id:string,status:ClaseActividadEstado)=>updateActivitySession(id,{status});
 type ActivitySessionQueryFilters=ActivitySessionFilters&{visibleAfter?:{date:string;time:string};excludedStatuses?:ClaseActividadEstado[];includeScheduleAssignments?:boolean;participation?:"WITH"|"WITHOUT"};
-export async function listActivitySessions(filters:ActivitySessionQueryFilters){const f=filters,page=typeof f.page==="number"?f.page:1,pageSize=typeof f.pageSize==="number"?f.pageSize:8,search=f.search?.trim(),visibilityDate=f.visibleAfter?dateValue(f.visibleAfter.date):null,professorAssignment=f.professorId?(f.includeScheduleAssignments?{OR:[{profesores:{some:{profesorId:f.professorId}}},{horarioActividad:{profesores:{some:{profesorId:f.professorId}}}}]}:{profesores:{some:{profesorId:f.professorId}}}):{};const where:Prisma.ClaseActividadWhereInput={estado:f.status,horarioActividadId:f.activityScheduleId,establecimientoId:f.establishmentId,fecha:f.dateFrom||f.dateTo?{gte:f.dateFrom?dateValue(f.dateFrom):undefined,lte:f.dateTo?dateValue(f.dateTo):undefined}:undefined,horarioActividad:{actividadId:f.activityId},...professorAssignment,AND:[...(f.excludedStatuses?.length?[{estado:{notIn:f.excludedStatuses}}]:[]),...(f.visibleAfter&&visibilityDate?[{OR:[{fecha:{gt:visibilityDate}},{fecha:visibilityDate,horaFin:{gt:f.visibleAfter.time}}]}]:[])],...(search?{OR:[{espacio:{contains:search,mode:"insensitive"}},{establecimiento:{nombre:{contains:search,mode:"insensitive"}}},{horarioActividad:{actividad:{nombre:{contains:search,mode:"insensitive"}}}},{profesores:{some:{profesor:{usuario:{OR:[{nombre:{contains:search,mode:"insensitive"}},{apellido:{contains:search,mode:"insensitive"}}]}}}}}]}:{})};return prisma.$transaction(async tx=>{const orderBy=[{fecha:"asc" as const},{horaInicio:"asc" as const},{horarioActividad:{actividad:{nombre:"asc" as const}}}];if(f.participation){const candidates=await tx.claseActividad.findMany({where,include,orderBy}),summary=await counts(tx,candidates),filtered=candidates.filter(row=>(summary.get(row.id)?.confirmedCount??0)>0===(f.participation==="WITH")),total=filtered.length,rows=filtered.slice((page-1)*pageSize,page*pageSize);return{items:rows.map(x=>map(x,summary)),meta:{total,page,pageSize,pageCount:Math.max(1,Math.ceil(total/pageSize))}};}const[total,rows]=await Promise.all([tx.claseActividad.count({where}),tx.claseActividad.findMany({where,include,orderBy,skip:(page-1)*pageSize,take:pageSize})]),summary=await counts(tx,rows);return{items:rows.map(x=>map(x,summary)),meta:{total,page,pageSize,pageCount:Math.max(1,Math.ceil(total/pageSize))}};});}
+export async function listActivitySessions(filters:ActivitySessionQueryFilters){await ensureActivitySessions(filters);const f=filters,page=typeof f.page==="number"?f.page:1,pageSize=typeof f.pageSize==="number"?f.pageSize:8,search=f.search?.trim(),visibilityDate=f.visibleAfter?dateValue(f.visibleAfter.date):null,professorAssignment=f.professorId?(f.includeScheduleAssignments?{OR:[{profesores:{some:{profesorId:f.professorId}}},{horarioActividad:{profesores:{some:{profesorId:f.professorId}}}}]}:{profesores:{some:{profesorId:f.professorId}}}):{};const where:Prisma.ClaseActividadWhereInput={estado:f.status,horarioActividadId:f.activityScheduleId,establecimientoId:f.establishmentId,fecha:f.dateFrom||f.dateTo?{gte:f.dateFrom?dateValue(f.dateFrom):undefined,lte:f.dateTo?dateValue(f.dateTo):undefined}:undefined,horarioActividad:{actividadId:f.activityId},...professorAssignment,AND:[...(f.excludedStatuses?.length?[{estado:{notIn:f.excludedStatuses}}]:[]),...(f.visibleAfter&&visibilityDate?[{OR:[{fecha:{gt:visibilityDate}},{fecha:visibilityDate,horaFin:{gt:f.visibleAfter.time}}]}]:[])],...(search?{OR:[{espacio:{contains:search,mode:"insensitive"}},{establecimiento:{nombre:{contains:search,mode:"insensitive"}}},{horarioActividad:{actividad:{nombre:{contains:search,mode:"insensitive"}}}},{profesores:{some:{profesor:{usuario:{OR:[{nombre:{contains:search,mode:"insensitive"}},{apellido:{contains:search,mode:"insensitive"}}]}}}}}]}:{})};return prisma.$transaction(async tx=>{const orderBy=[{fecha:"asc" as const},{horaInicio:"asc" as const},{horarioActividad:{actividad:{nombre:"asc" as const}}}];if(f.participation){const candidates=await tx.claseActividad.findMany({where,include,orderBy}),summary=await counts(tx,candidates),filtered=candidates.filter(row=>(summary.get(row.id)?.confirmedCount??0)>0===(f.participation==="WITH")),total=filtered.length,rows=filtered.slice((page-1)*pageSize,page*pageSize);return{items:rows.map(x=>map(x,summary)),meta:{total,page,pageSize,pageCount:Math.max(1,Math.ceil(total/pageSize))}};}const[total,rows]=await Promise.all([tx.claseActividad.count({where}),tx.claseActividad.findMany({where,include,orderBy,skip:(page-1)*pageSize,take:pageSize})]),summary=await counts(tx,rows);return{items:rows.map(x=>map(x,summary)),meta:{total,page,pageSize,pageCount:Math.max(1,Math.ceil(total/pageSize))}};});}

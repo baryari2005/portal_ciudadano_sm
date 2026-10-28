@@ -21,6 +21,9 @@ export async function signJwt(payload: JwtPayload, exp: string = defaultExp) {
 }
 
 export async function verifyJwt(token: string) {
-  const { payload } = await jwtVerify(token, secret);
+  const { payload } = await jwtVerify(token, secret, {
+    algorithms: ["HS256"],
+    requiredClaims: ["uid", "iat", "exp"],
+  });
   return payload;
 }

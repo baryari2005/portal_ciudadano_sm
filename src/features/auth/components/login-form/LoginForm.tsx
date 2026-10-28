@@ -57,6 +57,9 @@ export default function LoginForm({ nextParam, imageSources }: Props) {
       const preferred = localStorage.getItem(workspacePreferenceStorageKey(user.id));
       const requestedWorkspace = workspaceForPath(next || "/");
       const destination = availableWorkspaces(user, teacherEnabled).includes(requestedWorkspace) && nextParam ? next : getDefaultWorkspace(user, teacherEnabled, preferred);
+      // AppViewportGate sends desktop-only portals back to login below 900 px.
+      // Do not restore into that redirect repeatedly on a mobile viewport.
+      if (workspaceForPath(destination) === "administration" && window.innerWidth < 900) return;
       if (!active || lastReplaceRef.current === destination) return;
       lastReplaceRef.current = destination;
       router.replace(destination);

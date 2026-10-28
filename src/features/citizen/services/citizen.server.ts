@@ -1,17 +1,37 @@
+import { scheduleAssignments } from "@/features/activity-configuration/helpers/activity-configuration";
+import { activityConfigurations } from "@/features/activity-configuration/services/activity-configuration.server";
 import { prisma } from "@/lib/db";
 import { Genero, Nacionalidad, Prisma } from "@prisma/client";
-import { generateActivitySessions } from "@/features/activity-sessions/services/activity-sessions.server";
+import { ensureActivitySessions } from "@/features/activity-sessions/services/activity-sessions.server";
 import { createEnrollment, cancelEnrollment, changeCitizenEnrollmentSchedules } from "@/features/enrollments/services/enrollments.server";
 import { getUserQrStatus } from "@/features/attendance-qr/services/qr-credentials.server";
 import { getDigitalAccessQrStatus, issueDigitalAccessQr, revokeDigitalAccessQr } from "@/features/access/services/digital-access-qr.server";
-import { CatalogConflictError, CatalogNotFoundError, CatalogValidationError } from "@/lib/errors/catalog-errors";
+import { CatalogNotFoundError, CatalogValidationError } from "@/lib/errors/catalog-errors";
 import { notifyAdministrators } from "@/features/notifications/services/notifications.server";
 import { isCanceledCitizenSessionVisible, resolveCitizenScheduleStatus } from "../helpers/citizen-schedule-status";
 import { evaluateEnrollmentAge } from "@/features/enrollments/helpers/enrollment-age";
 const dateText=(v:Date)=>v.toISOString().slice(0,10);
 export async function getCitizenSummary(userId:string){const[user,grouped,upcoming,attended,qr]=await Promise.all([prisma.usuario.findFirst({where:{id:userId,deletedAt:null},select:{id:true,nombre:true,apellido:true,avatarUrl:true}}),prisma.inscripcion.groupBy({by:["estado"],where:{usuarioId:userId},_count:{_all:true}}),listCitizenSchedule(userId,{limit:1,upcomingOnly:true,enrollmentStatuses:["CONFIRMADA"]}),prisma.asistencia.count({where:{inscripcion:{usuarioId:userId},estado:"PRESENTE"}}),getUserQrStatus(userId)]);if(!user)throw new CatalogNotFoundError("Usuario no encontrado.");const count=(state:string)=>grouped.find(x=>x.estado===state)?._count._all??0;return{user:{id:user.id,firstName:user.nombre,lastName:user.apellido,avatarUrl:user.avatarUrl},counts:{confirmedEnrollments:count("CONFIRMADA"),waitlistEnrollments:count("LISTA_ESPERA"),upcomingSessions:upcoming.total,attendedSessions:attended},nextSession:upcoming.items[0]??null,qrCredential:qr}}
-export async function listCitizenActivities(userId:string,search?:string){const[user,rows]=await Promise.all([prisma.usuario.findFirst({where:{id:userId,deletedAt:null},select:{fechaNacimiento:true}}),prisma.actividad.findMany({where:{estado:{in:["ACTIVA","SIN_CUPO","COMPLETA"]},...(search?{OR:[{nombre:{contains:search,mode:"insensitive"}},{descripcionCorta:{contains:search,mode:"insensitive"}}]}:{})},include:{categoriaActividad:{select:{nombre:true}},publicosObjetivo:{include:{publicoObjetivo:{select:{nombre:true,edadMinimaSugerida:true,edadMaximaSugerida:true}}}},requisitos:{include:{requisito:true},orderBy:{orden:"asc"}},horarios:{where:{estado:"ACTIVO"},include:{establecimiento:{select:{id:true,nombre:true}},profesores:{include:{profesor:{include:{usuario:{select:{nombre:true,apellido:true}}}}},orderBy:[{esPrincipal:"desc"},{createdAt:"asc"}]},clases:{where:{fecha:{gte:new Date()},estado:{in:["PROGRAMADA","EN_CURSO"]}},select:{horaInicio:true,horaFin:true,profesores:{include:{profesor:{include:{usuario:{select:{nombre:true,apellido:true}}}}},orderBy:[{esPrincipal:"desc"},{createdAt:"asc"}]}},orderBy:[{fecha:"asc"},{horaInicio:"asc"}]},inscripciones:{where:{estado:"CONFIRMADA",modalidad:{not:"POR_CLASE"}},select:{id:true}}}}},orderBy:{nombre:"asc"}})]);if(!user)throw new CatalogNotFoundError("Usuario no encontrado.");const own=await prisma.inscripcion.findMany({where:{usuarioId:userId},select:{id:true,horarioActividadId:true,estado:true,horarios:{select:{horarioActividadId:true,horaInicio:true,horaFin:true}}}}),ownMap=new Map(own.flatMap(x=>x.horarios.length?x.horarios.map(slot=>[slot.horarioActividadId,x.estado] as const):[[x.horarioActividadId,x.estado] as const])),ownEnrollmentIdMap=new Map(own.flatMap(x=>x.horarios.length?x.horarios.map(slot=>[slot.horarioActividadId,x.id] as const):[[x.horarioActividadId,x.id] as const])),ownSlotsMap=new Map<string,Array<{startTime:string|null;endTime:string|null;status:string}>>();for(const enrollment of own){for(const slot of enrollment.horarios){ownSlotsMap.set(slot.horarioActividadId,[...(ownSlotsMap.get(slot.horarioActividadId)??[]),{startTime:slot.horaInicio,endTime:slot.horaFin,status:enrollment.estado}])}}return rows.filter(a=>evaluateEnrollmentAge({birthDate:user.fechaNacimiento,referenceDate:new Date(),audiences:a.publicosObjetivo.map(x=>x.publicoObjetivo)}).eligible).map(a=>({id:a.id,name:a.nombre,shortDescription:a.descripcionCorta,imageUrl:a.imagenUrl,category:a.categoriaActividad?.nombre??a.categoria,level:a.nivel,enrollmentMode:a.modalidadInscripcion,periodMonths:a.duracionPeriodoMeses,cancellationNoticeHours:a.horasCancelacionJustificada,age:{min:a.edadMinima,max:a.edadMaxima},free:a.esGratuita,price:a.precio?.toString()??null,audiences:a.publicosObjetivo.map(x=>x.publicoObjetivo.nombre),requirements:a.requisitos.map(x=>({id:x.requisito.id,name:x.requisito.nombre,slug:x.requisito.slug,imageUrl:x.requisito.imagenUrl,type:x.requisito.tipo,requiresDocument:x.requisito.requiereDocumento,mandatory:x.obligatorio,observations:x.observaciones,instructions:x.requisito.instrucciones,order:x.orden,active:x.requisito.activo})),hasRequirements:a.requisitos.length>0,requiresDocumentation:a.requisitos.some(x=>x.obligatorio&&x.requisito.requiereDocumento),schedules:a.horarios.map(h=>({id:h.id,day:h.diaSemana,startTime:h.horaInicio,endTime:h.horaFin,slotDurationMinutes:h.duracionTurnoMinutos,slotGapMinutes:h.intervaloTurnoMinutos,space:h.espacio,establishment:{id:h.establecimiento.id,name:h.establecimiento.nombre},maxCapacity:h.cupoMaximo,confirmedCount:h.inscripciones.length,availableCount:a.modalidadInscripcion==="POR_CLASE"?h.cupoMaximo:Math.max(h.cupoMaximo+(h.permiteSobrecupo?h.sobrecupoMaximo??0:0)-h.inscripciones.length,0),waitlistEnabled:h.permiteListaEspera,professors:h.profesores.map(p=>[p.profesor.usuario.nombre,p.profesor.usuario.apellido].filter(Boolean).join(" ")),teacherAssignments:[...new Map(h.clases.map(c=>[`${c.horaInicio}:${c.horaFin}`,{startTime:c.horaInicio,endTime:c.horaFin,professors:c.profesores.map(p=>[p.profesor.usuario.nombre,p.profesor.usuario.apellido].filter(Boolean).join(" "))}])).values()],ownEnrollmentStatus:ownMap.get(h.id)??null,ownEnrollmentId:ownEnrollmentIdMap.get(h.id)??null,ownEnrollmentSlots:ownSlotsMap.get(h.id)??[]}))}))}
-export async function getCitizenActivity(userId:string,id:string){const item=(await listCitizenActivities(userId)).find(x=>x.id===id);if(!item)throw new CatalogNotFoundError("Actividad no disponible.");const full=await prisma.actividad.findUnique({where:{id},select:{descripcion:true,modalidadOperacion:true,horarios:{where:{estado:"ACTIVO"},select:{clases:{where:{fecha:{gte:new Date()},estado:{in:["PROGRAMADA","EN_CURSO"]}},select:{id:true,fecha:true,horaInicio:true,horaFin:true,estado:true},orderBy:[{fecha:"asc"},{horaInicio:"asc"}]}}}}});return{...item,...full,eventSessions:full?.horarios.flatMap((schedule)=>schedule.clases).map((session)=>({...session,date:dateText(session.fecha)}))??[]}}
+// Discovery and recurring details read published data; calendars materialize their requested dates.
+async function loadCitizenActivities(userId:string,search?:string,activityId?:string){const[user,rows]=await Promise.all([prisma.usuario.findFirst({where:{id:userId,deletedAt:null},select:{fechaNacimiento:true}}),prisma.actividad.findMany({where:{id:activityId,estado:{in:["ACTIVA","SIN_CUPO","COMPLETA"]},...(search?{OR:[{nombre:{contains:search,mode:"insensitive"}},{descripcionCorta:{contains:search,mode:"insensitive"}}]}:{})},include:{categoriaActividad:{select:{nombre:true}},publicosObjetivo:{include:{publicoObjetivo:{select:{nombre:true,edadMinimaSugerida:true,edadMaximaSugerida:true}}}},requisitos:{include:{requisito:true},orderBy:{orden:"asc"}},horarios:{where:{estado:"ACTIVO"},include:{establecimiento:{select:{id:true,nombre:true}},profesores:{include:{profesor:{include:{usuario:{select:{nombre:true,apellido:true}}}}},orderBy:[{esPrincipal:"desc"},{createdAt:"asc"}]},clases:{where:{fecha:{gte:new Date()},estado:{in:["PROGRAMADA","EN_CURSO"]}},select:{id:true,fecha:true,estado:true,horaInicio:true,horaFin:true,profesores:{include:{profesor:{include:{usuario:{select:{nombre:true,apellido:true}}}}},orderBy:[{esPrincipal:"desc"},{createdAt:"asc"}]}},orderBy:[{fecha:"asc"},{horaInicio:"asc"}]},_count:{select:{inscripciones:{where:{estado:"CONFIRMADA",modalidad:{not:"POR_CLASE"}}}}}}}},orderBy:{nombre:"asc"}})]);if(!user)throw new CatalogNotFoundError("Usuario no encontrado.");const own=await prisma.inscripcion.findMany({where:{usuarioId:userId,...(activityId?{horarioActividad:{actividadId:activityId}}:{})},select:{id:true,horarioActividadId:true,estado:true,horarios:{select:{horarioActividadId:true,horaInicio:true,horaFin:true}}}}),ownMap=new Map(own.flatMap(x=>x.horarios.length?x.horarios.map(slot=>[slot.horarioActividadId,x.estado] as const):[[x.horarioActividadId,x.estado] as const])),ownEnrollmentIdMap=new Map(own.flatMap(x=>x.horarios.length?x.horarios.map(slot=>[slot.horarioActividadId,x.id] as const):[[x.horarioActividadId,x.id] as const])),ownSlotsMap=new Map<string,Array<{startTime:string|null;endTime:string|null;status:string}>>();for(const enrollment of own){for(const slot of enrollment.horarios){ownSlotsMap.set(slot.horarioActividadId,[...(ownSlotsMap.get(slot.horarioActividadId)??[]),{startTime:slot.horaInicio,endTime:slot.horaFin,status:enrollment.estado}])}}const configurations=await activityConfigurations(prisma,rows.map(row=>row.id));const today=dateText(new Date());return rows.filter(a=>{const configuration=configurations.get(a.id);return !configuration?.endDate||configuration.endDate>=today;}).filter(a=>evaluateEnrollmentAge({birthDate:user.fechaNacimiento,referenceDate:new Date(),audiences:a.publicosObjetivo.map(x=>x.publicoObjetivo)}).eligible).map(a=>({detail:{descripcion:a.descripcion,modalidadOperacion:a.modalidadOperacion,horarios:a.horarios.map(h=>({clases:h.clases.map(({id,fecha,horaInicio,horaFin,estado})=>({id,fecha,horaInicio,horaFin,estado}))}))},id:a.id,name:a.nombre,shortDescription:a.descripcionCorta,imageUrl:a.imagenUrl,category:a.categoriaActividad?.nombre??a.categoria,level:a.nivel,enrollmentMode:a.modalidadInscripcion,periodMonths:a.duracionPeriodoMeses,cancellationNoticeHours:a.horasCancelacionJustificada,age:{min:a.edadMinima,max:a.edadMaxima},free:a.esGratuita,price:a.precio?.toString()??null,audiences:a.publicosObjetivo.map(x=>x.publicoObjetivo.nombre),requirements:a.requisitos.map(x=>({id:x.requisito.id,name:x.requisito.nombre,slug:x.requisito.slug,imageUrl:x.requisito.imagenUrl,type:x.requisito.tipo,requiresDocument:x.requisito.requiereDocumento,mandatory:x.obligatorio,observations:x.observaciones,instructions:x.requisito.instrucciones,order:x.orden,active:x.requisito.activo})),hasRequirements:a.requisitos.length>0,requiresDocumentation:a.requisitos.some(x=>x.obligatorio&&x.requisito.requiereDocumento),schedules:a.horarios.map(h=>({id:h.id,day:h.diaSemana,startTime:h.horaInicio,endTime:h.horaFin,slotDurationMinutes:h.duracionTurnoMinutos,slotGapMinutes:h.intervaloTurnoMinutos,space:h.espacio,establishment:{id:h.establecimiento.id,name:h.establecimiento.nombre},maxCapacity:h.cupoMaximo,confirmedCount:h._count.inscripciones,availableCount:a.modalidadInscripcion==="POR_CLASE"?h.cupoMaximo:Math.max(h.cupoMaximo+(h.permiteSobrecupo?h.sobrecupoMaximo??0:0)-h._count.inscripciones,0),waitlistEnabled:h.permiteListaEspera,professors:h.profesores.map(p=>[p.profesor.usuario.nombre,p.profesor.usuario.apellido].filter(Boolean).join(" ")),teacherAssignments:[...new Map([...(scheduleAssignments(configurations.get(a.id)??null,h)??[]).map(slot=>[`${slot.startTime}:${slot.endTime}`,{startTime:slot.startTime,endTime:slot.endTime,professors:slot.professorIds.map(id=>h.profesores.find(p=>p.profesorId===id)?.profesor.usuario).filter((user):user is {nombre:string;apellido:string}=>!!user).map(user=>[user.nombre,user.apellido].filter(Boolean).join(" "))}] as const),...h.clases.map(c=>[`${c.horaInicio}:${c.horaFin}`,{startTime:c.horaInicio,endTime:c.horaFin,professors:c.profesores.map(p=>[p.profesor.usuario.nombre,p.profesor.usuario.apellido].filter(Boolean).join(" "))}] as const)]).values()],ownEnrollmentStatus:ownMap.get(h.id)??null,ownEnrollmentId:ownEnrollmentIdMap.get(h.id)??null,ownEnrollmentSlots:ownSlotsMap.get(h.id)??[]}))}))}
+export async function listCitizenActivities(userId:string,search?:string,activityId?:string){
+  return (await loadCitizenActivities(userId,search,activityId)).map(({detail,...item})=>{void detail;return item;});
+}
+export async function getCitizenActivity(userId:string,id:string){
+  let loaded = (await loadCitizenActivities(userId, undefined, id))[0];
+  if (!loaded) throw new CatalogNotFoundError("Actividad no disponible.");
+  // Only dated modalities need concrete classes to choose an enrollment here.
+  // Recurring calendars continue to materialize any requested future period.
+  if (["EVENTO_UNICO", "TURNO_PUNTUAL"].includes(loaded.detail.modalidadOperacion)) {
+    await ensureActivitySessions({ activityId: id });
+    // Another request may have materialized a dated class after our first read.
+    loaded = (await loadCitizenActivities(userId, undefined, id))[0];
+    if (!loaded) throw new CatalogNotFoundError("Actividad no disponible.");
+  }
+  const {detail,...item}=loaded;
+  return {...item,...detail,eventSessions:detail.horarios.flatMap(schedule=>schedule.clases).map(session=>({...session,date:dateText(session.fecha)}))};
+}
+
 export async function createCitizenEnrollment(userId:string,input:{activityId?:string;activityScheduleId?:string;classId?:string;selectedSlots?:Array<{activityScheduleId:string;startTime:string;endTime:string}>;levelConsent:boolean}){
   if(input.activityId&&input.selectedSlots?.length){
     const existing=await prisma.inscripcion.findFirst({where:{usuarioId:userId,estado:{in:["PENDIENTE","CONFIRMADA","LISTA_ESPERA"]},horarioActividad:{actividadId:input.activityId}},orderBy:{createdAt:"desc"},select:{id:true,horarioActividadId:true,horarios:{select:{horarioActividadId:true,horaInicio:true,horaFin:true,horarioActividad:{select:{horaInicio:true,horaFin:true}}}},horarioActividad:{select:{horaInicio:true,horaFin:true,actividad:{select:{modalidadOperacion:true}}}}}});
@@ -46,19 +66,7 @@ export async function ensureCitizenSchedule(userId:string,dateFrom:string,dateTo
     select:{horarioActividadId:true,horarios:{select:{horarioActividadId:true}}},
   });
   const scheduleIds=[...new Set(schedules.flatMap(item=>item.horarios.length?item.horarios.map(scope=>scope.horarioActividadId):[item.horarioActividadId]))];
-  let createdCount=0;
-  let skippedCount=0;
-  for(const horarioActividadId of scheduleIds){
-    try{
-      const result=await generateActivitySessions({activityScheduleId:horarioActividadId,dateFrom,dateTo,excludedDates:[]});
-      createdCount+=result.createdDates.length;
-    }catch(error){
-      const recoverable=error instanceof CatalogConflictError||error instanceof CatalogValidationError||error instanceof CatalogNotFoundError||(error instanceof Prisma.PrismaClientKnownRequestError&&error.code==="P2002");
-      if(!recoverable)throw error;
-      skippedCount+=1;
-    }
-  }
-  return{scheduleCount:scheduleIds.length,createdCount,skippedCount};
+  return ensureActivitySessions({scheduleIds,dateFrom,dateTo});
 }
 
 export async function listCitizenSchedule(userId:string,options:CitizenScheduleOptions={}){
@@ -79,6 +87,7 @@ export async function listCitizenSchedule(userId:string,options:CitizenScheduleO
   }
   const enrolledScheduleIds=[...scopesBySchedule.keys()];
   if(!enrolledScheduleIds.length)return{total:0,items:[]};
+  await ensureActivitySessions({scheduleIds:enrolledScheduleIds,dateFrom:options.dateFrom?dateText(options.dateFrom):undefined,dateTo:options.dateTo?dateText(options.dateTo):undefined});
   const scheduleScopeFilters=[...scopesBySchedule.entries()].flatMap(([scheduleId,scopes])=>scopes.map(scope=>({horarioActividadId:scheduleId,...(scope.startTime?{horaInicio:scope.startTime}:{}),...(scope.endTime?{horaFin:scope.endTime}:{})})));
   const where={
     ...(dateFilter?{fecha:dateFilter}:{}),
@@ -91,10 +100,10 @@ export async function listCitizenSchedule(userId:string,options:CitizenScheduleO
       horarioActividad:{select:{
         cupoMaximo:true,
         actividad:{select:{id:true,nombre:true,imagenUrl:true,modalidadInscripcion:true,horasCancelacionJustificada:true}},
-        profesores:{where:{esPrincipal:true},select:{profesor:{select:{usuario:{select:{nombre:true,apellido:true}}}}},take:1},
+        profesores:{orderBy:[{esPrincipal:"desc"},{createdAt:"asc"}],select:{profesor:{select:{usuario:{select:{nombre:true,apellido:true}}}}},take:1},
       }},
       establecimiento:{select:{id:true,nombre:true}},
-      profesores:{where:{esPrincipal:true},select:{profesor:{select:{usuario:{select:{nombre:true,apellido:true}}}}},take:1},
+      profesores:{orderBy:[{esPrincipal:"desc"},{createdAt:"asc"}],select:{profesor:{select:{usuario:{select:{nombre:true,apellido:true}}}}},take:1},
       asistencias:{where:{inscripcion:{usuarioId:userId}},select:{estado:true},take:1},
       reservas:{where:{usuarioId:userId},select:{id:true,estado:true,cancelacionJustificada:true,motivoCancelacion:true,ofertaVenceAt:true},take:1},
       _count:{select:{reservas:{where:{estado:"RESERVADA"}}}},
@@ -112,7 +121,7 @@ export async function listCitizenSchedule(userId:string,options:CitizenScheduleO
   return{total,items:visibleRows.map(x=>{
     const enrollment=enrollmentForRow(x)!;
     const enrollmentStatus=enrollment.estado as CitizenScheduleEnrollmentStatus;
-    const professor=x.profesores[0]?.profesor.usuario??x.horarioActividad.profesores[0]?.profesor.usuario;
+    const professor=x.profesores[0]?.profesor.usuario;
     const sessionStatus=x.estado;
     const displayStatus=resolveCitizenScheduleStatus({
       date:dateText(x.fecha),startTime:x.horaInicio,endTime:x.horaFin,sessionStatus,enrollmentStatus,

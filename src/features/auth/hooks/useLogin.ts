@@ -70,7 +70,7 @@ export function useLogin() {
       return;
     }
 
-    if (!token || user || triedMe || loading) {
+    if (!token || triedMe || loading) {
       return;
     }
 

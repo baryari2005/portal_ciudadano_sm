@@ -1,3 +1,5 @@
+import { serializableTransaction as serializable } from "@/lib/db/serializable-transaction";
+import { withActivityValidity } from "@/features/activity-configuration/services/activity-configuration.server";
 /* eslint-disable @typescript-eslint/no-explicit-any -- Normalización diferencial de relaciones Prisma de inscripciones. */
 import { notifyCitizenEnrollmentMissingDocuments } from "@/features/citizen/services/citizen-enrollment-document-notifications.server";
 import { InscripcionEstado, Prisma } from "@prisma/client";
@@ -14,12 +16,42 @@ const include={usuario:{select:{id:true,userId:true,nombre:true,apellido:true,do
 const clean=(value?:string|null)=>value?.trim()||null;
 const transitions:Record<InscripcionEstado,InscripcionEstado[]>={PENDIENTE:["CONFIRMADA","LISTA_ESPERA","RECHAZADA","CANCELADA"],LISTA_ESPERA:["CONFIRMADA","CANCELADA","RECHAZADA"],CONFIRMADA:["CANCELADA","BAJA"],CANCELADA:["CONFIRMADA","LISTA_ESPERA"],RECHAZADA:["PENDIENTE"],BAJA:["CONFIRMADA","LISTA_ESPERA"]};
 
-async function capacity(tx:Prisma.TransactionClient,schedule:any,slot?:{horaInicio:string|null}){const today=new Date();today.setUTCHours(0,0,0,0);const scope=slot?.horaInicio?{horarios:{some:{horarioActividadId:schedule.id,horaInicio:slot.horaInicio}}}:{OR:[{horarios:{some:{horarioActividadId:schedule.id,horaInicio:null}}},{horarioActividadId:schedule.id}]};const base={modalidad:{not:"POR_CLASE" as const},AND:[scope,{OR:[{fechaFin:null},{fechaFin:{gte:today}}]}]};const [confirmed,waitlist]=await Promise.all([tx.inscripcion.count({where:{...base,estado:"CONFIRMADA"}}),tx.inscripcion.count({where:{...base,estado:"LISTA_ESPERA"}})]);const over=schedule.permiteSobrecupo?(schedule.sobrecupoMaximo??0):0,total=schedule.cupoMaximo+over;return{maxCapacity:schedule.cupoMaximo,overbookingLimit:schedule.permiteSobrecupo?schedule.sobrecupoMaximo:null,totalCapacity:total,confirmedCount:confirmed,normalAvailableCount:Math.max(schedule.cupoMaximo-confirmed,0),availableCount:Math.max(total-confirmed,0),waitlistCount:waitlist};}
+async function capacity(tx:Prisma.TransactionClient,schedule:any,slot?:{horaInicio:string|null},includeWaitlist=true){const today=new Date();today.setUTCHours(0,0,0,0);const scope=slot?.horaInicio?{horarios:{some:{horarioActividadId:schedule.id,horaInicio:slot.horaInicio}}}:{OR:[{horarios:{some:{horarioActividadId:schedule.id,horaInicio:null}}},{horarioActividadId:schedule.id}]};const base={modalidad:{not:"POR_CLASE" as const},AND:[scope,{OR:[{fechaFin:null},{fechaFin:{gte:today}}]}]};const [confirmed,waitlist]=await Promise.all([tx.inscripcion.count({where:{...base,estado:"CONFIRMADA"}}),includeWaitlist?tx.inscripcion.count({where:{...base,estado:"LISTA_ESPERA"}}):Promise.resolve(0)]);const over=schedule.permiteSobrecupo?(schedule.sobrecupoMaximo??0):0,total=schedule.cupoMaximo+over;return{maxCapacity:schedule.cupoMaximo,overbookingLimit:schedule.permiteSobrecupo?schedule.sobrecupoMaximo:null,totalCapacity:total,confirmedCount:confirmed,normalAvailableCount:Math.max(schedule.cupoMaximo-confirmed,0),availableCount:Math.max(total-confirmed,0),waitlistCount:waitlist};}
 async function map(tx:Prisma.TransactionClient,row:any){const cap=await capacity(tx,row.horarioActividad);let waitlistPosition:null|number=null;if(row.estado==="LISTA_ESPERA"){waitlistPosition=await tx.inscripcion.count({where:{horarios:{some:{horarioActividadId:row.horarioActividadId}},estado:"LISTA_ESPERA",OR:[{fechaListaEspera:{lt:row.fechaListaEspera}},{fechaListaEspera:row.fechaListaEspera,createdAt:{lte:row.createdAt}}]}});}const selectedSchedules=row.horarios?.length?row.horarios.map((item:any)=>({schedule:item.horarioActividad,startTime:item.horaInicio??item.horarioActividad.horaInicio,endTime:item.horaFin??item.horarioActividad.horaFin})):[{schedule:row.horarioActividad,startTime:row.horarioActividad.horaInicio,endTime:row.horarioActividad.horaFin}];return{id:row.id,status:row.estado,enrollmentDate:row.fechaInscripcion,confirmationDate:row.fechaConfirmacion,waitlistDate:row.fechaListaEspera,cancellationDate:row.fechaCancelacion,waitlistPosition,observations:row.observaciones,rejectionReason:row.motivoRechazo,cancellationReason:row.motivoCancelacion,user:{id:row.usuario.id,userId:row.usuario.userId,firstName:row.usuario.nombre,lastName:row.usuario.apellido,documentNumber:row.usuario.documento,email:row.usuario.email,avatarUrl:row.usuario.avatarUrl},activitySchedule:{id:row.horarioActividad.id,day:row.horarioActividad.diaSemana,startTime:row.horarioActividad.horaInicio,endTime:row.horarioActividad.horaFin,activity:{id:row.horarioActividad.actividad.id,name:row.horarioActividad.actividad.nombre,imageUrl:row.horarioActividad.actividad.imagenUrl},establishment:{id:row.horarioActividad.establecimiento.id,name:row.horarioActividad.establecimiento.nombre}},selectedSchedules:selectedSchedules.map(({schedule,startTime,endTime}:any)=>({id:schedule.id,day:schedule.diaSemana,startTime,endTime,establishment:{id:schedule.establecimiento.id,name:schedule.establecimiento.nombre}})),capacity:cap,createdAt:row.createdAt,updatedAt:row.updatedAt};}
-async function serializable<T>(fn:(tx:Prisma.TransactionClient)=>Promise<T>){for(let attempt=0;attempt<3;attempt++){try{return await prisma.$transaction(fn,{isolationLevel:Prisma.TransactionIsolationLevel.Serializable,maxWait:10_000,timeout:30_000});}catch(error){if(!(error instanceof Prisma.PrismaClientKnownRequestError)||error.code!=="P2034"||attempt===2)throw error;}}throw new Error("No se pudo completar la transacción");}
-async function lockSchedule(tx:Prisma.TransactionClient,id:string){await tx.$queryRaw`SELECT "id" FROM "ActividadHorario" WHERE "id" = ${id} FOR UPDATE`;const schedule=await tx.horarioActividad.findUnique({where:{id},include:{actividad:{select:{id:true,nombre:true,estado:true,nivel:true,modalidadInscripcion:true,duracionPeriodoMeses:true,publicosObjetivo:{select:{publicoObjetivo:{select:{nombre:true,edadMinimaSugerida:true,edadMaximaSugerida:true,generosAdmitidos:true}}},orderBy:{publicoObjetivo:{orden:"asc"}}},requisitos:{where:{obligatorio:true,requisito:{activo:true,requiereDocumento:true}},select:{requisitoId:true}}}},establecimiento:{select:{id:true,nombre:true}}}});if(!schedule)throw new CatalogNotFoundError("Horario no encontrado.");return schedule;}
+
+const enrollmentScheduleInclude={actividad:{select:{id:true,nombre:true,estado:true,nivel:true,modalidadInscripcion:true,duracionPeriodoMeses:true,publicosObjetivo:{select:{publicoObjetivo:{select:{nombre:true,edadMinimaSugerida:true,edadMaximaSugerida:true,generosAdmitidos:true}}},orderBy:{publicoObjetivo:{orden:"asc"}}},requisitos:{where:{obligatorio:true,requisito:{activo:true,requiereDocumento:true}},select:{requisitoId:true}}}},establecimiento:{select:{id:true,nombre:true}}} satisfies Prisma.HorarioActividadInclude;
+async function lockSchedules(tx:Prisma.TransactionClient,ids:string[]){
+  if(ids.length===1)return [await lockSchedule(tx,ids[0])];
+  const parents=await tx.horarioActividad.findMany({where:{id:{in:ids}},select:{id:true,actividadId:true}});
+  if(parents.length!==ids.length)throw new CatalogNotFoundError("Horario no encontrado.");
+  // Keep every original row lock, acquiring each parent once in a stable order.
+  const activityIds=[...new Set(parents.map(row=>row.actividadId))].sort();
+  await tx.$queryRaw(Prisma.sql`SELECT id FROM "Actividad" WHERE id IN (${Prisma.join(activityIds)}) ORDER BY id FOR UPDATE`);
+  await tx.$queryRaw(Prisma.sql`SELECT id FROM "ActividadHorario" WHERE id IN (${Prisma.join([...ids].sort())}) ORDER BY id FOR UPDATE`);
+  const rows=await tx.horarioActividad.findMany({where:{id:{in:ids}},include:enrollmentScheduleInclude});
+  const activities=new Map<string,Awaited<ReturnType<typeof withActivityValidity<(typeof rows)[number]["actividad"]>>>>();
+  for(const row of rows)if(!activities.has(row.actividad.id))activities.set(row.actividad.id,await withActivityValidity(tx,row.actividad));
+  return ids.map(id=>{
+    const raw=rows.find(row=>row.id===id);
+    if(!raw)throw new CatalogNotFoundError("Horario no encontrado.");
+    const schedule={...raw,actividad:activities.get(raw.actividad.id)!};
+    assertScheduleOpen(schedule);
+    return schedule;
+  });
+}
+function assertScheduleOpen(schedule:{estado:string;actividad:{estado:string;fechaFin:Date|null}}){
+  const today=new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"America/Argentina/Buenos_Aires",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date())+"T00:00:00Z");
+  if(schedule.estado!=="ACTIVO"||!["ACTIVA","SIN_CUPO","COMPLETA"].includes(schedule.actividad.estado)||(schedule.actividad.fechaFin&&schedule.actividad.fechaFin<today))throw new CatalogValidationError("La actividad no admite nuevas inscripciones.");
+}
+async function lockSchedule(tx:Prisma.TransactionClient,id:string){
+const parent=await tx.horarioActividad.findUnique({where:{id},select:{actividadId:true}});
+if(!parent)throw new CatalogNotFoundError("Horario no encontrado.");
+await tx.$queryRaw`SELECT id FROM "Actividad" WHERE id = ${parent.actividadId} FOR UPDATE`;
+await tx.$queryRaw`SELECT "id" FROM "ActividadHorario" WHERE "id" = ${id} FOR UPDATE`;const rawSchedule=await tx.horarioActividad.findUnique({where:{id},include:enrollmentScheduleInclude});if(!rawSchedule)throw new CatalogNotFoundError("Horario no encontrado.");const schedule={...rawSchedule,actividad:await withActivityValidity(tx,rawSchedule.actividad)};
+assertScheduleOpen(schedule);
+return schedule;}
 async function hasApprovedRequiredDocuments(tx:Prisma.TransactionClient,userId:string,requirementIds:string[]){if(!requirementIds.length)return true;const rows=await tx.documentoUsuario.findMany({where:{usuarioId:userId,requisitoId:{in:requirementIds}},orderBy:[{requisitoId:"asc"},{version:"desc"}],select:{requisitoId:true,estado:true}}),latestStates=new Map<string,string>(),approvedIds=new Set<string>();for(const row of rows){if(!latestStates.has(row.requisitoId))latestStates.set(row.requisitoId,row.estado);if(row.estado==="APROBADO"&&latestStates.get(row.requisitoId)!=="RECHAZADO")approvedIds.add(row.requisitoId)}return requirementIds.every(id=>approvedIds.has(id))}
-async function nextState(tx:Prisma.TransactionClient,schedule:any,slot?:{horaInicio:string|null}){if(schedule.estado!=="ACTIVO")throw new CatalogValidationError("El horario no admite nuevas inscripciones.");const cap=await capacity(tx,schedule,slot);if(cap.availableCount>0)return "CONFIRMADA" as const;if(schedule.permiteListaEspera)return "LISTA_ESPERA" as const;throw new CatalogConflictError("No hay cupos disponibles y este horario no permite lista de espera.");}
+async function nextState(tx:Prisma.TransactionClient,schedule:any,slot?:{horaInicio:string|null}){if(schedule.estado!=="ACTIVO")throw new CatalogValidationError("El horario no admite nuevas inscripciones.");const cap=await capacity(tx,schedule,slot,false);if(cap.availableCount>0)return "CONFIRMADA" as const;if(schedule.permiteListaEspera)return "LISTA_ESPERA" as const;throw new CatalogConflictError("No hay cupos disponibles y este horario no permite lista de espera.");}
 const minutes=(value:string)=>Number(value.slice(0,2))*60+Number(value.slice(3));
 export type EnrollmentConflictScope = { scheduleId:string; day:string; startTime:string; endTime:string };
 const scopesOverlap=(left:EnrollmentConflictScope,right:EnrollmentConflictScope)=>left.day===right.day&&minutes(left.startTime)<minutes(right.endTime)&&minutes(right.startTime)<minutes(left.endTime);
@@ -30,7 +62,7 @@ export async function assertNoEnrollmentConflicts(tx:Prisma.TransactionClient,us
 }
 
 export async function createEnrollment(input: CreateEnrollmentInput, options: { notifyAdmin?: boolean; notifyMissingDocuments?: boolean } = {}) {
-  try{return await serializable(async (tx) => {
+  try{return await serializable(prisma, async (tx) => {
     const user = await tx.usuario.findFirst({
       where: { id: input.usuarioId, deletedAt: null },
       select: { id: true, fechaNacimiento: true, genero: true, estadoParticipacion: true },
@@ -65,7 +97,7 @@ export async function createEnrollment(input: CreateEnrollmentInput, options: { 
     }
     requestedScheduleIds = [...new Set(requestedScheduleIds)];
     if (!requestedScheduleIds.length) throw new CatalogValidationError("Seleccioná una actividad y sus horarios.");
-    const schedules = await Promise.all(requestedScheduleIds.map((id) => lockSchedule(tx, id)));
+    const schedules = await lockSchedules(tx, requestedScheduleIds);
     const schedule = schedules[0];
     if (schedules.some((item) => item.actividad.id !== schedule.actividad.id)) throw new CatalogValidationError("Todos los horarios deben pertenecer a la misma actividad.");
     for(const slot of requestedSlots){const source=schedules.find(item=>item.id===slot.horarioActividadId);if(!source)throw new CatalogValidationError("El turno seleccionado no pertenece a la actividad.");const start=Number(slot.horaInicio.slice(0,2))*60+Number(slot.horaInicio.slice(3)),end=Number(slot.horaFin.slice(0,2))*60+Number(slot.horaFin.slice(3)),rangeStart=Number(source.horaInicio.slice(0,2))*60+Number(source.horaInicio.slice(3)),rangeEnd=Number(source.horaFin.slice(0,2))*60+Number(source.horaFin.slice(3));if(start<rangeStart||end>rangeEnd||start>=end||(source.duracionTurnoMinutos&&end-start!==source.duracionTurnoMinutos))throw new CatalogValidationError("Uno de los turnos no coincide con la franja configurada.");}
@@ -115,7 +147,7 @@ export async function createEnrollment(input: CreateEnrollmentInput, options: { 
 export async function getEnrollmentSlotAvailability(selections:Array<{horarioActividadId:string;horaInicio:string;horaFin:string}>,userId?:string,activityId?:string,excludeEnrollmentId?:string){return prisma.$transaction(async tx=>{const ids=[...new Set(selections.map(item=>item.horarioActividadId))],schedules=await tx.horarioActividad.findMany({where:{id:{in:ids}},include:{actividad:true}});if(schedules.length!==ids.length)throw new CatalogNotFoundError("Uno de los horarios no existe.");if(activityId&&schedules.some(schedule=>schedule.actividadId!==activityId))throw new CatalogValidationError("Uno de los horarios no pertenece a la actividad.");if(userId){const scopes=selections.map(selection=>{const schedule=schedules.find(item=>item.id===selection.horarioActividadId)!;return{scheduleId:schedule.id,day:schedule.diaSemana,startTime:selection.horaInicio,endTime:selection.horaFin};});await assertNoEnrollmentConflicts(tx,userId,scopes,excludeEnrollmentId);}return Promise.all(selections.map(async selection=>{const schedule=schedules.find(item=>item.id===selection.horarioActividadId)!;const result=await capacity(tx,schedule,{horaInicio:selection.horaInicio});return{...selection,available:result.availableCount,status:result.availableCount>0?"DISPONIBLE":schedule.permiteListaEspera?"LISTA_ESPERA":"SIN_CUPO"};}));});}
 
 export async function changeCitizenEnrollmentSchedules(userId:string,enrollmentId:string,selections:Array<{horarioActividadId:string;horaInicio:string;horaFin:string}>,options:{notifyAdministrators?:boolean}={}){
-  return serializable(async tx=>{
+  return serializable(prisma, async tx=>{
     const current=await tx.inscripcion.findFirst({where:{id:enrollmentId,usuarioId:userId},include:{horarios:true,horarioActividad:{include:{actividad:{select:{id:true,nombre:true,modalidadOperacion:true}},establecimiento:{select:{id:true,nombre:true}}}},usuario:{select:{id:true,nombre:true,apellido:true,documento:true,email:true}}}});
     if(!current)throw new CatalogNotFoundError("Inscripción no encontrada.");
     if(!["PENDIENTE","CONFIRMADA","LISTA_ESPERA"].includes(current.estado))throw new CatalogValidationError("Esta inscripción no permite cambiar horarios.");
@@ -160,7 +192,7 @@ async function promote(tx:Prisma.TransactionClient,scheduleId:string){
   }
 }
 export async function updateEnrollment(id: string, input: UpdateEnrollmentInput) {
-  return serializable(async (tx) => {
+  return serializable(prisma, async (tx) => {
     const current = await tx.inscripcion.findUnique({ where: { id }, include });
     if (!current) throw new CatalogNotFoundError("Inscripción no encontrada.");
     const target = (input.estado ?? current.estado) as InscripcionEstado;
@@ -211,10 +243,11 @@ export async function updateEnrollment(id: string, input: UpdateEnrollmentInput)
 }
 export const cancelEnrollment=(id:string,motivoCancelacion?:string)=>updateEnrollment(id,{estado:"CANCELADA",motivoCancelacion});
 export async function getEnrollment(id:string){const item=await prisma.$transaction(async tx=>{const row=await tx.inscripcion.findUnique({where:{id},include});return row?map(tx,row):null;});if(!item)return null;const summaries=await getEnrollmentDocumentationSummaries([id]);return{...item,documentation:summaries.get(id)!};}
-export async function listEnrollments(filters: EnrollmentFilters) {
+export async function listEnrollments(filters: EnrollmentFilters, accessScope?: Prisma.InscripcionWhereInput) {
   const f = filters as any;
   const search = f.search?.trim();
   const where: Prisma.InscripcionWhereInput = {
+      ...(accessScope ? { AND: accessScope } : {}),
     estado: f.status,
     usuarioId: f.userId,
     horarioActividadId: f.activityScheduleId,

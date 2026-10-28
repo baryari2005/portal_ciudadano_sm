@@ -5,7 +5,7 @@ export async function getAccessOptions() { return (await axiosInstance.get<{ dat
 export async function getAccessHome(establishmentId: string) { return (await axiosInstance.get("/access", { params: { view: "home", establishmentId } })).data.data; }
 export async function validateAccessQr(establishmentId: string, qrToken: string) { return (await axiosInstance.post<AccessValidationResponse>("/access/qr/validate", { establishmentId, qrToken })).data; }
 export async function searchAccessPeople(establishmentId: string, q: string, page = 1) { return (await axiosInstance.get("/access/manual/search", { params: { establishmentId, q, page, pageSize: 8 } })).data; }
-export async function registerManualAccess(data: { establishmentId: string; userId: string; decision: "ALLOW" | "REJECT"; observation: string }) { return (await axiosInstance.post("/access/manual/register", data)).data.data as AccessValidationResponse; }
+export async function registerManualAccess(data: { establishmentId: string; userId: string; decision: "ALLOW" | "REJECT"; observation: string; qrAttemptId?: string }) { return (await axiosInstance.post("/access/manual/register", data)).data.data as AccessValidationResponse; }
 export async function listAccessHistory(params: Record<string, string | number | undefined>) { return (await axiosInstance.get("/access", { params })).data.data; }
 export async function getAccessDetail(id: string) { return (await axiosInstance.get(`/access/${id}`)).data.data; }
 export async function annulAccess(id: string, reason: string) { return (await axiosInstance.delete(`/access/${id}`, { data: { reason } })).data.data; }

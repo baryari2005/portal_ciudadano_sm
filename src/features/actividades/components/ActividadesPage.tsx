@@ -198,7 +198,7 @@ export function ActividadesPage() {
       <CatalogPageHeader
         icon={LibraryBig}
         title="Actividades"
-        description="Administrá la información general de las propuestas municipales."
+        description="Administrá la información general de las propuestas."
         total={filteredItems.length}
         createLabel="Nueva actividad"
         canCreate={canCreate}

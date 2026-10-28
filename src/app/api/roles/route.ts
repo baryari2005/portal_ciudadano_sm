@@ -13,16 +13,15 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const loggedInUser = await requireAuth(req);
-  requirePermission(loggedInUser, "roles", "ver");
-
-  const params = parseRoleListParams(req.url);
-  const { items, meta } = await listRoles(params);
-
-  return NextResponse.json({
-    data: items.map(toRoleListItem),
-    meta,
-  });
+  try {
+    const loggedInUser = await requireAuth(req);
+    requirePermission(loggedInUser, "roles", "ver");
+    const params = parseRoleListParams(req.url);
+    const { items, meta } = await listRoles(params);
+    return NextResponse.json({ data: items.map(toRoleListItem), meta });
+  } catch (error) {
+    return mapRoleRouteError(error);
+  }
 }
 
 export async function POST(req: NextRequest) {

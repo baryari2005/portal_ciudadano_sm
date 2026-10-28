@@ -713,12 +713,10 @@ function Review({
           value={`${payload.schedules.length} configurados`}
         />
         <Summary
-          label="Clases iniciales"
+          label="Vigencia de la actividad"
           value={
-            payload.modalidadOperacion === "ACCESO_LIBRE"
-              ? "No requiere"
-              : payload.generacionClasesDesde && payload.generacionClasesHasta
-                ? `${payload.generacionClasesDesde} a ${payload.generacionClasesHasta}`
+            payload.generacionClasesDesde
+                ? `${payload.generacionClasesDesde} a ${payload.generacionClasesHasta ?? "Sin fecha de finalización"}`
                 : "Pendiente"
           }
         />

@@ -10,6 +10,7 @@ import {
 } from "@/features/users/services/user.service";
 import { createAuditLog } from "@/features/audit-log/services/audit-log.server";
 import { getAuditRequestContext } from "@/features/audit-log/helpers/audit-log.helpers";
+import { mapApiRouteError } from "@/lib/api/route-error";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,10 +52,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const loggedInUser = await requireAuth(req);
-  requirePermission(loggedInUser, "usuarios", "crear");
-
   try {
+    const loggedInUser = await requireAuth(req);
+    requirePermission(loggedInUser, "usuarios", "crear");
     const body = await req.json();
     const dto = createUserSchema.parse(body);
     if (dto.professorProfile) requirePermission(loggedInUser, "profesores", "crear");
@@ -66,6 +66,9 @@ export async function POST(req: NextRequest) {
       status: result.revived ? 200 : 201,
     });
   } catch (err: unknown) {
+    if (err instanceof Error && ["UNAUTHORIZED", "FORBIDDEN", "ACCOUNT_NOT_ALLOWED"].includes(err.message)) {
+      return mapApiRouteError(err, "No pudimos crear el usuario.");
+    }
     const { message, status } = handleUserError(err);
     return NextResponse.json({ message }, { status });
   }

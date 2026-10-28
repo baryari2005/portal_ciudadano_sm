@@ -66,7 +66,7 @@ function mapCitizen(user: Prisma.UsuarioGetPayload<{ select: typeof citizenSelec
   };
 }
 
-export async function searchEnrollmentCitizens(query: string, page = 1, pageSize = 6) {
+export async function searchEnrollmentCitizens(query: string, page = 1, pageSize = 6, authorizationScope?: Prisma.UsuarioWhereInput) {
   const q = query.trim().replace(/\s+/g, " ");
   const documentQuery = q.replace(/[.\s-]/g, "");
   const nameParts = q.split(" ").filter(Boolean);
@@ -74,6 +74,7 @@ export async function searchEnrollmentCitizens(query: string, page = 1, pageSize
     deletedAt: null,
     estado: "ACTIVO",
     rol: citizenRole,
+    ...(authorizationScope ? { AND: authorizationScope } : {}),
     ...(q
       ? {
           OR: [

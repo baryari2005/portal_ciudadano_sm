@@ -6,6 +6,7 @@ import { Download, Printer } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { DEFAULT_EXPERIENCE_PALETTE } from "@/features/general-settings/constants/experience-palettes";
 import {
   Dialog,
   DialogContent,
@@ -162,31 +163,39 @@ export function UserAccessCardDialog({
   open,
   onOpenChange,
 }: UserAccessCardDialogProps) {
-  const [qrDataUrl, setQrDataUrl] = useState("");
+  const [qrResult, setQrResult] = useState({ payload: "", dataUrl: "", error: false });
   const qrPayload = useMemo(
     () => (user ? buildAccessQrPayload(user) : ""),
     [user],
   );
+  const currentQr = open && qrResult.payload === qrPayload ? qrResult : null;
+  const qrDataUrl = currentQr?.dataUrl ?? "";
+  const qrError = currentQr?.error ?? false;
 
   useEffect(() => {
     let active = true;
 
     if (!open || !qrPayload) {
-      setQrDataUrl("");
+      setQrResult({ payload: "", dataUrl: "", error: false });
       return;
     }
 
+    setQrResult({ payload: qrPayload, dataUrl: "", error: false });
     QRCode.toDataURL(qrPayload, {
       errorCorrectionLevel: "M",
       margin: 2,
       width: 220,
       color: {
-        dark: "var(--brand-heading)",
+        dark: DEFAULT_EXPERIENCE_PALETTE.heading,
         light: "#FFFFFF",
       },
     }).then((dataUrl) => {
       if (active) {
-        setQrDataUrl(dataUrl);
+        setQrResult({ payload: qrPayload, dataUrl, error: false });
+      }
+    }).catch(() => {
+      if (active) {
+        setQrResult({ payload: qrPayload, dataUrl: "", error: true });
       }
     });
 
@@ -262,6 +271,10 @@ export function UserAccessCardDialog({
                     alt="QR de ingreso"
                     className="h-44 w-44"
                   />
+                ) : qrError ? (
+                  <div role="alert" className="grid h-44 w-44 place-items-center text-center text-sm font-bold text-red-700">
+                    No pudimos generar el QR de ingreso.
+                  </div>
                 ) : (
                   <div className="grid h-44 w-44 place-items-center text-sm font-bold text-[var(--brand-muted)]">
                     Generando QR...

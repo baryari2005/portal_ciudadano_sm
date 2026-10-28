@@ -5,6 +5,7 @@ import { createEnrollmentSchema, enrollmentFiltersSchema } from "@/features/enro
 import { createEnrollment, listEnrollments } from "@/features/enrollments/services/enrollments.server";
 import { mapApiRouteError } from "@/lib/api/route-error";
 import { requireAuth, requirePermission } from "@/lib/server-auth";
+import { isTeacherRole, teacherEnrollmentScope } from "@/features/teacher/services/teacher.server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +16,8 @@ export async function GET(request: NextRequest) {
     requirePermission(user, "enrollments", "ver");
     const parsed = enrollmentFiltersSchema.safeParse(Object.fromEntries(request.nextUrl.searchParams));
     if (!parsed.success) return NextResponse.json({ message: "Filtros inválidos", details: parsed.error.flatten() }, { status: 400 });
-    const result = await listEnrollments(parsed.data);
+    const scope = isTeacherRole(user) ? await teacherEnrollmentScope(user.id, parsed.data.establishmentId) : undefined;
+    const result = await listEnrollments(parsed.data, scope);
     return NextResponse.json({ data: result.items, meta: result.meta });
   } catch (error) {
     return mapApiRouteError(error, "No pudimos cargar las inscripciones.");

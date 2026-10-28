@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
 import { useSearchParams } from "next/navigation";
@@ -38,6 +38,7 @@ const WEEK_DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 export function CitizenSchedulePage() {
   const searchParams = useSearchParams();
   const requestedClassId = searchParams.get("classId");
+  const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
   const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(new Date()));
   const [data, setData] = useState<CitizenSchedule | null>(null);
   const [selectedId, setSelectedId] = useState("");
@@ -66,6 +67,7 @@ export function CitizenSchedulePage() {
     setError(false);
     void loadCitizenSchedule(months, dateFrom, dateTo, controller.signal)
       .then((schedule) => {
+        if (controller.signal.aborted) return;
         setData(schedule);
         if (requestedClassId && schedule.items.some((item) => item.id === requestedClassId)) setSelectedId(requestedClassId);
       })
@@ -91,6 +93,7 @@ export function CitizenSchedulePage() {
     <main className="min-h-[calc(100dvh-var(--topbar-h)-48px)] bg-[var(--brand-page)] lg:p-8">
       <MobileScheduleView
         data={data}
+        selectedDate={selectedDate}
         error={error}
         selected={selected}
         view={view}
@@ -98,7 +101,7 @@ export function CitizenSchedulePage() {
         onSelect={setSelectedId}
         onBack={() => setSelectedId("")}
         onRetry={() => setRetryKey((value) => value + 1)}
-        onDateChange={(date) => setVisibleMonth(startOfMonth(date))}
+        onDateChange={(date) => { setSelectedDate(startOfDay(date)); setVisibleMonth(startOfMonth(date)); }}
       />
       <div className="hidden lg:block">
       <CatalogPageHeader
@@ -168,50 +171,61 @@ export function CitizenSchedulePage() {
   );
 }
 
-function MobileScheduleView({ data, error, selected, view, onViewChange, onSelect, onBack, onRetry, onDateChange }: { data: CitizenSchedule | null; error: boolean; selected: CitizenScheduleItem | null; view: "list" | "calendar"; onViewChange: (view: "list" | "calendar") => void; onSelect: (id: string) => void; onBack: () => void; onRetry: () => void; onDateChange: (date: Date) => void }) {
+function MobileScheduleView({ data, selectedDate, error, selected, view, onViewChange, onSelect, onBack, onRetry, onDateChange }: { data: CitizenSchedule | null; selectedDate: Date; error: boolean; selected: CitizenScheduleItem | null; view: "list" | "calendar"; onViewChange: (view: "list" | "calendar") => void; onSelect: (id: string) => void; onBack: () => void; onRetry: () => void; onDateChange: (date: Date) => void }) {
   const today = startOfDay(new Date());
-  const [selectedDate, setSelectedDate] = useState(today);
-  const days = Array.from({ length: 7 }, (_, index) => addDays(today, index));
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const detailRef = useRef<HTMLDivElement>(null);
+  const selectedClassId = selected?.id;
+  useEffect(() => {
+    if (selectedClassId) detailRef.current?.scrollIntoView({ block: "start", behavior: "instant" });
+  }, [selectedClassId]);
+  const days = Array.from({ length: 7 }, (_, index) => addDays(startOfWeek(selectedDate, { weekStartsOn: 1 }), index));
   const selectedKey = format(selectedDate, "yyyy-MM-dd");
-  const selectedOutsideVisibleWeek = selectedDate > days[days.length - 1];
-  const futureItems = (data?.items ?? []).filter((item) => item.date >= format(today, "yyyy-MM-dd"));
-  const items = view === "calendar" ? futureItems.filter((item) => item.date === selectedKey) : futureItems;
+
+  const availableItems = data?.items ?? [];
+  const items = view === "calendar" ? availableItems.filter((item) => item.date === selectedKey) : availableItems.filter((item) => item.date >= format(today, "yyyy-MM-dd"));
 
   function selectDate(date: Date | undefined) {
     if (!date) return;
     const normalized = startOfDay(date);
-    setSelectedDate(normalized);
+    setCalendarOpen(false);
     onDateChange(normalized);
   }
 
-  if (selected) return <div className="p-4 lg:hidden"><ScheduleDetail item={selected} onBack={onBack} onChanged={onRetry} /></div>;
+  if (selected) return <div ref={detailRef} className="p-4 lg:hidden"><ScheduleDetail item={selected} onBack={onBack} onChanged={onRetry} /></div>;
 
   return <div className="pb-5 lg:hidden">
     <header className="flex items-center gap-3 border-b border-[var(--brand-border-soft)] bg-white px-4 py-4">
       <Button asChild variant="ghost" size="icon" className="size-10 rounded-full border border-[var(--brand-border-soft)] bg-[#F9FAF5] text-[var(--brand-primary)]"><Link href="/citizen"><ChevronLeft /></Link></Button>
-      <div><h1 className="text-xl font-extrabold text-[var(--brand-primary)]">Próximas clases</h1><p className="text-xs text-[var(--brand-muted)]">Consultá las clases correspondientes a tus inscripciones.</p></div>
+      <div className="min-w-0"><h1 className="text-xl font-extrabold text-[var(--brand-primary)]">Próximas clases</h1><p className="text-xs text-[var(--brand-muted)]">Consultá las clases correspondientes a tus inscripciones.</p></div>
     </header>
 
-    <div className="px-4 pt-4">
+    <div className="px-2 pt-4 min-[375px]:px-4">
       <div className="grid grid-cols-2 rounded-full bg-[#EEF3EB] p-1">
-        <button type="button" onClick={() => onViewChange("calendar")} className={cn("flex h-9 items-center justify-center gap-2 rounded-full text-xs font-bold", view === "calendar" ? "bg-[#DDEDD8] text-[var(--brand-primary)] shadow-sm" : "text-[var(--brand-muted)]")}><CalendarDays className="size-4" />Calendario</button>
-        <button type="button" onClick={() => onViewChange("list")} className={cn("flex h-9 items-center justify-center gap-2 rounded-full text-xs font-bold", view === "list" ? "bg-[#DDEDD8] text-[var(--brand-primary)] shadow-sm" : "text-[var(--brand-muted)]")}><List className="size-4" />Lista</button>
+        <button type="button" onClick={() => onViewChange("calendar")} className={cn("flex h-11 items-center justify-center gap-2 rounded-full text-xs font-bold", view === "calendar" ? "bg-[#DDEDD8] text-[var(--brand-primary)] shadow-sm" : "text-[var(--brand-muted)]")}><CalendarDays className="size-4" />Calendario</button>
+        <button type="button" onClick={() => onViewChange("list")} className={cn("flex h-11 items-center justify-center gap-2 rounded-full text-xs font-bold", view === "list" ? "bg-[#DDEDD8] text-[var(--brand-primary)] shadow-sm" : "text-[var(--brand-muted)]")}><List className="size-4" />Lista</button>
       </div>
 
-      {view === "calendar" ? <div className="mt-4 grid grid-cols-[repeat(7,minmax(0,1fr))_36px] items-stretch gap-1">
-        {days.map((day) => {
-          const active = format(day, "yyyy-MM-dd") === selectedKey;
-          const hasActivity = futureItems.some((item) => item.date === format(day, "yyyy-MM-dd"));
-          return <button type="button" key={day.toISOString()} onClick={() => selectDate(day)} className={cn("flex min-w-0 flex-col items-center rounded-xl border py-2 text-center", active ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white shadow-sm" : "border-[var(--brand-border-soft)] bg-[#F9FAF5] text-[var(--brand-ink)]")}><span className="text-[8px] font-bold capitalize">{format(day, "EEE", { locale: es }).replace(".", "")}</span><strong className="mt-0.5 text-sm">{format(day, "d")}</strong>{format(day, "yyyy-MM-dd") === format(today, "yyyy-MM-dd") ? <span className="text-[7px]">Hoy</span> : hasActivity ? <span className={cn("mt-1 size-1.5 rounded-full", active ? "bg-white" : "bg-[var(--brand-secondary)]")} aria-label="Tiene actividades" /> : <span className="mt-1 size-1.5" />}</button>;
-        })}
-        <Popover><PopoverTrigger asChild><Button type="button" variant="outline" size="icon" aria-label="Abrir calendario" className="h-full min-h-14 w-9 rounded-xl border-[var(--brand-border-soft)] bg-[var(--brand-panel)] text-[var(--brand-primary)]"><CalendarDays className="size-4" /></Button></PopoverTrigger><PopoverContent align="end" className="w-auto p-0"><Calendar mode="single" selected={selectedDate} onSelect={selectDate} disabled={{ before: today }} initialFocus /></PopoverContent></Popover>
-      </div> : null}
-
-      {selectedOutsideVisibleWeek && view === "calendar" ? <div className="mt-4 flex items-center gap-2 rounded-xl bg-[var(--brand-panel)] px-3 py-2 text-xs font-bold text-[var(--brand-primary)]"><CalendarDays className="size-4" />Mostrando clases del {format(selectedDate, "d 'de' MMMM", { locale: es })}</div> : null}
+      {view === "calendar" ? <>
+        <div className="mt-4 grid grid-cols-[44px_minmax(0,1fr)_44px_44px] items-center gap-1">
+          <Button type="button" variant="outline" size="icon" aria-label="Mes anterior" className="size-11 rounded-xl" onClick={() => onDateChange(addMonths(selectedDate, -1))}><ChevronLeft /></Button>
+          <h2 aria-live="polite" className="min-w-0 text-center text-sm font-extrabold capitalize text-[var(--brand-primary)]">{format(selectedDate, "MMMM yyyy", { locale: es })}</h2>
+          <Button type="button" variant="outline" size="icon" aria-label="Mes siguiente" className="size-11 rounded-xl" onClick={() => onDateChange(addMonths(selectedDate, 1))}><ChevronRight /></Button>
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}><PopoverTrigger asChild><Button type="button" variant="outline" size="icon" aria-label="Abrir calendario" className="size-11 rounded-xl border-[var(--brand-border-soft)] bg-[var(--brand-panel)] text-[var(--brand-primary)]"><CalendarDays className="size-4" /></Button></PopoverTrigger><PopoverContent align="end" collisionPadding={8} className="w-auto max-w-[calc(100vw-16px)] p-0"><Calendar mode="single" locale={es} weekStartsOn={1} selected={selectedDate} defaultMonth={selectedDate} onSelect={selectDate} className="[--cell-size:2.5rem]" initialFocus /></PopoverContent></Popover>
+        </div>
+        <div className="mt-3 grid grid-cols-7 items-stretch gap-1">
+          {days.map((day) => {
+            const key = format(day, "yyyy-MM-dd"), active = key === selectedKey;
+            const hasActivity = availableItems.some((item) => item.date === key);
+            return <button type="button" key={key} aria-label={format(day, "EEEE d 'de' MMMM", { locale: es })} aria-pressed={active} onClick={() => selectDate(day)} className={cn("flex min-h-16 min-w-0 flex-col items-center justify-center rounded-xl border py-2 text-center", active ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white shadow-sm" : "border-[var(--brand-border-soft)] bg-[#F9FAF5] text-[var(--brand-ink)]")}><span className="text-[10px] font-bold capitalize">{format(day, "EEE", { locale: es }).replace(".", "")}</span><strong className="mt-0.5 text-base">{format(day, "d")}</strong>{key === format(today, "yyyy-MM-dd") ? <span className="text-[9px]">Hoy</span> : hasActivity ? <span className={cn("mt-1 size-1.5 rounded-full", active ? "bg-white" : "bg-[var(--brand-secondary)]")} aria-label="Tiene actividades" /> : <span className="mt-1 size-1.5" />}</button>;
+          })}
+        </div>
+        <p className="mt-3 text-center text-xs font-semibold text-[var(--brand-primary)]">{format(selectedDate, "EEEE d 'de' MMMM", { locale: es })}</p>
+      </> : null}
 
       {error ? <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">No pudimos cargar tus clases.<Button variant="ghost" onClick={onRetry}>Reintentar</Button></div> : <div className="mt-5 grid gap-2.5">
         {items.map((item, index) => <MobileScheduleCard key={item.id} item={item} featured={index === 0} onClick={() => onSelect(item.id)} />)}
-        {!items.length ? <div className="rounded-3xl border border-dashed border-[var(--brand-border)] bg-[#F9FAF5] p-8 text-center"><SearchX className="mx-auto size-8 text-[var(--brand-secondary)]" /><p className="mt-3 font-extrabold text-[var(--brand-primary)]">{view === "calendar" && selectedKey === format(today, "yyyy-MM-dd") ? "No tenés actividades programadas para hoy" : view === "calendar" ? `No tenés actividades para el ${format(selectedDate, "d 'de' MMMM", { locale: es })}` : "No tenés próximas clases programadas"}</p>{view === "calendar" && futureItems.length ? <button type="button" onClick={() => onViewChange("list")} className="mt-3 text-sm font-bold text-[var(--brand-primary)] underline underline-offset-4">Ver próximas clases</button> : null}</div> : null}
+        {!items.length ? <div className="rounded-3xl border border-dashed border-[var(--brand-border)] bg-[#F9FAF5] p-8 text-center"><SearchX className="mx-auto size-8 text-[var(--brand-secondary)]" /><p className="mt-3 font-extrabold text-[var(--brand-primary)]">{view === "calendar" && selectedKey === format(today, "yyyy-MM-dd") ? "No tenés actividades programadas para hoy" : view === "calendar" ? `No tenés actividades para el ${format(selectedDate, "d 'de' MMMM", { locale: es })}` : "No tenés próximas clases programadas"}</p>{view === "calendar" && availableItems.length ? <button type="button" onClick={() => onViewChange("list")} className="mt-3 text-sm font-bold text-[var(--brand-primary)] underline underline-offset-4">Ver próximas clases</button> : null}</div> : null}
       </div>}
     </div>
   </div>;
@@ -222,8 +236,9 @@ function MobileScheduleCard({ item, featured, onClick }: { item: CitizenSchedule
   return <button type="button" onClick={onClick} className={cn("grid w-full grid-cols-[46px_48px_minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border bg-[#F9FAF5] p-2.5 text-left shadow-sm", featured ? "border-[var(--brand-secondary)] ring-1 ring-[var(--brand-secondary)]/15" : "border-[var(--brand-border-soft)]")}>
     <span className="rounded-xl bg-[var(--brand-panel)] px-1 py-2 text-center"><span className="block text-[9px] font-extrabold uppercase text-[var(--brand-secondary)]">{format(day, "EEE", { locale: es }).replace(".", "")}</span><strong className="block text-lg leading-5 text-[var(--brand-primary)]">{format(day, "d")}</strong></span>
     <span className="grid size-11 place-items-center overflow-hidden rounded-full bg-[var(--brand-panel)]">{item.activity.imageUrl ? <ActivityImagePreview source={item.activity.imageUrl} alt={`Imagen de ${item.activity.name}`} className="size-11 !rounded-full !border-0" /> : <CalendarDays className="size-5 text-[var(--brand-primary)]" />}</span>
-    <span className="min-w-0"><span className="block truncate text-sm font-extrabold text-[var(--brand-primary)]">{item.activity.name}</span><span className="mt-1 flex items-center gap-1 truncate text-[10px] text-[var(--brand-muted)]"><Clock3 className="size-3" />{item.startTime} a {item.endTime}</span><span className="mt-0.5 flex items-center gap-1 truncate text-[10px] text-[var(--brand-muted)]"><MapPin className="size-3" />{item.establishment.name}</span>{item.primaryProfessor ? <span className="mt-0.5 flex items-center gap-1 truncate text-[10px] text-[var(--brand-muted)]"><UserRound className="size-3" />{item.primaryProfessor}</span> : null}</span>
+    <span className="min-w-0"><span className="block truncate text-sm font-extrabold text-[var(--brand-primary)]">{item.activity.name}</span><span className="mt-1 flex items-center gap-1 truncate text-[10px] text-[var(--brand-muted)]"><Clock3 className="size-3" />{item.startTime} a {item.endTime}</span><span className="mt-0.5 flex items-center gap-1 truncate text-[10px] text-[var(--brand-muted)]"><MapPin className="size-3" />{item.establishment.name}</span><span className="mt-0.5 flex items-center gap-1 truncate text-[10px] text-[var(--brand-muted)]"><UserRound className="size-3" />{item.primaryProfessor || "Sin profesor asignado"}</span></span>
     <ChevronRight className="size-4 text-[var(--brand-secondary)]" />
+    <span className="col-span-full"><StatusBadge status={item.displayStatus} /></span>
   </button>;
 }
 
@@ -303,11 +318,13 @@ function ScheduleDetail({ item, onBack, onChanged }: { item: CitizenScheduleItem
   }
 
   const reservation = item.reservation;
+  const canAct = item.sessionStatus === "PROGRAMADA" && new Date(`${item.date}T${item.startTime}:00-03:00`) > new Date() && ["CONFIRMADA", "LISTA_ESPERA"].includes(item.enrollmentStatus);
   function cancelBody() { if (!proof) return { reason: reason.trim() }; const form = new FormData(); form.set("reason", reason.trim()); form.set("proof", proof); return form; }
   return (
     <><aside className="h-fit rounded-3xl border border-[var(--brand-border-soft)] bg-[var(--brand-panel)] p-5 text-[var(--brand-ink)] shadow-sm sm:p-7 lg:sticky lg:top-0">
-      <Button variant="ghost" onClick={onBack} className="mb-4 -ml-2 text-[var(--brand-primary)] lg:hidden"><ArrowLeft />Volver al listado</Button>
-      <div className="flex items-start gap-4"><span className="grid size-16 shrink-0 place-items-center rounded-2xl bg-[var(--brand-primary)] text-white shadow-sm"><CalendarDays className="size-8" /></span><div className="min-w-0 flex-1"><h2 className="break-words text-2xl font-extrabold text-[var(--brand-primary)]">{item.activity.name}</h2><div className="mt-2"><StatusBadge status={item.displayStatus} /></div></div></div>
+      <Button variant="ghost" onClick={onBack} className="mb-4 -ml-2 min-h-11 text-[var(--brand-primary)] lg:hidden"><ArrowLeft />Volver al listado</Button>
+      <div className="flex items-start gap-4"><span className="grid size-16 shrink-0 place-items-center rounded-2xl bg-[var(--brand-primary)] text-white shadow-sm"><CalendarDays className="size-8" /></span><div className="min-w-0 flex-1"><h2 className="break-words text-2xl font-extrabold text-[var(--brand-primary)]">{item.activity.name}</h2><div className="mt-2 hidden lg:block"><StatusBadge status={item.displayStatus} /></div></div></div>
+      <div className="mt-4 lg:hidden"><StatusBadge status={item.displayStatus} /></div>
       <dl className="mt-6 grid gap-3">
         <CatalogDetailField icon={CalendarDays} label="Fecha">{format(parseISO(item.date), "EEEE d 'de' MMMM 'de' yyyy", { locale: es })}</CatalogDetailField>
         <CatalogDetailField icon={Clock3} label="Horario">{item.startTime} a {item.endTime}</CatalogDetailField>
@@ -316,14 +333,14 @@ function ScheduleDetail({ item, onBack, onChanged }: { item: CitizenScheduleItem
         {item.activity.enrollmentMode === "POR_CLASE" ? <CatalogDetailField icon={TicketCheck} label="Cupos">{Math.max(item.capacity - item.reservedCount, 0)} disponibles de {item.capacity}</CatalogDetailField> : null}
       </dl>
       {reservation?.status === "AUSENCIA_INFORMADA" ? <p className="mt-5 rounded-2xl border border-[var(--brand-border)] bg-white p-4 text-sm font-bold text-[var(--brand-text)]">Informaste que no asistirás. {reservation.justified ? "La ausencia quedó justificada." : "La cancelación fue realizada fuera del plazo de justificación."}</p> : null}
-      <div className="mt-6 grid gap-3 border-t border-[var(--brand-border)] pt-5">
-        {item.activity.enrollmentMode === "POR_CLASE" && !reservation ? <Button disabled={working} className="h-11 rounded-xl bg-[var(--brand-primary)] font-bold hover:bg-[var(--brand-primary-hover)]" onClick={() => void action(`/classes/${item.id}/reserve`, "Reserva registrada.")}>{working ? <Loader2 className="animate-spin" /> : <TicketCheck />}Reservar esta clase</Button> : null}
+      {canAct ? <div className="mt-6 grid gap-3 border-t border-[var(--brand-border)] pt-5">
+        {item.activity.enrollmentMode === "POR_CLASE" && item.enrollmentStatus === "CONFIRMADA" && !reservation ? <Button disabled={working} className="h-11 rounded-xl bg-[var(--brand-primary)] font-bold hover:bg-[var(--brand-primary-hover)]" onClick={() => void action(`/classes/${item.id}/reserve`, "Reserva registrada.")}>{working ? <Loader2 className="animate-spin" /> : <TicketCheck />}Reservar esta clase</Button> : null}
         {reservation?.status === "LISTA_ESPERA" ? <p className="rounded-xl bg-sky-50 p-3 text-center text-sm font-bold text-sky-900">Estás en la lista de espera de esta clase.</p> : null}
         {reservation?.status === "OFRECIDA" ? <Button disabled={working} className="h-11 rounded-xl bg-[var(--brand-primary)] font-bold hover:bg-[var(--brand-primary-hover)]" onClick={() => void action(`/classes/${item.id}/confirm`, "Cupo confirmado.")}>{working ? <Loader2 className="animate-spin" /> : <TicketCheck />}Confirmar cupo disponible</Button> : null}
-        {(item.activity.enrollmentMode !== "POR_CLASE" || reservation?.status === "RESERVADA") && reservation?.status !== "AUSENCIA_INFORMADA" ? <Button variant="outline" className="h-11 rounded-xl border-red-200 bg-white font-bold text-red-700 hover:bg-red-50" onClick={() => setCancelOpen(true)}><XCircle />No asistiré a esta clase</Button> : null}
-      </div>
+        {((item.activity.enrollmentMode !== "POR_CLASE" && item.enrollmentStatus === "CONFIRMADA") || reservation?.status === "RESERVADA") && reservation?.status !== "AUSENCIA_INFORMADA" ? <Button variant="outline" className="h-11 rounded-xl border-red-200 bg-white font-bold text-red-700 hover:bg-red-50" onClick={() => setCancelOpen(true)}><XCircle />No asistiré a esta clase</Button> : null}
+      </div> : null}
     </aside>
-    <Dialog open={cancelOpen} onOpenChange={(open) => !working && setCancelOpen(open)}><DialogContent className="rounded-3xl border-[var(--brand-border)]"><DialogHeader><DialogTitle className="text-[var(--brand-primary)]">Informar inasistencia</DialogTitle><DialogDescription>El cupo se libera inmediatamente. Con {item.activity.cancellationNoticeHours} horas o más de anticipación quedará justificada automáticamente.</DialogDescription></DialogHeader><div className="space-y-2"><Label htmlFor="absence-reason" className="font-extrabold">Motivo</Label><Textarea id="absence-reason" value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Contanos por qué no podés asistir" className="min-h-28 rounded-xl border-[var(--brand-border)]" /></div><div className="space-y-2"><Label htmlFor="absence-proof" className="font-extrabold">Comprobante (opcional)</Label><Input id="absence-proof" type="file" accept="application/pdf,image/jpeg,image/png" onChange={(event) => setProof(event.target.files?.[0] ?? null)} /><p className="text-xs text-[var(--brand-muted)]">PDF, JPG o PNG · máximo 10 MB.</p></div><DialogFooter><Button variant="outline" disabled={working} onClick={() => setCancelOpen(false)}>Volver</Button><Button disabled={working || reason.trim().length < 3} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]" onClick={() => void action(`/classes/${item.id}/cancel`, "Inasistencia registrada.", cancelBody())}>{working ? <Loader2 className="animate-spin" /> : <XCircle />}Confirmar</Button></DialogFooter></DialogContent></Dialog></>
+    <Dialog open={cancelOpen} onOpenChange={(open) => !working && setCancelOpen(open)}><DialogContent className="max-h-[calc(100dvh-32px)] w-[calc(100vw-24px)] overflow-y-auto rounded-3xl border-[var(--brand-border)] sm:max-w-lg"><DialogHeader><DialogTitle className="text-[var(--brand-primary)]">Informar inasistencia</DialogTitle><DialogDescription>El cupo se libera inmediatamente. Con {item.activity.cancellationNoticeHours} horas o más de anticipación quedará justificada automáticamente.</DialogDescription></DialogHeader><div className="space-y-2"><Label htmlFor="absence-reason" className="font-extrabold">Motivo</Label><Textarea id="absence-reason" value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Contanos por qué no podés asistir" className="min-h-28 rounded-xl border-[var(--brand-border)]" /></div><div className="space-y-2"><Label htmlFor="absence-proof" className="font-extrabold">Comprobante (opcional)</Label><Input id="absence-proof" type="file" accept="application/pdf,image/jpeg,image/png" onChange={(event) => setProof(event.target.files?.[0] ?? null)} /><p className="text-xs text-[var(--brand-muted)]">PDF, JPG o PNG · máximo 10 MB.</p></div><DialogFooter><Button variant="outline" disabled={working} onClick={() => setCancelOpen(false)}>Volver</Button><Button disabled={working || reason.trim().length < 3} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)]" onClick={() => void action(`/classes/${item.id}/cancel`, "Inasistencia registrada.", cancelBody())}>{working ? <Loader2 className="animate-spin" /> : <XCircle />}Confirmar</Button></DialogFooter></DialogContent></Dialog></>
   );
 }
 

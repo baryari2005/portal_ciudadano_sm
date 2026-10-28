@@ -65,7 +65,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
       );
     }
 
-    const data = await updateActividad(id, parsed.data);
+    const data = await updateActividad(id, parsed.data, user.id);
     await createAuditLog({actorId:user.id,action:"EDITAR",entityType:"ACTIVIDAD",entityId:id,entityName:data.nombre,changes:buildAuditChanges((before??{}) as Record<string,unknown>,data as Record<string,unknown>,["nombre","descripcionCorta","descripcion","nivel","edadMinima","edadMaxima","esGratuita","precio","establecimientoId","categoriaActividadId","cupo","estado"]),origin:"ADMINISTRACION",requestContext:getAuditRequestContext(req.headers)});
     return NextResponse.json({ data });
   } catch (error) {
@@ -107,7 +107,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       );
     }
 
-    const data = await patchActividad(id, parsed.data);
+    const data = await patchActividad(id, parsed.data, user.id);
     await createAuditLog({actorId:user.id,action:"EDITAR",entityType:"ACTIVIDAD",entityId:id,entityName:data.nombre,changes:buildAuditChanges((before??{}) as Record<string,unknown>,data as Record<string,unknown>,Object.keys(parsed.data)),origin:"ADMINISTRACION",requestContext:getAuditRequestContext(req.headers)});
     return NextResponse.json({ data });
   } catch (error) {

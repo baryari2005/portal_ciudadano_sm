@@ -114,7 +114,7 @@ export async function getServerMe(
       },
     });
 
-    if (!user) return { user: null };
+    if (!user || user.deletedAt) return { user: null };
 
     const safeUser = Object.fromEntries(
       Object.entries(user).filter(([key]) => key !== "password"),

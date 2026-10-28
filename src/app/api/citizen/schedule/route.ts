@@ -4,7 +4,7 @@ import { listCitizenSchedule } from "@/features/citizen/services/citizen.server"
 import { mapApiRouteError } from "@/lib/api/route-error";
 import { requireAuth } from "@/lib/server-auth";
 
-const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const date = z.string().date();
 const filtersSchema = z.object({ dateFrom: date, dateTo: date }).refine(
   ({ dateFrom, dateTo }) => dateFrom <= dateTo,
   { message: "El rango de fechas es inválido." },

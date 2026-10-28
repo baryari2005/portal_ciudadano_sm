@@ -1,3 +1,7 @@
+import { inTransaction, type DatabaseClient } from "@/lib/prisma-transaction";
+import { readActivityConfiguration, writeActivityConfiguration } from "@/features/activity-configuration/services/activity-configuration.server";
+import { scheduleAssignments } from "@/features/activity-configuration/helpers/activity-configuration";
+import { syncScheduleSessionTeachers } from "@/features/activity-sessions/services/activity-sessions.server";
 /* eslint-disable @typescript-eslint/no-explicit-any -- Tipos intermedios del servicio Prisma legado pendientes de extracción. */
 import { HorarioActividadEstado, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
@@ -60,9 +64,9 @@ export async function assertActivityScheduleAvailability(input: {
   profesoresIds: string[];
   recursos: Array<{ recursoId: string; cantidadReservada: number; exclusivo: boolean }>;
   excludeId?: string;
-}) {
+}, client: DatabaseClient = prisma) {
   const { excludeId, ...schedule } = input;
-  return prisma.$transaction((tx) => validateConflicts(tx, { ...schedule, estado: "ACTIVO" }, excludeId));
+  return inTransaction(client,(tx) => validateConflicts(tx, { ...schedule, estado: "ACTIVO" }, excludeId));
 }
 
 export async function listActivitySchedules(filters:ActivityScheduleFilters={}) {
@@ -72,15 +76,21 @@ export async function listActivitySchedules(filters:ActivityScheduleFilters={}) 
 }
 export async function getActivitySchedule(id:string) { const row=await prisma.horarioActividad.findUnique({where:{id},include}); return row?map(row):null; }
 
-export async function createActivitySchedule(raw:CreateActivityScheduleInput, audit?:ScheduleAudit) {
+export async function createActivitySchedule(raw:CreateActivityScheduleInput, audit?:ScheduleAudit, client: DatabaseClient = prisma) {
   const parsed=createActivityScheduleSchema.parse(raw); const input={...parsed, espacio:clean(parsed.espacio), observaciones:clean(parsed.observaciones), sobrecupoMaximo:parsed.permiteSobrecupo?parsed.sobrecupoMaximo:null};
-  return prisma.$transaction(async tx=>{ await validateRelations(tx,input); await validateConflicts(tx,input); const row=await tx.horarioActividad.create({data:{actividadId:input.actividadId,establecimientoId:input.establecimientoId,diaSemana:input.diaSemana,horaInicio:input.horaInicio,horaFin:input.horaFin,espacio:input.espacio,observaciones:input.observaciones,cupoMaximo:input.cupoMaximo,permiteListaEspera:input.permiteListaEspera,permiteSobrecupo:input.permiteSobrecupo,sobrecupoMaximo:input.sobrecupoMaximo,estado:input.estado,duracionTurnoMinutos:input.duracionTurnoMinutos,intervaloTurnoMinutos:input.intervaloTurnoMinutos,profesores:{create:input.profesoresIds.map(id=>({profesorId:id,esPrincipal:id===input.profesorPrincipalId}))},recursos:{create:input.recursos.map(item=>({recursoId:item.recursoId,cantidadReservada:item.cantidadReservada,estrategiaAsignacion:item.estrategiaAsignacion,exclusivo:item.exclusivo}))}},include});if(audit)await createAuditLogTx(tx,{...audit,action:"CREAR",entityType:"HORARIO_ACTIVIDAD",entityId:row.id,entityName:`${row.actividad.nombre} · ${row.diaSemana} ${row.horaInicio}`});return map(row); });
+  return inTransaction(client,async tx=>{ await validateRelations(tx,input); await validateConflicts(tx,input); const row=await tx.horarioActividad.create({data:{actividadId:input.actividadId,establecimientoId:input.establecimientoId,diaSemana:input.diaSemana,horaInicio:input.horaInicio,horaFin:input.horaFin,espacio:input.espacio,observaciones:input.observaciones,cupoMaximo:input.cupoMaximo,permiteListaEspera:input.permiteListaEspera,permiteSobrecupo:input.permiteSobrecupo,sobrecupoMaximo:input.sobrecupoMaximo,estado:input.estado,duracionTurnoMinutos:input.duracionTurnoMinutos,intervaloTurnoMinutos:input.intervaloTurnoMinutos,profesores:{create:input.profesoresIds.map(id=>({profesorId:id,esPrincipal:id===input.profesorPrincipalId}))},recursos:{create:input.recursos.map(item=>({recursoId:item.recursoId,cantidadReservada:item.cantidadReservada,estrategiaAsignacion:item.estrategiaAsignacion,exclusivo:item.exclusivo}))}},include});if(audit)await createAuditLogTx(tx,{...audit,action:"CREAR",entityType:"HORARIO_ACTIVIDAD",entityId:row.id,entityName:`${row.actividad.nombre} · ${row.diaSemana} ${row.horaInicio}`});return map(row); });
 }
-export async function updateActivitySchedule(id:string, patch:UpdateActivityScheduleInput, audit?:ScheduleAudit, options:{ignoreProfessorConflicts?:boolean}={}) {
-  return prisma.$transaction(async tx=>{
+export async function updateActivitySchedule(id:string, patch:UpdateActivityScheduleInput, audit?:ScheduleAudit, options:{ignoreProfessorConflicts?:boolean}={}, client: DatabaseClient = prisma) {
+  return inTransaction(client,async tx=>{
+    const parent=await tx.horarioActividad.findUnique({where:{id},select:{actividadId:true}});
+    if(!parent)throw new CatalogNotFoundError("Horario no encontrado.");
+    await tx.$queryRaw`SELECT id FROM "Actividad" WHERE id = ${parent.actividadId} FOR UPDATE`;
+    await tx.$queryRaw`SELECT id FROM "ActividadHorario" WHERE id = ${id} FOR UPDATE`;
     const current=await tx.horarioActividad.findUnique({where:{id},include});
     if(!current) throw new CatalogNotFoundError("Horario no encontrado.");
-    const final=createActivityScheduleSchema.parse({actividadId:current.actividadId,establecimientoId:current.establecimientoId,diaSemana:current.diaSemana,horaInicio:current.horaInicio,horaFin:current.horaFin,espacio:current.espacio,observaciones:current.observaciones,cupoMaximo:current.cupoMaximo,permiteListaEspera:current.permiteListaEspera,permiteSobrecupo:current.permiteSobrecupo,sobrecupoMaximo:current.sobrecupoMaximo,estado:current.estado,profesoresIds:current.profesores.map(x=>x.profesorId),profesorPrincipalId:current.profesores.find(x=>x.esPrincipal)?.profesorId??null,duracionTurnoMinutos:current.duracionTurnoMinutos,intervaloTurnoMinutos:current.intervaloTurnoMinutos,recursos:current.recursos.map(x=>({recursoId:x.recursoId,cantidadReservada:x.cantidadReservada,estrategiaAsignacion:x.estrategiaAsignacion,exclusivo:x.exclusivo})),...patch});
+    const currentPrimaryId=current.profesores.find(x=>x.esPrincipal)?.profesorId??null;
+    const primaryId=patch.profesoresIds!==undefined&&currentPrimaryId&&!patch.profesoresIds.includes(currentPrimaryId)?null:currentPrimaryId;
+    const final=createActivityScheduleSchema.parse({actividadId:current.actividadId,establecimientoId:current.establecimientoId,diaSemana:current.diaSemana,horaInicio:current.horaInicio,horaFin:current.horaFin,espacio:current.espacio,observaciones:current.observaciones,cupoMaximo:current.cupoMaximo,permiteListaEspera:current.permiteListaEspera,permiteSobrecupo:current.permiteSobrecupo,sobrecupoMaximo:current.sobrecupoMaximo,estado:current.estado,profesoresIds:current.profesores.map(x=>x.profesorId),profesorPrincipalId:primaryId,duracionTurnoMinutos:current.duracionTurnoMinutos,intervaloTurnoMinutos:current.intervaloTurnoMinutos,recursos:current.recursos.map(x=>({recursoId:x.recursoId,cantidadReservada:x.cantidadReservada,estrategiaAsignacion:x.estrategiaAsignacion,exclusivo:x.exclusivo})),...patch});
     const profesoresIds=[...new Set(final.profesoresIds)];
     const recursos=[...new Map(final.recursos.map(item=>[item.recursoId,item])).values()];
     const input={...final,profesoresIds,recursos,espacio:clean(final.espacio),observaciones:clean(final.observaciones),sobrecupoMaximo:final.permiteSobrecupo?final.sobrecupoMaximo:null};
@@ -96,7 +106,20 @@ export async function updateActivitySchedule(id:string, patch:UpdateActivitySche
       await tx.horarioActividadRecurso.deleteMany({where:{horarioActividadId:id}});
       if(input.recursos.length)await tx.horarioActividadRecurso.createMany({data:input.recursos.map(item=>({horarioActividadId:id,recursoId:item.recursoId,cantidadReservada:item.cantidadReservada,estrategiaAsignacion:item.estrategiaAsignacion,exclusivo:item.exclusivo})),skipDuplicates:true});
     }
+    const assignmentChanged=JSON.stringify([...input.profesoresIds].sort())!==JSON.stringify(current.profesores.map(item=>item.profesorId).sort())||input.horaInicio!==current.horaInicio||input.horaFin!==current.horaFin||input.duracionTurnoMinutos!==current.duracionTurnoMinutos||input.intervaloTurnoMinutos!==current.intervaloTurnoMinutos;
     const row=await tx.horarioActividad.update({where:{id},data:{actividadId:input.actividadId,establecimientoId:input.establecimientoId,diaSemana:input.diaSemana,horaInicio:input.horaInicio,horaFin:input.horaFin,espacio:input.espacio,observaciones:input.observaciones,cupoMaximo:input.cupoMaximo,permiteListaEspera:input.permiteListaEspera,permiteSobrecupo:input.permiteSobrecupo,sobrecupoMaximo:input.sobrecupoMaximo,estado:input.estado,duracionTurnoMinutos:input.duracionTurnoMinutos,intervaloTurnoMinutos:input.intervaloTurnoMinutos},include});
+    if(assignmentChanged&&!options.ignoreProfessorConflicts){
+      const configuration=await readActivityConfiguration(tx,current.actividadId);
+      if(configuration){
+        const previous=scheduleAssignments(configuration,current)??[];
+        const geometryChanged=input.horaInicio!==current.horaInicio||input.horaFin!==current.horaFin||input.duracionTurnoMinutos!==current.duracionTurnoMinutos||input.intervaloTurnoMinutos!==current.intervaloTurnoMinutos;
+        const assignments=geometryChanged?[]:previous.map(item=>({...item,professorIds:[...input.profesoresIds]}));
+        const schedules=configuration.schedules.filter(item=>item.id!==id&&!(item.id===undefined&&item.establecimientoId===current.establecimientoId&&item.diaSemana===current.diaSemana&&item.horaInicio===current.horaInicio&&item.horaFin===current.horaFin));
+        if(!geometryChanged)schedules.push({id,establecimientoId:row.establecimientoId,diaSemana:row.diaSemana,horaInicio:row.horaInicio,horaFin:row.horaFin,teacherAssignments:assignments});
+        await writeActivityConfiguration(tx,current.actividadId,{schedules},audit?.actorId??undefined);
+      }
+    }
+    if(syncProfessors&&!options.ignoreProfessorConflicts&&(assignmentChanged||currentPrimaryId!==input.profesorPrincipalId))await syncScheduleSessionTeachers(tx,id,input.profesoresIds,input.profesorPrincipalId??null);
     if(audit){const before=map(current),after=map(row),action=patch.estado==="CANCELADO"?"CANCELAR":patch.estado==="SUSPENDIDO"?"SUSPENDER":patch.estado==="FINALIZADO"?"FINALIZAR":patch.estado==="ACTIVO"&&current.estado!=="ACTIVO"?"REACTIVAR":"EDITAR";await createAuditLogTx(tx,{...audit,action,entityType:"HORARIO_ACTIVIDAD",entityId:id,entityName:`${row.actividad.nombre} · ${row.diaSemana} ${row.horaInicio}`,changes:buildAuditChanges(before,after,["activityId","establishmentId","day","startTime","endTime","space","notes","maxCapacity","waitingListEnabled","overbookingEnabled","overbookingLimit","status","professors","resources"])});}
     return map(row);
   });

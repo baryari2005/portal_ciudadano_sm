@@ -88,6 +88,10 @@ const priceSchema = z.preprocess(
 );
 
 const generalFields = {
+  fechaInicio: z.string().date().optional(),
+  fechaFin: z.string().date().nullable().optional(),
+  fechasExcluidas: z.array(z.string().date()).optional(),
+
   descripcionCorta: nullableText(180),
   descripcion: nullableText(),
   imagenUrl: imageUrlSchema,
@@ -112,6 +116,8 @@ const generalFields = {
 };
 
 type GeneralState = {
+  fechaInicio?: string;
+  fechaFin?: string | null;
   edadMinima?: number | null;
   edadMaxima?: number | null;
   esGratuita: boolean;
@@ -123,6 +129,7 @@ type GeneralState = {
 };
 
 function validateGeneralState(value: GeneralState, context: z.RefinementCtx) {
+  if(value.fechaInicio && value.fechaFin && value.fechaInicio>value.fechaFin)context.addIssue({code:"custom",path:["fechaFin"],message:"La fecha final debe ser posterior o igual a la inicial"});
   if (
     value.edadMinima != null &&
     value.edadMaxima != null &&
@@ -195,6 +202,7 @@ export const actividadSchema = z
   .object({
     nombre: z.string().trim().min(1, "El nombre es obligatorio"),
     ...generalFields,
+    fechaInicio: z.string().date("Indicá la fecha de inicio"),
     cupo: z.coerce.number().int().min(0).optional().nullable(),
     estado: z.enum(ACTIVIDAD_ESTADOS_COMPATIBLES).optional(),
     estadoTexto: z.string().trim().optional(),
@@ -209,6 +217,10 @@ export const actividadSchema = z
 export const updateActividadSchema = z
   .object({
     nombre: z.string().trim().min(1, "El nombre es obligatorio").optional(),
+  fechaInicio: z.string().date().optional(),
+  fechaFin: z.string().date().nullable().optional(),
+  fechasExcluidas: z.array(z.string().date()).optional(),
+
     descripcionCorta: nullableText(180),
     descripcion: nullableText(),
     imagenUrl: imageUrlSchema,

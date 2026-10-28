@@ -168,9 +168,14 @@ export async function getDashboardSummary(
         horarioActividad: { actividadId: f.activityId },
         establecimientoId: f.establishmentId,
       },
-      include: {
+      // Select only fields displayed by the dashboard, not the full operational models.
+      select: {
+        id: true,
+        fecha: true,
+        horaInicio: true,
+        estado: true,
         horarioActividad: {
-          include: {
+          select: {
             actividad: { select: { nombre: true } },
             inscripciones: {
               where: { estado: "CONFIRMADA" },
@@ -180,9 +185,9 @@ export async function getDashboardSummary(
         },
         establecimiento: { select: { nombre: true } },
         profesores: {
-          include: {
+          select: {
             profesor: {
-              include: {
+              select: {
                 usuario: { select: { nombre: true, apellido: true } },
               },
             },

@@ -40,7 +40,7 @@ export function DashboardOverview() {
     ["Documentos rechazados", data.current.rejectedDocuments, FileCheck2, "Estado actual"],
   ] as const;
   return <AdminPageShell>
-    <CatalogPageHeader icon={BarChart3} title="Dashboard general" description="Visualizá los indicadores principales para la gestión de actividades municipales." total={data.current.activeActivities} actions={<Button asChild className="h-11 rounded-xl bg-[var(--brand-primary)] px-5 font-bold text-white hover:bg-[var(--brand-primary-hover)]"><Link href="/reports"><BarChart3 />Ver reportes</Link></Button>} />
+    <CatalogPageHeader icon={BarChart3} title="Dashboard general" description="Visualizá los indicadores principales para la gestión de actividades." total={data.current.activeActivities} actions={<Button asChild className="h-11 rounded-xl bg-[var(--brand-primary)] px-5 font-bold text-white hover:bg-[var(--brand-primary-hover)]"><Link href="/reports"><BarChart3 />Ver reportes</Link></Button>} />
     <div className="mt-6"><DashboardFilters /></div>
 
     <section className="mt-6 rounded-3xl border border-[var(--brand-border-soft)] bg-[var(--brand-panel)] p-5 shadow-sm sm:p-7">
