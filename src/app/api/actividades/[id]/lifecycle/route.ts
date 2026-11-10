@@ -25,10 +25,8 @@ export async function POST(req: NextRequest, { params }: Params) {
 export async function DELETE(req: NextRequest, { params }: Params) {
   try {
     const user = await requireAuth(req); requirePermission(user, "actividades", "eliminar");
-    const id = (await params).id, body = await req.json(), preview = await getActivityDeletionPreview(id);
-    if (body.confirmation !== preview.name) return NextResponse.json({ message: "Escribí el nombre exacto de la actividad para confirmar." }, { status: 400 });
-    await purgeActivity(id);
-    await createAuditLog({ actorId: user.id, action: "ELIMINAR", entityType: "ACTIVIDAD", entityId: id, entityName: preview.name, metadata: preview, origin: "ADMINISTRACION", requestContext: getAuditRequestContext(req.headers) });
+    const id = (await params).id;
+    await purgeActivity(id, { actorId: user.id, requestContext: getAuditRequestContext(req.headers) });
     return NextResponse.json({ ok: true });
   } catch (error) { return mapApiRouteError(error, "No pudimos eliminar definitivamente la actividad."); }
 }

@@ -61,6 +61,11 @@ function getDuplicateMessage(field: unknown) {
   return "Ya existe una solicitud o usuario registrado con esos datos.";
 }
 
+function requestImageWarning(payload: RequestAccessPayload, identity: string | null, avatar: string | null) {
+  const missing = [payload.profilePhotoTmpPath && !identity ? "foto de identidad" : null, payload.avatarTmpPath && !avatar ? "avatar" : null].filter(Boolean);
+  return missing.length ? `. No se pudieron guardar: ${missing.join(", ")}. La solicitud quedó registrada; informá a Administración para completar las imágenes` : "";
+}
+
 async function commitRequestImage(tmpPath: string, userId: string, folder: "identity-photos" | "users") {
   if (!tmpPath || !tmpPath.startsWith("tmp/")) {
     return null;
@@ -161,7 +166,7 @@ export async function createRequestAccess(
           data: { ...(profilePhotoUrl ? { fotoPerfilUrl: profilePhotoUrl } : {}), ...(avatarUrl ? { avatarUrl } : {}) },
         });
       }
-      return { ok: true, message: "Solicitud reenviada correctamente" };
+      return { ok: true, message: "Solicitud reenviada correctamente" + requestImageWarning(payload, profilePhotoUrl, avatarUrl) };
     }
     if (duplicate.userId === userId) {
       throw new RequestAccessError(DUPLICATE_MESSAGES.userId, 409);
@@ -219,7 +224,7 @@ export async function createRequestAccess(
 
   return {
     ok: true,
-    message: "Solicitud enviada correctamente",
+    message: "Solicitud enviada correctamente" + requestImageWarning(payload, profilePhotoUrl, avatarUrl),
   };
 }
 

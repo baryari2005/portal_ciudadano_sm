@@ -1,3 +1,4 @@
+import { ARGENTINA_TIME_ZONE } from "@/constants/time-zone";
 import { CheckCircle2, CircleX, Clock3 } from "lucide-react";
 import { AccessPersonCard } from "./AccessPersonCard";
 import type { AccessValidationResponse } from "../types/access.types";
@@ -7,6 +8,6 @@ export function AccessResultCard({ result, compactMobile = false }: { result: Ac
   return <section className={`rounded-3xl border border-[var(--brand-border-soft)] bg-white shadow-sm ${compactMobile ? "p-4" : "p-6"}`}>
     <div className={`flex items-start ${compactMobile ? "gap-3" : "gap-4"}`}><div className={`grid shrink-0 place-items-center ${compactMobile ? "size-11 rounded-xl" : "size-12 rounded-2xl"} ${allowed ? "bg-[var(--brand-accent)] text-[var(--brand-primary)]" : "bg-amber-100 text-amber-800"}`}>{allowed ? <CheckCircle2 /> : <CircleX />}</div><div><p className="text-xs font-extrabold uppercase tracking-wide text-[var(--brand-secondary)]">Resultado</p><h2 className="text-xl font-extrabold text-[var(--brand-primary)]">{allowed ? "Acceso permitido" : "Acceso rechazado"}</h2><p className="mt-1 text-sm font-semibold text-[var(--brand-text)]">{result.message}</p></div></div>
     {result.user ? <div className={compactMobile ? "mt-4" : "mt-6"}><AccessPersonCard person={result.user} mobile={compactMobile} /></div> : null}
-    <div className="mt-4 grid gap-2 text-sm font-medium text-[var(--brand-text)] sm:grid-cols-2"><p><strong>Motivo:</strong> {labels[result.reason] ?? result.reason}</p><p className="flex items-center gap-1"><Clock3 className="size-4" /> {new Date(result.occurredAt).toLocaleString("es-AR")}</p>{result.matchedSession ? <p className="sm:col-span-2"><strong>Clase:</strong> {result.matchedSession.activityName} · {result.matchedSession.startTime} a {result.matchedSession.endTime}</p> : null}</div>
+    <div className="mt-4 grid gap-2 text-sm font-medium text-[var(--brand-text)] sm:grid-cols-2"><p><strong>Motivo:</strong> {labels[result.reason] ?? result.reason}</p><p className="flex items-center gap-1"><Clock3 className="size-4" /> {new Date(result.occurredAt).toLocaleString("es-AR", { timeZone: ARGENTINA_TIME_ZONE })}</p>{result.matchedSession ? <p className="sm:col-span-2"><strong>Clase:</strong> {result.matchedSession.activityName} · {result.matchedSession.startTime} a {result.matchedSession.endTime}</p> : null}</div>
   </section>;
 }

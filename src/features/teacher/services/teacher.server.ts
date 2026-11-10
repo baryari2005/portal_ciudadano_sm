@@ -1,3 +1,5 @@
+import { establishmentAddress } from "@/features/workspace-establishment/establishment-address";
+import { ARGENTINA_TIME_ZONE } from "@/constants/time-zone";
 import { Prisma } from "@prisma/client";
 import { getAttendanceRoster, listAttendanceSessions } from "@/features/attendance/services/attendance.server";
 import { prisma } from "@/lib/db";
@@ -22,23 +24,33 @@ const teacherSessionAssignment = (professorId: string): Prisma.ClaseActividadWhe
   profesores: { some: { profesorId: professorId } },
 });
 
+const teacherEstablishmentWhere = (professorId: string): Prisma.EstablecimientoWhereInput => ({
+  activo: true,
+  OR: [
+    { horariosActividad: { some: { profesores: { some: { profesorId: professorId } } } } },
+    { clases: { some: { profesores: { some: { profesorId: professorId } } } } },
+  ],
+});
+
+function teacherTodayBounds() {
+  // ClaseActividad.fecha is a civil DATE: use the Argentine day, not the host day.
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: ARGENTINA_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+  const part = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find(item => item.type === type)?.value);
+  const year = part("year"), month = part("month"), day = part("day");
+  return { start: new Date(Date.UTC(year, month - 1, day)), end: new Date(Date.UTC(year, month - 1, day + 1)) };
+}
+
 export async function listTeacherEstablishments(userId: string) {
   const teacher = await requireTeacherProfile(userId);
   const establishments = await prisma.establecimiento.findMany({
-    where: {
-      activo: true,
-      OR: [
-        { horariosActividad: { some: { profesores: { some: { profesorId: teacher.id } } } } },
-        { clases: { some: { profesores: { some: { profesorId: teacher.id } } } } },
-      ],
-    },
-    select: { id: true, nombre: true, direccion: true },
+    where: teacherEstablishmentWhere(teacher.id),
+    select: { id: true, nombre: true, direccion: true, localidad: true, provincia: true },
     orderBy: { nombre: "asc" },
   });
-  const start = new Date(); start.setHours(0,0,0,0); const end = new Date(start); end.setDate(end.getDate()+1);
+  const { start, end } = teacherTodayBounds();
   const counts = await prisma.claseActividad.groupBy({ by: ["establecimientoId"], where: { establecimientoId: { in: establishments.map((item) => item.id) }, fecha: { gte: start, lt: end }, ...teacherSessionAssignment(teacher.id) }, _count: { id: true } });
   const countById = new Map(counts.map((item) => [item.establecimientoId,item._count.id]));
-  return establishments.map((item) => ({ ...item, todayClassCount: countById.get(item.id) ?? 0 }));
+  return establishments.map((item) => ({ id: item.id, nombre: item.nombre, direccion: establishmentAddress(item), todayClassCount: countById.get(item.id) ?? 0 }));
 }
 
 export async function assertTeacherEstablishment(userId: string, establishmentId: string) {
@@ -213,13 +225,18 @@ export async function getTeacherSession(userId: string, sessionId: string, estab
 
 export async function getTeacherSummary(userId: string, establishmentId?: string) {
   const teacher = await requireTeacherProfile(userId);
-  const scope = await teacherEstablishmentScope(userId, establishmentId);
-  const today = new Date(); today.setHours(0, 0, 0, 0); const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+  // The summary only needs authorized IDs. Reuse the same assignment predicate
+  // without reloading the profile, addresses and per-establishment day counts.
+  const establishments = await prisma.establecimiento.findMany({
+    where: teacherEstablishmentWhere(teacher.id), select: { id: true },
+  });
+  if (establishmentId && !establishments.some((item) => item.id === establishmentId)) throw new TeacherSessionAccessError();
+  const scope = establishmentId ?? { in: establishments.map((item) => item.id) };
+  const { start: today, end: tomorrow } = teacherTodayBounds();
   await ensureActivitySessions({establishmentId:scope,professorId:teacher.id});
   const ownership = { establecimientoId: scope, ...teacherSessionAssignment(teacher.id) };
-  const sessionSummaryInclude = { horarioActividad: { include: { actividad: { select: { nombre: true, imagenUrl: true } }, inscripciones: { where: { estado: "CONFIRMADA" as const }, select: { id: true } } } }, establecimiento: { select: { nombre: true } } };
-  const [todaySessions, todayClasses, upcomingSessions, nextSession, pendingRosters, unreadCount, schedulesChanged] = await Promise.all([
-    prisma.claseActividad.count({ where: { ...ownership, fecha: { gte: today, lt: tomorrow } } }),
+  const sessionSummaryInclude = { horarioActividad: { select: { actividad: { select: { nombre: true, imagenUrl: true } }, _count: { select: { inscripciones: { where: { estado: "CONFIRMADA" as const } } } } } }, establecimiento: { select: { nombre: true } } };
+  const [todayClasses, upcomingSessions, nextSession, pendingRosters, unreadCount, schedulesChanged] = await Promise.all([
     prisma.claseActividad.findMany({ where: { ...ownership, fecha: { gte: today, lt: tomorrow } }, include: sessionSummaryInclude, orderBy: { horaInicio: "asc" } }),
     prisma.claseActividad.count({ where: { ...ownership, fecha: { gte: today }, estado: { in: ["PROGRAMADA", "EN_CURSO"] } } }),
     prisma.claseActividad.findFirst({ where: { ...ownership, fecha: { gte: today }, estado: { in: ["PROGRAMADA", "EN_CURSO"] } }, include: sessionSummaryInclude, orderBy: [{ fecha: "asc" }, { horaInicio: "asc" }] }),
@@ -227,8 +244,8 @@ export async function getTeacherSummary(userId: string, establishmentId?: string
     getUnreadCount(userId),
     prisma.horarioActividad.count({ where: { establecimientoId: scope, profesores: { some: { profesorId: teacher.id } }, estado: { in: ["SUSPENDIDO", "CANCELADO"] } } }),
   ]);
-  const mapSession = (session: NonNullable<typeof nextSession>) => ({ id: session.id, date: session.fecha, startTime: session.horaInicio, endTime: session.horaFin, activityName: session.horarioActividad.actividad.nombre, activityImageUrl: session.horarioActividad.actividad.imagenUrl, establishmentName: session.establecimiento.nombre, space: session.espacio, status: session.estado, confirmedCount: session.horarioActividad.inscripciones.length });
-  return { todaySessions, upcomingSessions, pendingRosters, unreadCount, schedulesChanged, todayClasses: todayClasses.map(mapSession), nextSession: nextSession ? mapSession(nextSession) : null };
+  const mapSession = (session: NonNullable<typeof nextSession>) => ({ id: session.id, date: session.fecha, startTime: session.horaInicio, endTime: session.horaFin, activityName: session.horarioActividad.actividad.nombre, activityImageUrl: session.horarioActividad.actividad.imagenUrl, establishmentName: session.establecimiento.nombre, space: session.espacio, status: session.estado, confirmedCount: session.horarioActividad._count.inscripciones });
+  return { todaySessions: todayClasses.length, upcomingSessions, pendingRosters, unreadCount, schedulesChanged, todayClasses: todayClasses.map(mapSession), nextSession: nextSession ? mapSession(nextSession) : null };
 }
 
 export async function getTeacherNotifications(userId: string, page = 1) {

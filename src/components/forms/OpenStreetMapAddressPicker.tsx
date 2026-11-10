@@ -16,6 +16,9 @@ export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, local
   const mapHost = useRef<HTMLDivElement>(null), mapRef = useRef<LeafletMap | null>(null), markerRef = useRef<Marker | null>(null), callbackRef = useRef(onChange), exactAddressRef = useRef(value), coordinatesRef = useRef({ lat, lng });
   const [query, setQuery] = useState(value), [results, setResults] = useState<GeocodingResult[]>([]), [loading, setLoading] = useState(false), [message, setMessage] = useState("");
   const initialExact = splitExactAddress(value);
+  const selectionVersion = useRef(0);
+  const disabledRef = useRef(disabled);
+  disabledRef.current = disabled;
   const [street, setStreet] = useState(initialExact.street), [streetNumber, setStreetNumber] = useState(initialExact.number), [complement, setComplement] = useState(initialExact.complement);
   callbackRef.current = onChange;
   exactAddressRef.current = value;
@@ -36,10 +39,16 @@ export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, local
   }
 
   useEffect(() => {
+    selectionVersion.current++;
+    setResults([]); setLoading(false); setMessage("");
     setQuery(value);
     const parsed = splitExactAddress(value);
     setStreet(parsed.street); setStreetNumber(parsed.number); setComplement(parsed.complement);
   }, [value]);
+  useEffect(() => {
+    selectionVersion.current++;
+    setResults([]); setLoading(false); setMessage("");
+  }, [province, locality]);
   useEffect(() => {
     if (display === "input") return;
     if (!mapHost.current || mapRef.current) return;
@@ -53,12 +62,12 @@ export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, local
       const map = L.map(mapHost.current, { zoomControl: true }).setView(center, hasCoordinates ? 17 : 13);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(map);
       const icon = L.divIcon({ className: "address-map-marker", html: '<span aria-hidden="true"></span>', iconSize: [30, 40], iconAnchor: [15, 40] });
-      const selectPoint = async (point: { lat: number; lng: number }) => {
+      const selectPoint = (point: { lat: number; lng: number }) => {
+        if (disabledRef.current) return;
+        selectionVersion.current++;
         markerRef.current?.setLatLng(point);
-        setLoading(true); setMessage("");
-        try { const response = await fetch(`/api/geocoding?lat=${point.lat}&lng=${point.lng}`); const body = await response.json() as GeocodingResponse<AddressLocation>; if (!response.ok || !body.data) throw new Error(); callbackRef.current({ ...body.data, address: normalizedAddress(body.data, exactAddressRef.current), postalCode: undefined }); }
-        catch { callbackRef.current({ address: exactAddressRef.current, placeId: null, lat: point.lat, lng: point.lng, provider: "openstreetmap" }); setMessage("Punto seleccionado; completá la dirección manualmente."); }
-        finally { setLoading(false); }
+        callbackRef.current({ address: exactAddressRef.current, placeId: `manual:${point.lat},${point.lng}`, lat: point.lat, lng: point.lng, provider: "manual" });
+        setLoading(false); setMessage("Ubicación seleccionada manualmente.");
       };
       const marker = L.marker(center, { draggable: true, icon, opacity: hasCoordinates ? 1 : 0 }).addTo(map);
       marker.on("dragend", () => void selectPoint(marker.getLatLng()));
@@ -71,16 +80,19 @@ export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, local
 
   async function search() {
     if (query.trim().length < 3) { setMessage("Ingresá al menos 3 caracteres."); return; }
+    const version = ++selectionVersion.current;
     setLoading(true); setMessage(""); setResults([]);
     const exact = splitExactAddress(query);
+    if (!exact.number) { setLoading(false); setMessage("Ingresá la altura para buscar una coincidencia exacta. También podés marcar el punto en el mapa."); return; }
     const searchableAddress = [exact.street, exact.number].filter(Boolean).join(" ");
     if (!province?.trim() || !locality?.trim()) { setLoading(false); setMessage("Seleccioná provincia, departamento y localidad antes de buscar la dirección."); return; }
     const params = new URLSearchParams({ resource: "addresses", address: searchableAddress, province: province.trim(), locality: locality.trim() });
-    try { const response = await fetch(`/api/georef?${params}`); const body = await response.json() as GeocodingResponse<Array<{id:string;formattedAddress:string;street:string;streetNumber:string;province:{name:string};locality:{name:string}|null;location:{lat:number;lon:number}}>>; if (!response.ok) throw new Error(body.message); const items=(body.data??[]).map((item)=>({address:item.formattedAddress,placeId:item.id,lat:item.location.lat,lng:item.location.lon,locality:item.locality?.name,province:item.province.name,street:item.street,streetNumber:item.streetNumber,provider:"openstreetmap" as const}));setResults(items); if (!items.length) setMessage("No encontramos resultados oficiales. Podés marcar el punto en el mapa."); }
-    catch (error) { setMessage(error instanceof Error ? error.message : "No pudimos buscar la dirección."); }
-    finally { setLoading(false); }
+    try { const response = await fetch(`/api/georef?${params}`); const body = await response.json() as GeocodingResponse<Array<{id:string;formattedAddress:string;street:string;streetNumber:string;province:{name:string};locality:{name:string}|null;location:{lat:number;lon:number}}>>; if (version !== selectionVersion.current) return; if (!response.ok) throw new Error(body.message); const items=(body.data??[]).map((item)=>({address:item.formattedAddress,placeId:item.id,lat:item.location.lat,lng:item.location.lon,locality:item.locality?.name,province:item.province.name,street:item.street,streetNumber:item.streetNumber,provider:"openstreetmap" as const}));setResults(items); if (!items.length) setMessage("No encontramos una coincidencia exacta. Podés marcar el punto en el mapa."); }
+    catch (error) { if (version === selectionVersion.current) setMessage(error instanceof Error ? error.message : "No pudimos buscar la dirección."); }
+    finally { if (version === selectionVersion.current) setLoading(false); }
   }
   async function select(result: GeocodingResult) {
+    const version = ++selectionVersion.current;
     const exactAddress = normalizedAddress(result, query);
     setResults([]); setQuery(exactAddress);
     mapRef.current?.setView([result.lat, result.lng], 17); markerRef.current?.setLatLng([result.lat, result.lng]).setOpacity(1);
@@ -88,15 +100,16 @@ export function OpenStreetMapAddressPicker({ id, value, placeId, lat, lng, local
     try {
       const response = await fetch(`/api/geocoding?lat=${result.lat}&lng=${result.lng}`);
       const body = await response.json() as GeocodingResponse<AddressLocation>;
-      callbackRef.current({ ...result, address: exactAddress, postalCode: response.ok ? body.data?.postalCode : undefined });
+      if (version === selectionVersion.current) callbackRef.current({ ...result, address: exactAddress, postalCode: response.ok ? body.data?.postalCode : undefined });
     } catch {
-      callbackRef.current({ ...result, address: exactAddress });
+      if (version === selectionVersion.current) callbackRef.current({ ...result, address: exactAddress });
     } finally {
-      setLoading(false);
+      if (version === selectionVersion.current) setLoading(false);
     }
   }
 
   function changeExact(nextStreet: string, nextNumber: string, nextComplement: string) {
+    selectionVersion.current++;
     setStreet(nextStreet); setStreetNumber(nextNumber); setComplement(nextComplement);
     const address = joinExactAddress(nextStreet, nextNumber, nextComplement);
     setQuery(address); setResults([]); markerRef.current?.setOpacity(0);

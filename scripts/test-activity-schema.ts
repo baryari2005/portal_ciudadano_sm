@@ -6,6 +6,7 @@ import {
 
 const base = {
   nombre: "Yoga",
+  fechaInicio: "2026-01-01",
   establecimientoId: "legacy-establishment",
   categoriaActividadId: null,
   publicosObjetivoIds: [],

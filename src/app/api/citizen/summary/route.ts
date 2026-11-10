@@ -1,21 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCitizenSummary, listCitizenEnrollments } from "@/features/citizen/services/citizen.server";
+import { getCitizenSummary } from "@/features/citizen/services/citizen.server";
 import { getEnrollmentDocumentationSummaries } from "@/features/enrollment-documents/services/enrollment-documents.server";
-import { getUnreadCount, listUserNotifications } from "@/features/notifications/services/notifications.server";
+import { listUserNotifications } from "@/features/notifications/services/notifications.server";
 import { mapApiRouteError } from "@/lib/api/route-error";
 import { requireAuth } from "@/lib/server-auth";
+import { prisma } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   try {
     const user = await requireAuth(req);
-    const [base, enrollments, unreadCount, latestNotifications] = await Promise.all([
+    // Documentation needs ordered enrollment IDs, not the enrollment screen DTO
+    // (which also loads schedules, next classes and waitlist positions).
+    const documentationPromise = prisma.inscripcion.findMany({
+      where: { usuarioId: user.id },
+      select: { id: true },
+      orderBy: { fechaInscripcion: "desc" },
+    }).then(async (enrollments) => {
+      const summaries = await getEnrollmentDocumentationSummaries(enrollments.map((item) => item.id));
+      return enrollments.map((item) => ({ id: item.id, summary: summaries.get(item.id)! }));
+    });
+    const [base, entries, latestNotifications] = await Promise.all([
       getCitizenSummary(user.id),
-      listCitizenEnrollments(user.id),
-      getUnreadCount(user.id),
+      documentationPromise,
       listUserNotifications(user.id, { pageSize: 5 }),
     ]);
-    const summaries = await getEnrollmentDocumentationSummaries(enrollments.map((item) => item.id));
-    const entries = enrollments.map((item) => ({ id: item.id, summary: summaries.get(item.id)! }));
     const observed = entries.filter((item) => item.summary.status === "OBSERVADA");
     const pending = entries.filter((item) => item.summary.status === "PENDIENTE");
 
@@ -29,7 +37,7 @@ export async function GET(req: NextRequest) {
           completedEnrollments: entries.filter((item) => item.summary.status === "COMPLETA").length,
           priorityEnrollmentId: observed[0]?.id ?? pending[0]?.id ?? null,
         },
-        notifications: { unreadCount, latest: latestNotifications.items },
+        notifications: { unreadCount: latestNotifications.meta.unreadCount, latest: latestNotifications.items },
       },
     });
   } catch (error) {

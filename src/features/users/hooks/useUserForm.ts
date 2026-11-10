@@ -151,6 +151,7 @@ export function useUserForm({
   );
 
   const onSubmit = async (values: UserFormValues) => {
+    const imageErrors: string[] = [];
     try {
       const payload: UserPayload = {
         userId: values.userId.trim(),
@@ -205,16 +206,17 @@ export function useUserForm({
           try {
             const r = await identityPhoto.commit(`identity-photos/${created.id}`);
             await updateCreated(created.id, { fotoPerfilUrl: r.publicUrl });
-          } catch {}
+          } catch { imageErrors.push("foto de identidad"); }
         }
         if (avatar.tmpPath) {
           try {
             const r = await avatar.commit(`users/${created.id}`);
             await updateCreated(created.id, { avatarUrl: r.publicUrl });
-          } catch {}
+          } catch { imageErrors.push("avatar"); }
         }
 
-        toast.success(submissionMode === "reception-request" ? "Solicitud enviada" : "Usuario creado correctamente");
+        if (imageErrors.length) toast.warning(`Usuario guardado; no se pudieron guardar: ${imageErrors.join(", ")}. Abrí su edición para volver a cargarlas.`);
+        else toast.success(submissionMode === "reception-request" ? "Solicitud enviada" : "Usuario creado correctamente");
         onSuccess?.(created.id);
         return;
       }
@@ -239,16 +241,17 @@ export function useUserForm({
         try {
           const r = await identityPhoto.commit(`identity-photos/${id}`, oldProfilePhotoPath);
           await update(id, { fotoPerfilUrl: r.publicUrl });
-        } catch {}
+        } catch { imageErrors.push("foto de identidad"); }
       }
       if (avatar.tmpPath) {
         try {
           const r = await avatar.commit(`users/${id}`);
           await update(id, { avatarUrl: r.publicUrl });
-        } catch {}
+        } catch { imageErrors.push("avatar"); }
       }
 
-      toast.success(successMessage ?? "Usuario actualizado correctamente");
+      if (imageErrors.length) toast.warning(`Datos guardados; no se pudieron actualizar: ${imageErrors.join(", ")}. Se conservaron las imágenes anteriores.`);
+      else toast.success(successMessage ?? "Usuario actualizado correctamente");
       onSuccess?.(id);
     } catch (err: unknown) {
       const ax = err as AxiosError<{ message?: string | string[]; issues?: Array<{ path: string; message: string }> }>;

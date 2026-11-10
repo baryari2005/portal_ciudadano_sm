@@ -8,7 +8,7 @@ import { getServerMe } from "@/lib/server-auth";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const BUCKET = process.env.SUPABASE_BUCKET || "avatars";
+const BUCKET = process.env.SUPABASE_BUCKET_AVATARS || "avatars";
 
 const clean = (p: string) => p.replace(/^\/+/, "");
 const toBucketPath = (p: string) => clean(p).replace(/^avatars\//, "");
@@ -129,12 +129,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: moveErr.message }, { status: 500 });
   }
 
-  if (oldNorm && oldNorm !== dest) {
-    await supa.storage
-      .from(BUCKET)
-      .remove([oldNorm])
-      .catch(() => {});
-  }
+  // Keep the previous object until its new database reference is saved.
+  // Unreferenced object cleanup is outside this operation.
 
   const { data } = supa.storage.from(BUCKET).getPublicUrl(dest);
 

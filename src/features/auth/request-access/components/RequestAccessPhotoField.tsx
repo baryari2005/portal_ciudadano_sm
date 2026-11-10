@@ -99,13 +99,14 @@ export function RequestAccessPhotoField({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const stagedPreview = useRef(false);
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
 
   useEffect(() => {
-    setPreviewUrl(currentUrl ?? null);
+    if (!stagedPreview.current) setPreviewUrl(currentUrl ?? null);
   }, [currentUrl]);
 
   useEffect(() => {
@@ -193,7 +194,9 @@ export function RequestAccessPhotoField({
         throw new Error(responseData?.error || responseData?.message || "No pudimos subir la foto.");
       }
 
-      setPreviewUrl(data.publicUrl);
+      const localPreview = await toDataURL(compressedFile);
+      stagedPreview.current = true;
+      setPreviewUrl(localPreview);
       onUploaded({ tmpPath: data.tmpPath ?? data.publicUrl, publicUrl: data.publicUrl });
       toast.success("Foto cargada correctamente.");
     } catch (error) {
@@ -271,6 +274,7 @@ export function RequestAccessPhotoField({
   }
 
   function clearPhoto() {
+    stagedPreview.current = false;
     setPreviewUrl(null);
     onClear();
   }

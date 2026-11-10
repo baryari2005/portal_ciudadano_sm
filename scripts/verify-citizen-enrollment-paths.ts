@@ -80,6 +80,11 @@ function populate(row: any) {
 }
 
 const tx = {
+  actividadBorrador:{findUnique:async({where}:any)=>{
+    const activity=activities.get(where.actividadId);if(!activity)return null;
+    const day=(value:any)=>value instanceof Date?value.toISOString().slice(0,10):value;
+    return {publicadoAt:new Date(),payload:{__activity:{version:1,startDate:day(activity.fechaInicio)??"2020-01-01",endDate:day(activity.fechaFin)??null,excludedDates:[],schedules:[]}}};
+  }},
   usuario: { async findFirst({ where }: any) { const user = users.get(where.id); return user ? { id: user.id, fechaNacimiento: user.fechaNacimiento, genero: user.genero, estadoParticipacion: user.estadoParticipacion } : null; } },
   $queryRaw: async () => [],
   claseActividad: {
@@ -221,6 +226,11 @@ async function main() {
   // 4) Los dos eventos únicos (POR_CLASE) del mismo día/hora, en sedes distintas -> también deben bloquearse.
   await expectRejection("Dos eventos POR_CLASE simultáneos en sedes distintas", () => server.createEnrollment({ usuarioId: CITIZEN, claseActividadId: "cls-evento-unico-2" } as any), "ya está inscripta");
 
+  activities.get("act-horario-fijo")!.estado="FINALIZADA";
+  await expectRejection("Actividad finalizada",()=>server.createEnrollment({usuarioId:CITIZEN,actividadId:"act-horario-fijo"} as any),"no admite nuevas inscripciones");
+  activities.get("act-horario-fijo")!.estado="ACTIVA";
+  activities.get("act-horario-fijo")!.fechaFin=new Date("2020-01-01T00:00:00Z");
+  await expectRejection("Actividad vencida",()=>server.createEnrollment({usuarioId:CITIZEN,actividadId:"act-horario-fijo"} as any),"no admite nuevas inscripciones");
   console.log(`OK: ${checks} verificaciones sobre createEnrollment cubriendo las modalidades y el solapamiento de horario/sede (incluido POR_CLASE).`);
 }
 

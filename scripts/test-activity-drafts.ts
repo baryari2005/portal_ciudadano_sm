@@ -56,7 +56,9 @@ const drafts = {
   },
 };
 const prisma = {
+  $queryRaw:async()=>[],
   actividadBorrador: drafts,
+  horarioActividad: { async findMany() { return structuredClone(activity.horarios); } },
   actividad: { async findUnique() { return structuredClone(activity); } },
   async $transaction(callback: (tx: any) => unknown) { return callback(prisma); },
 };
@@ -131,6 +133,19 @@ async function main() {
 
   await server.deleteActivityDraft(edit.id, pending.updatedAt.toISOString());
   assert.equal(await server.getActivityDraft(edit.id), null);
+  // Both editor modes persist arbitrary validity without generating operational data.
+  for(const end of ["2026-12-01","2027-05-01","2027-11-01","2028-11-01","2031-11-01",null]){
+    for(const mode of ["create","edit"]){
+      const draft=mode==="create"?await server.createActivityDraft("admin-a"):await server.createActivityEditDraft(activity.id,"admin-a");
+      const payload={...draft.payload,generacionClasesDesde:"2026-11-01",generacionClasesHasta:end,schedules:draft.payload.schedules.map(schedule=>({...schedule,profesorIds:[],teacherAssignments:[]}))};
+      const saved=await server.saveActivityDraft(draft.id,"admin-a",payload,draft.updatedAt.toISOString());
+      assert.equal(saved.payload.generacionClasesHasta,end);
+      assert.equal(saved.payload.generacionClasesDesde,"2026-11-01");
+      assert.ok(saved.payload.schedules.every(schedule=>schedule.profesorIds.length===0));
+      assert.equal((await server.getActivityDraft(draft.id))?.payload.generacionClasesHasta,end);
+      await server.deleteActivityDraft(draft.id,saved.updatedAt.toISOString());
+    }
+  }
   assert.equal(operationalWrites, 0, "Draft operations must not regenerate classes, reservations, or assignments");
   console.log("OK: drafts, no-op edits, reversion, concurrent saves/deletes, failed publication and published-activity protection.");
 }

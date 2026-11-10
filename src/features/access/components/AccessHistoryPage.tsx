@@ -1,5 +1,6 @@
 "use client";
 
+import { ARGENTINA_TIME_ZONE } from "@/constants/time-zone";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Ban, CheckCircle2, ChevronRight, CircleX, History, Search } from "lucide-react";
@@ -36,7 +37,7 @@ function MobileHistoryCard({row}:{row:Row}){
   const annulled=Boolean(row.anuladoAt),allowed=row.resultado==="PERMITIDO",date=new Date(row.fechaHora),Icon=annulled?Ban:allowed?CheckCircle2:CircleX;
   const badge=annulled?"Anulado":allowed?"Permitido":"Rechazado";
   const tone=annulled?"border-[var(--brand-secondary)]/35 bg-[var(--brand-panel)] text-[var(--brand-primary)]":allowed?"border-[var(--brand-secondary)]/35 bg-[var(--brand-panel)] text-[var(--brand-primary)]":"border-red-200 bg-red-50 text-red-700";
-  const compactDate=`${date.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit"})} · ${date.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"})}`;
+  const compactDate=`${date.toLocaleDateString("es-AR",{timeZone:ARGENTINA_TIME_ZONE,day:"2-digit",month:"2-digit"})} · ${date.toLocaleTimeString("es-AR",{timeZone:ARGENTINA_TIME_ZONE,hour:"2-digit",minute:"2-digit"})}`;
   return <Link href={`/reception/${row.id}`} className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 rounded-2xl border border-[var(--brand-border-soft)] bg-white p-3 shadow-sm"><span className={`grid size-10 shrink-0 place-items-center rounded-full border ${tone}`}><Icon className="size-5"/></span><span className="min-w-0"><span className="block truncate text-sm font-extrabold text-[var(--brand-primary)]">{row.nombreSnapshot??"No identificado"}</span><span className="mt-0.5 block truncate text-[11px] text-[var(--brand-muted)]">DNI {row.documentoSnapshot||"No informado"}</span><span className="mt-1 block min-w-0 truncate text-[10px] font-medium text-[var(--brand-ink)]"><span>{formatReason(row.motivo)}</span><span className="text-[var(--brand-muted)]"> · {origins[row.origen]??row.origen}</span></span></span><span className="flex shrink-0 items-center gap-1.5"><span className="flex flex-col items-end gap-1.5"><span className={`inline-flex rounded-full border px-2 py-0.5 text-[9px] font-extrabold ${tone}`}>{badge}</span><span className="whitespace-nowrap text-[10px] text-[var(--brand-muted)]">{compactDate}</span></span><ChevronRight className="size-4 shrink-0 text-[var(--brand-secondary)]"/></span></Link>;
 }
 
@@ -63,7 +64,7 @@ function DesktopHistoryCard({row}:{row:Row}){
     <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-[var(--brand-primary)] text-white shadow-sm"><Icon className="size-6"/></span>
     <span className="min-w-0">
       <span className="flex flex-wrap items-center gap-2"><span className="truncate font-extrabold text-[var(--brand-ink)]">{row.nombreSnapshot??"No identificado"}</span><Badge variant="outline" className={cn("w-fit rounded-full px-2.5 py-1 font-bold",tone)}>{badge}</Badge></span>
-      <span className="mt-1 block text-sm font-semibold text-[var(--brand-text)]">{new Date(row.fechaHora).toLocaleString("es-AR")} · {origins[row.origen]??row.origen}</span>
+      <span className="mt-1 block text-sm font-semibold text-[var(--brand-text)]">{new Date(row.fechaHora).toLocaleString("es-AR", { timeZone: ARGENTINA_TIME_ZONE })} · {origins[row.origen]??row.origen}</span>
       <span className="mt-1 block truncate text-xs text-[var(--brand-muted)]">DNI {row.documentoSnapshot||"No informado"} · {formatReason(row.motivo)}</span>
     </span>
     <ChevronRight className="size-5 text-[var(--brand-secondary)]"/>

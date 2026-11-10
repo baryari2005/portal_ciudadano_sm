@@ -52,6 +52,7 @@ import {
   type UserRecordSection,
 } from "../../constants/user-record-sections";
 import Image from "next/image";
+import { useUserImages } from "../../hooks/useUserImages";
 
 const sections = [
   { id: "personal-data", label: "Datos personales", icon: UserRound },
@@ -83,6 +84,7 @@ export function UserRecordPage({
     ["documents", "enrollments", "attendance"].includes(normalizedSection),
   );
   const [user, setUser] = useState<ManagedUser | null>(null);
+  const imageUrls = useUserImages(activeSection === "images" ? user?.id : undefined, user?.avatarUrl, user?.identityPhotoUrl);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -166,7 +168,7 @@ export function UserRecordPage({
       }
       onSectionChange={selectSection}
       navigationDisabled={loading}
-      loading={loading || sectionLoading}
+      loading={loading || sectionLoading || (activeSection === "images" && Boolean(user?.avatarUrl || user?.identityPhotoUrl) && !imageUrls)}
       loadingLabel="información del ciudadano"
       contentClassName={
         activeSection === "participation"
@@ -211,10 +213,11 @@ export function UserRecordPage({
           icon={Images}
         >
           <div className="grid content-start gap-5 sm:grid-cols-2">
-            <RecordImage label="Avatar" src={user.avatarUrl} />
+            <RecordImage label="Avatar" src={imageUrls ? imageUrls.avatarUrl : user.avatarUrl} registered={Boolean(user.avatarUrl)} />
             <RecordImage
               label="Foto de identidad"
-              src={user.identityPhotoUrl ?? null}
+              src={imageUrls ? imageUrls.identityPhotoUrl : user.identityPhotoUrl ?? null}
+              registered={Boolean(user.identityPhotoUrl)}
             />
           </div>
         </AdminRecordSectionContent>
@@ -415,24 +418,28 @@ function CitizenRecordDataSection({
   );
 }
 
-function RecordImage({ label, src }: { label: string; src: string | null }) {
+function RecordImage({ label, src, registered }: { label: string; src: string | null; registered: boolean }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
   return (
     <div>
       <p className="mb-2 text-sm font-extrabold text-[var(--brand-primary)]">
         {label}
       </p>
       <div className="relative grid aspect-[4/3] w-full max-w-48 place-items-center overflow-hidden rounded-2xl border border-[var(--brand-border)] bg-[var(--brand-panel)]">
-        {src ? (
+        {src && !failed ? (
           <Image
             src={src}
             alt={label}
+              unoptimized
+              onError={() => setFailed(true)}
             fill
             sizes="(max-width: 640px) 100vw, 384px"
             className="object-cover"
           />
         ) : (
           <span className="text-sm font-bold text-[var(--brand-muted)]">
-            Sin imagen registrada
+              {registered ? "Imagen no disponible" : "Sin imagen registrada"}
           </span>
         )}
       </div>

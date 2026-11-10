@@ -13,6 +13,7 @@ import {
 
 import { prisma } from "@/lib/db";
 import {
+  CatalogConflictError,
   CatalogNotFoundError,
   CatalogValidationError,
 } from "@/lib/errors/catalog-errors";
@@ -476,7 +477,10 @@ export async function getActividad(id: string, client: DbClient = prisma) {
   return record ? {...mapActividad(record),...await withActivityValidity(client,{id:record.id})} : null;
 }
 
-export async function createActividad(input: ActividadInput, actorId?: string, draftId?: string, client: DbClient = prisma) {
+export async function createActividad(input: ActividadInput, actorId?: string, draftId?: string, client: DbClient = prisma, options:{deferConfiguration?:boolean}={}) {
+  // Publication persists the final schedule templates before its outer transaction
+  // commits. Standalone creation must always persist configuration immediately.
+  if(options.deferConfiguration&&(!draftId||"$transaction" in client))throw new CatalogValidationError("La configuración diferida requiere una publicación transaccional.");
   return inTransaction(client,
     async (tx) => {
       const category = await validateCategory(tx, input.categoriaActividadId);
@@ -523,7 +527,7 @@ export async function createActividad(input: ActividadInput, actorId?: string, d
         },
       });
       if(draftId)await tx.actividadBorrador.update({where:{id:draftId},data:{actividadId:id}});
-      await writeActivityConfiguration(tx,id,{startDate:input.fechaInicio,endDate:input.fechaFin??null,excludedDates:input.fechasExcluidas??[]},actorId);
+      if(!options.deferConfiguration)await writeActivityConfiguration(tx,id,{startDate:input.fechaInicio,endDate:input.fechaFin??null,excludedDates:input.fechasExcluidas??[]},actorId);
       await replaceSchedulesAndAssignees(tx, id, input, input.cupo ?? 1);
       await syncPublics(tx, id, new Set(), input.publicosObjetivoIds);
       await validateAndSyncRequirements(tx, id, input.requirements);
@@ -828,27 +832,26 @@ export type ActivityDeletionPreview = {
   purgeBlockedReason: string | null;
 };
 
-export async function getActivityDeletionPreview(id: string): Promise<ActivityDeletionPreview> {
-  const activity = await prisma.actividad.findUnique({ where: { id }, select: { id: true, nombre: true, estado: true } });
+export async function getActivityDeletionPreview(id: string, db: Prisma.TransactionClient | PrismaClient = prisma): Promise<ActivityDeletionPreview> {
+  const activity = await db.actividad.findUnique({ where: { id }, select: { id: true, nombre: true, estado: true } });
   if (!activity) throw new CatalogNotFoundError("Actividad no encontrada.");
   const scheduleWhere = { horarioActividad: { actividadId: id } };
   const operational = operationalNow();
   const futureWhere: Prisma.ClaseActividadWhereInput = { ...scheduleWhere, asistenciaCerradaAt: null, estado: { notIn: ["FINALIZADA", "CANCELADA"] }, OR: [{ fecha: { gt: operational.today } }, { fecha: operational.today, horaInicio: { gte: operational.time } }] };
   const [schedules, sessions, futureSessions, enrollments, affectedEnrollmentUsers, affectedReservationUsers, reservations, attendanceRecords, enrollmentDocuments, accessRecords] = await Promise.all([
-    prisma.horarioActividad.count({ where: { actividadId: id } }),
-    prisma.claseActividad.count({ where: scheduleWhere }),
-    prisma.claseActividad.count({ where: futureWhere }),
-    prisma.inscripcion.count({ where: scheduleWhere }),
-    prisma.inscripcion.findMany({ where: { ...scheduleWhere, estado: { in: ["PENDIENTE", "CONFIRMADA", "LISTA_ESPERA"] } }, select: { usuarioId: true } }),
-    prisma.reservaClase.findMany({ where: { claseActividad: futureWhere, estado: { in: ["RESERVADA", "LISTA_ESPERA", "OFRECIDA"] } }, select: { usuarioId: true } }),
-    prisma.reservaClase.count({ where: { claseActividad: scheduleWhere } }),
-    prisma.asistencia.count({ where: { claseActividad: scheduleWhere } }),
-    prisma.documentoInscripcion.count({ where: { inscripcion: scheduleWhere } }),
-    prisma.registroAcceso.count({ where: { OR: [{ claseActividad: scheduleWhere }, { inscripcion: scheduleWhere }] } }),
+    db.horarioActividad.count({ where: { actividadId: id } }),
+    db.claseActividad.count({ where: scheduleWhere }),
+    db.claseActividad.count({ where: futureWhere }),
+    db.inscripcion.count({ where: scheduleWhere }),
+    db.inscripcion.findMany({ where: { ...scheduleWhere, estado: { in: ["PENDIENTE", "CONFIRMADA", "LISTA_ESPERA"] } }, select: { usuarioId: true } }),
+    db.reservaClase.findMany({ where: { claseActividad: futureWhere, estado: { in: ["RESERVADA", "LISTA_ESPERA", "OFRECIDA"] } }, select: { usuarioId: true } }),
+    db.reservaClase.count({ where: { claseActividad: scheduleWhere } }),
+    db.asistencia.count({ where: { claseActividad: scheduleWhere } }),
+    db.documentoInscripcion.count({ where: { inscripcion: scheduleWhere } }),
+    db.registroAcceso.count({ where: { OR: [{ claseActividad: scheduleWhere }, { inscripcion: scheduleWhere }] } }),
   ]);
-  const hasHistory = attendanceRecords > 0 || accessRecords > 0;
   const affectedUsers = new Set([...affectedEnrollmentUsers, ...affectedReservationUsers].map((item) => item.usuarioId)).size;
-  const canPurge = activity.estado === "BORRADOR" && !hasHistory;
+  const canPurge = true;
   return {
     id: activity.id,
     name: activity.nombre,
@@ -863,7 +866,7 @@ export async function getActivityDeletionPreview(id: string): Promise<ActivityDe
     enrollmentDocuments,
     accessRecords,
     canPurge,
-    purgeBlockedReason: canPurge ? null : activity.estado !== "BORRADOR" ? "Sólo se pueden eliminar definitivamente actividades en borrador." : "La actividad posee asistencias o accesos históricos y debe conservarse.",
+    purgeBlockedReason: null,
   };
 }
 
@@ -894,27 +897,69 @@ export async function archiveActivity(id: string, reason: string) {
   }, { maxWait: 10_000, timeout: 30_000 });
 }
 
-export async function purgeActivity(id: string) {
-  const preview = await getActivityDeletionPreview(id);
-  if (!preview.canPurge) throw new CatalogValidationError(preview.purgeBlockedReason ?? "La actividad no se puede eliminar definitivamente.");
-  await prisma.$transaction(async (tx) => {
-    const schedules = await tx.horarioActividad.findMany({ where: { actividadId: id }, select: { id: true, clases: { select: { id: true } }, inscripciones: { select: { id: true } } } });
-    const classIds = schedules.flatMap((schedule) => schedule.clases.map((item) => item.id));
-    const enrollmentIds = schedules.flatMap((schedule) => schedule.inscripciones.map((item) => item.id));
-    if (classIds.length) {
-      const reservationIds = (await tx.reservaClase.findMany({ where: { claseActividadId: { in: classIds } }, select: { id: true } })).map((item) => item.id);
-      if (reservationIds.length) await tx.reservaRecurso.deleteMany({ where: { reservaClaseId: { in: reservationIds } } });
+export async function purgeActivity(id: string, audit?: { actorId: string; requestContext?: { ip?: string | null; userAgent?: string | null } }) {
+  try {
+    return await prisma.$transaction(async (tx) => {
+      // Serialize competing purges without changing the normal operational services.
+      const locked = await tx.$queryRaw<Array<{ id: string }>>`SELECT id FROM "Actividad" WHERE id = ${id} FOR UPDATE`;
+      if (!locked.length) throw new CatalogNotFoundError("Actividad no encontrada.");
+      const preview = await getActivityDeletionPreview(id, tx);
+      const schedules = await tx.horarioActividad.findMany({ where: { actividadId: id }, select: { id: true } });
+      const scheduleIds = schedules.map((row) => row.id);
+      const classes = await tx.claseActividad.findMany({ where: { horarioActividadId: { in: scheduleIds } }, select: { id: true } });
+      const classIds = classes.map((row) => row.id);
+      const enrollments = await tx.inscripcion.findMany({ where: { horarioActividadId: { in: scheduleIds } }, select: { id: true, usuarioId: true } });
+      const enrollmentIds = enrollments.map((row) => row.id);
+      const shared = await tx.inscripcionHorario.count({ where: { inscripcionId: { in: enrollmentIds }, horarioActividadId: { notIn: scheduleIds } } });
+      const foreignReservations = await tx.reservaClase.count({ where: { inscripcionId: { in: enrollmentIds }, claseActividadId: { notIn: classIds } } });
+      const foreignAttendance = await tx.asistencia.count({ where: { inscripcionId: { in: enrollmentIds }, claseActividadId: { notIn: classIds } } });
+      if (shared || foreignReservations || foreignAttendance) throw new CatalogConflictError("Hay inscripciones compartidas con otra actividad. No se eliminaron datos; revisá esas relaciones antes de continuar.");
+      const linked = await tx.inscripcionHorario.findMany({ where: { horarioActividadId: { in: scheduleIds } }, select: { inscripcion: { select: { usuarioId: true } } } });
+      const reservations = await tx.reservaClase.findMany({ where: { claseActividadId: { in: classIds } }, select: { id: true, usuarioId: true } });
+      const activity = await tx.actividad.findUniqueOrThrow({ where: { id }, select: { responsableId: true } });
+      const responsible = activity.responsableId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activity.responsableId) ? activity.responsableId : null;
+      const teachers = await tx.profesor.findMany({ where: { OR: [
+        { horarios: { some: { horarioActividadId: { in: scheduleIds } } } },
+        { clases: { some: { claseActividadId: { in: classIds } } } },
+        { usuario: { actividadesAsignadas: { some: { actividadId: id } } } },
+        ...(responsible ? [{ id: responsible }, { usuarioId: responsible }] : []),
+      ] }, select: { usuarioId: true } });
+      const recipientIds = [...new Set([...enrollments.map((row) => row.usuarioId), ...linked.map((row) => row.inscripcion.usuarioId), ...reservations.map((row) => row.usuarioId), ...teachers.map((row) => row.usuarioId)])];
+      const recipients = await tx.usuario.findMany({ where: { id: { in: recipientIds }, deletedAt: null }, select: { id: true } });
+      const { createNotifications } = await import("@/features/notifications/services/notifications.server");
+      await createNotifications(recipients.map((row) => ({ userId: row.id, senderId: audit?.actorId, type: "GENERAL", title: "Actividad cancelada", message: `La actividad ${preview.name} fue cancelada y ya no estará disponible. Las próximas clases no se realizarán.`, priority: "ALTA", entityType: "deleted_activity", entityId: id, deduplicationKey: `activity-purged:${id}` })), tx);
+      // Access history is preserved, with its optional operational references detached.
+      await tx.registroAcceso.updateMany({ where: { claseActividadId: { in: classIds } }, data: { claseActividadId: null } });
+      await tx.registroAcceso.updateMany({ where: { inscripcionId: { in: enrollmentIds } }, data: { inscripcionId: null } });
+      await tx.reservaRecurso.deleteMany({ where: { reservaClaseId: { in: reservations.map((row) => row.id) } } });
       await tx.reservaClase.deleteMany({ where: { claseActividadId: { in: classIds } } });
-      await tx.asistencia.deleteMany({ where: { claseActividadId: { in: classIds } } });
-      await tx.claseActividad.deleteMany({ where: { id: { in: classIds } } });
-    }
-    if (enrollmentIds.length) {
+      await tx.asistencia.deleteMany({ where: { OR: [{ claseActividadId: { in: classIds } }, { inscripcionId: { in: enrollmentIds } }] } });
       await tx.documentoInscripcion.deleteMany({ where: { inscripcionId: { in: enrollmentIds } } });
+      await tx.inscripcionHorario.deleteMany({ where: { OR: [{ inscripcionId: { in: enrollmentIds } }, { horarioActividadId: { in: scheduleIds } }] } });
       await tx.inscripcion.deleteMany({ where: { id: { in: enrollmentIds } } });
-    }
-    await tx.actividadBorrador.deleteMany({ where: { actividadId: id } });
-    await tx.horarioActividad.deleteMany({ where: { actividadId: id } });
-    await tx.actividad.delete({ where: { id } });
-  }, { maxWait: 10_000, timeout: 30_000 });
-  return preview;
+      await tx.claseActividadProfesor.deleteMany({ where: { claseActividadId: { in: classIds } } });
+      await tx.bloqueoRecurso.deleteMany({ where: { claseActividadId: { in: classIds } } });
+      await tx.claseActividad.deleteMany({ where: { id: { in: classIds } } });
+      await tx.horarioActividadProfesor.deleteMany({ where: { horarioActividadId: { in: scheduleIds } } });
+      await tx.horarioActividadRecurso.deleteMany({ where: { horarioActividadId: { in: scheduleIds } } });
+      await tx.actividadBorrador.deleteMany({ where: { actividadId: id } });
+      await tx.horarioActividad.deleteMany({ where: { id: { in: scheduleIds } } });
+      await tx.actividadUsuario.deleteMany({ where: { actividadId: id } });
+      await tx.actividadRecurso.deleteMany({ where: { actividadId: id } });
+      await tx.actividadRequisito.deleteMany({ where: { actividadId: id } });
+      await tx.actividadPublicoObjetivo.deleteMany({ where: { actividadId: id } });
+      await tx.actividad.delete({ where: { id } });
+      if (audit) {
+        const { createAuditLog } = await import("@/features/audit-log/services/audit-log.server");
+        await createAuditLog({ actorId: audit.actorId, action: "ELIMINAR", entityType: "ACTIVIDAD", entityId: id, entityName: preview.name, metadata: { ...preview, notifiedUsers: recipients.length }, origin: "ADMINISTRACION", requestContext: audit.requestContext }, tx);
+      }
+      return preview;
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, maxWait: 10_000, timeout: 60_000 });
+  } catch (error) {
+    // The PostgreSQL connector can expose deadlocks as an unknown Prisma error.
+    if (error instanceof Prisma.PrismaClientUnknownRequestError && /\b40P01\b/.test(error.message)) throw new CatalogConflictError("La actividad se está procesando en otra solicitud. Actualizá el listado antes de reintentar.");
+    if (error instanceof Prisma.PrismaClientKnownRequestError && (error.code === "P2034" || (error.code === "P2010" && error.meta?.code === "40001"))) throw new CatalogConflictError("La actividad se está procesando en otra solicitud. Actualizá el listado antes de reintentar.");
+    if (error instanceof Prisma.PrismaClientKnownRequestError && (error.code === "P2003" || (error.code === "P2010" && error.meta?.code === "23503"))) throw new CatalogConflictError("Hay relaciones que impiden eliminar la actividad. No se eliminaron datos; actualizá el listado antes de reintentar.");
+    throw error;
+  }
 }

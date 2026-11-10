@@ -26,9 +26,9 @@ export function GeorefTerritoryFields({ province, locality, onProvinceChange, on
   const effectiveLocality = lockedLocality ?? locality;
   const georef = useGeorefTerritories(province, effectiveLocality);
   const controlClass = className ?? "h-11 w-full rounded-xl border-[var(--brand-border)] bg-[var(--brand-page)]";
-  const changeProvince = (id: string) => { const selected = georef.provinces.find((item) => item.id === id); georef.setProvinceId(id); georef.setDepartmentId(""); onProvinceChange(selected?.name ?? ""); onLocalityChange(lockedLocality ?? ""); onLocationInvalidated?.(); };
-  const changeDepartment = (id: string) => { georef.setDepartmentId(id); onLocalityChange(lockedLocality ?? ""); onLocationInvalidated?.(); };
-  const changeLocality = (id: string) => { onLocalityChange(georef.localities.find((item) => item.id === id)?.name ?? ""); onLocationInvalidated?.(); };
+  const changeProvince = (id: string) => { const selected = georef.provinces.find((item) => item.id === id); if (!selected || id === georef.provinceId) return; georef.setProvinceId(id); georef.setDepartmentId(""); onProvinceChange(selected.name); onLocalityChange(lockedLocality ?? ""); onLocationInvalidated?.(); };
+  const changeDepartment = (id: string) => { if (!georef.departments.some((item) => item.id === id) || id === georef.departmentId) return; georef.setDepartmentId(id); onLocalityChange(lockedLocality ?? ""); onLocationInvalidated?.(); };
+  const changeLocality = (id: string) => { const selected = georef.localities.find((item) => item.id === id); if (!selected || normalizedTerritoryName(selected.name) === normalizedTerritoryName(effectiveLocality)) return; onLocalityChange(selected.name); onLocationInvalidated?.(); };
   const localityId = georef.localities.find((item) => normalizedTerritoryName(item.name) === normalizedTerritoryName(effectiveLocality))?.id ?? "";
 
   return <>

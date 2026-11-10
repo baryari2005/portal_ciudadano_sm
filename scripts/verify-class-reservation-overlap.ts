@@ -21,8 +21,8 @@ const inscripciones = new Map<string, any>();
 const reservas = new Map<string, any>();
 
 function addEstablishment(id: string, nombre: string) { establishments.set(id, { id, nombre }); return id; }
-function addActivity(overrides: any) { const activity = { modalidadInscripcion: "POR_CLASE", horasCancelacionJustificada: 24, nombre: overrides.id, ...overrides }; activities.set(activity.id, activity); return activity; }
-function addSchedule(overrides: any) { const schedule = { cupoMaximo: 10, ...overrides }; schedules.set(schedule.id, schedule); return schedule; }
+function addActivity(overrides: any) { const activity = { estado: "ACTIVA", modalidadInscripcion: "POR_CLASE", horasCancelacionJustificada: 24, nombre: overrides.id, ...overrides }; activities.set(activity.id, activity); return activity; }
+function addSchedule(overrides: any) { const schedule = { estado: "ACTIVO", cupoMaximo: 10, ...overrides }; schedules.set(schedule.id, schedule); return schedule; }
 function addClass(overrides: any) { const clase = { estado: "PROGRAMADA", cupoMaximo: null, ...overrides }; clases.set(clase.id, clase); return clase; }
 function addUser(overrides: any) { const user = { estadoParticipacion: "HABILITADO", ...overrides }; users.set(user.id, user); return user; }
 function addEnrollment(overrides: any) { const id = overrides.id ?? nextId("insc"); const row = { estado: "CONFIRMADA", createdAt: new Date(), horarios: [], ...overrides, id }; inscripciones.set(id, row); return row; }
@@ -57,6 +57,11 @@ function populateEnrollment(row: any) {
 
 // --- class-reservations.server.ts's own tx surface -------------------------------------------------
 const crTx = {
+  actividadBorrador:{findUnique:async({where}:any)=>{
+    const activity=activities.get(where.actividadId);if(!activity)return null;
+    const day=(value:any)=>value instanceof Date?value.toISOString().slice(0,10):value;
+    return {publicadoAt:new Date(),payload:{__activity:{version:1,startDate:day(activity.fechaInicio)??"2020-01-01",endDate:day(activity.fechaFin)??null,excludedDates:[],schedules:[]}}};
+  }},
   $queryRaw: async () => [],
   usuario: { async findUnique({ where }: any) { const user = users.get(where.id); return user ? { estadoParticipacion: user.estadoParticipacion } : null; } },
   claseActividad: {
@@ -65,7 +70,7 @@ const crTx = {
       if (!clase) return null;
       const schedule = schedules.get(clase.horarioActividadId);
       const activity = activities.get(schedule.actividadId);
-      return { id: clase.id, fecha: clase.fecha, horaInicio: clase.horaInicio, horaFin: clase.horaFin, estado: clase.estado, cupoMaximo: clase.cupoMaximo, horarioActividadId: schedule.id, horarioActividad: { id: schedule.id, diaSemana: schedule.diaSemana, cupoMaximo: schedule.cupoMaximo, actividad: activity, recursos: [] }, establecimiento: establishments.get(clase.establecimientoId ?? schedule.establecimientoId) };
+      return { id: clase.id, fecha: clase.fecha, horaInicio: clase.horaInicio, horaFin: clase.horaFin, estado: clase.estado, cupoMaximo: clase.cupoMaximo, horarioActividadId: schedule.id, horarioActividad: { id: schedule.id, actividadId: schedule.actividadId, estado: schedule.estado, diaSemana: schedule.diaSemana, cupoMaximo: schedule.cupoMaximo, actividad: activity, recursos: [] }, establecimiento: establishments.get(clase.establecimientoId ?? schedule.establecimientoId) };
     },
   },
   inscripcion: {
@@ -170,6 +175,11 @@ async function main() {
   // 5) Clase puntual que se superpone con la inscripción recurrente semanal (miércoles 09:00-10:00) -> debe bloquearse.
   await expectRejection("Clase puntual superpuesta con actividad recurrente", () => classReservationsServer.reserveCitizenClass(CITIZEN, "cls-recurrente-conflicto"), "ya está inscripta");
 
+  activities.get("act-turno-puntual").estado="FINALIZADA";
+  await expectRejection("Actividad finalizada",()=>classReservationsServer.reserveCitizenClass(CITIZEN,"cls-a"),"no admite reservas");
+  activities.get("act-turno-puntual").estado="ACTIVA";
+  activities.get("act-turno-puntual").fechaFin=new Date("2020-01-01T00:00:00Z");
+  await expectRejection("Clase fuera de vigencia",()=>classReservationsServer.reserveCitizenClass(CITIZEN,"cls-a"),"no admite reservas");
   console.log(`OK: ${checks} verificaciones sobre reserveCitizenClass cubriendo el solapamiento entre clases puntuales y contra actividades recurrentes.`);
 }
 

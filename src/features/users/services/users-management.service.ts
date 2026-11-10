@@ -108,7 +108,7 @@ export function toManagedUser(user: ApiUser): ManagedUser {
     documentType: user.tipoDocumento || "Sin registrar",
     cuil: user.cuil || "Sin registrar",
     birthDate:
-      formatDateTime(user.fechaNacimiento).split(",")[0] || "Sin registrar",
+      formatDateTime(user.fechaNacimiento, "UTC").split(",")[0] || "Sin registrar",
     gender: user.genero?.replaceAll("_", " ") || "Sin registrar",
     maritalStatus: user.estadoCivil?.replaceAll("_", " ") || "Sin registrar",
     nationality: user.nacionalidad?.replaceAll("_", " ") || "Sin registrar",

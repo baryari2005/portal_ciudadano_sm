@@ -234,8 +234,8 @@ function EstablecimientoDetail({
         <CatalogDetailField icon={MapPin} label="Dirección">{item.direccion}</CatalogDetailField>
         <CatalogDetailField icon={MapPin} label="Localidad y provincia">{[item.localidad, item.provincia].filter(Boolean).join(", ") || "Sin registrar"}</CatalogDetailField>
         <CatalogDetailField icon={Mail} label="Email">{item.email || "Sin registrar"}</CatalogDetailField>
-        <CatalogDetailField icon={Phone} label="Teléfono">{item.telefono || "Sin registrar"}</CatalogDetailField>
-        <CatalogDetailField icon={Phone} label="Celular">{item.celular || "Sin registrar"}</CatalogDetailField>
+        {item.telefono || !item.celular ? <CatalogDetailField icon={Phone} label="Teléfono fijo">{item.telefono || "Sin registrar"}</CatalogDetailField> : null}
+        {item.celular ? <CatalogDetailField icon={Phone} label="Celular">{item.celular}</CatalogDetailField> : null}
         <CatalogDetailField icon={Clock} label="Horarios abiertos">
           <div className="grid gap-1">
             {item.horarios.length ? orderedOpeningHours(item.horarios).map((horario, index) => (

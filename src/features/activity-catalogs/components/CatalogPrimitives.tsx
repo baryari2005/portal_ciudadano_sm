@@ -1,5 +1,6 @@
 "use client";
 
+import { ARGENTINA_TIME_ZONE } from "@/constants/time-zone";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
@@ -46,6 +47,7 @@ export function formatCatalogDate(value: string) {
   return new Intl.DateTimeFormat("es-AR", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: ARGENTINA_TIME_ZONE,
   }).format(new Date(value));
 }
 

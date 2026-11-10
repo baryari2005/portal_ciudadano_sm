@@ -1,6 +1,6 @@
 import { axiosInstance } from "@/lib/axios";
 import type { AccessPerson, AccessValidationResponse } from "../types/access.types";
-export type EstablishmentOption = { id: string; nombre: string };
+export type EstablishmentOption = { id: string; nombre: string; direccion: string };
 export async function getAccessOptions() { return (await axiosInstance.get<{ data: EstablishmentOption[] }>("/access", { params: { view: "options" } })).data.data; }
 export async function getAccessHome(establishmentId: string) { return (await axiosInstance.get("/access", { params: { view: "home", establishmentId } })).data.data; }
 export async function validateAccessQr(establishmentId: string, qrToken: string) { return (await axiosInstance.post<AccessValidationResponse>("/access/qr/validate", { establishmentId, qrToken })).data; }

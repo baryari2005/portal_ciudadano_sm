@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { isAxiosError } from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   BadgeDollarSign,
@@ -24,7 +25,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AdminDetailActions, AdminDetailHeader, AdminDetailPanel, AdminListCard } from "@/components/shared/admin-patterns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -95,7 +96,7 @@ export function ActividadesPage() {
   const [lifecyclePreview, setLifecyclePreview] = useState<ActivityDeletionPreview | null>(null);
   const [lifecycleLoading, setLifecycleLoading] = useState(false);
   const [lifecycleReason, setLifecycleReason] = useState("");
-  const [purgeConfirmation, setPurgeConfirmation] = useState("");
+  const lifecycleInFlight = useRef(false);
   const [selectedDraft, setSelectedDraft] = useState<ActivityDraft | null>(null);
   const [drafts, setDrafts] = useState<ActivityDraft[]>([]);
   const [draftsLoading, setDraftsLoading] = useState(true);
@@ -166,7 +167,7 @@ export function ActividadesPage() {
     setLifecycleMode(mode);
     setLifecyclePreview(null);
     setLifecycleReason("");
-    setPurgeConfirmation("");
+
     setLifecycleLoading(true);
     try { setLifecyclePreview(await getActivityDeletionPreviewClient(activityList.selected.id)); }
     catch { toast.error("No pudimos analizar las relaciones de la actividad."); setLifecycleMode(null); }
@@ -174,21 +175,22 @@ export function ActividadesPage() {
   }
 
   async function confirmLifecycle() {
-    if (!activityList.selected || !lifecyclePreview || !lifecycleMode) return;
+    if (!activityList.selected || !lifecyclePreview || !lifecycleMode || (lifecycleMode === "purge" && lifecycleInFlight.current)) return;
+    if (lifecycleMode === "purge") lifecycleInFlight.current = true;
     setLifecycleLoading(true);
     try {
       if (lifecycleMode === "archive") {
         await archiveActivityClient(activityList.selected.id, lifecycleReason);
         toast.success("La actividad fue dada de baja y se notificó a las personas afectadas.");
       } else {
-        await purgeActivityClient(activityList.selected.id, purgeConfirmation);
+        await purgeActivityClient(lifecyclePreview.id);
         toast.success("La actividad y sus datos asociados fueron eliminados.");
       }
       setLifecycleMode(null);
       activityList.setSelectedId("");
       await activityList.refresh();
-    } catch { toast.error(lifecycleMode === "archive" ? "No pudimos dar de baja la actividad." : "No pudimos eliminar definitivamente la actividad."); }
-    finally { setLifecycleLoading(false); }
+    } catch (error) { toast.error(lifecycleMode === "purge" && isAxiosError<{ message?: string }>(error) && error.response?.data?.message ? error.response.data.message : lifecycleMode === "archive" ? "No pudimos dar de baja la actividad." : "No pudimos eliminar definitivamente la actividad."); }
+    finally { lifecycleInFlight.current = false; setLifecycleLoading(false); }
   }
 
   if (activityList.loading || draftsLoading || catalogs.loading) return <CatalogLoadingState label="actividades" fullPage />;
@@ -270,10 +272,10 @@ export function ActividadesPage() {
         open={lifecycleMode !== null}
         title={lifecycleMode === "archive" ? "Dar de baja la actividad" : "Eliminar definitivamente"}
         description={lifecycleMode === "archive" ? "Se cancelarán las clases futuras, reservas e inscripciones activas, conservando el historial." : "Esta acción elimina la actividad y todos sus datos operativos asociados. No se puede deshacer."}
-        confirmLabel={lifecycleMode === "archive" ? "Dar de baja" : "Eliminar definitivamente"}
+        confirmLabel={lifecycleMode === "archive" ? "Dar de baja" : "Confirmar eliminación"}
         loading={lifecycleLoading}
         icon={lifecycleMode === "archive" ? <ArchiveX /> : <Trash2 />}
-        confirmDisabled={!lifecyclePreview || (lifecycleMode === "archive" ? lifecycleReason.trim().length < 3 : !lifecyclePreview.canPurge || purgeConfirmation !== lifecyclePreview.name)}
+        confirmDisabled={!lifecyclePreview || (lifecycleMode === "archive" ? lifecycleReason.trim().length < 3 : !lifecyclePreview.canPurge)}
         onClose={() => { if (!lifecycleLoading) setLifecycleMode(null); }}
         onConfirm={() => void confirmLifecycle()}
       >
@@ -286,7 +288,7 @@ export function ActividadesPage() {
             <LifecycleCount label="Asistencias" value={lifecyclePreview.attendanceRecords} />
             <LifecycleCount label="Documentos" value={lifecyclePreview.enrollmentDocuments} />
           </div>
-          {lifecycleMode === "archive" ? <Textarea value={lifecycleReason} onChange={(event) => setLifecycleReason(event.target.value)} rows={4} className="rounded-xl border-[var(--brand-border)] bg-[var(--brand-control)]" placeholder="Motivo de la baja *" /> : <div className="grid gap-2"><p className="text-sm text-[var(--brand-muted)]">Escribí <strong>{lifecyclePreview.name}</strong> para confirmar.</p><Input value={purgeConfirmation} onChange={(event) => setPurgeConfirmation(event.target.value)} className="h-11 rounded-xl border-[var(--brand-border)] bg-[var(--brand-control)]" />{!lifecyclePreview.canPurge ? <p className="rounded-xl bg-red-50 p-3 text-sm font-medium text-red-700">{lifecyclePreview.purgeBlockedReason}</p> : null}</div>}
+          {lifecycleMode === "archive" ? <Textarea value={lifecycleReason} onChange={(event) => setLifecycleReason(event.target.value)} rows={4} className="rounded-xl border-[var(--brand-border)] bg-[var(--brand-control)]" placeholder="Motivo de la baja *" /> : null}
         </div> : <p className="text-sm font-medium text-[var(--brand-muted)]">Cargando relaciones de la actividad...</p>}
       </ConfirmDialog>
     </div>

@@ -135,7 +135,8 @@ function FacilitySection({
         <CatalogDetailField icon={MapPin} label="Dirección">{facility.direccion}</CatalogDetailField>
         <CatalogDetailField icon={MapPin} label="Barrio">{facility.barrio || "Sin registrar"}</CatalogDetailField>
         <CatalogDetailField icon={Mail} label="Email">{facility.email || "Sin registrar"}</CatalogDetailField>
-        <CatalogDetailField icon={Phone} label="Teléfono">{facility.telefono || "Sin registrar"}</CatalogDetailField>
+        {facility.telefono || !facility.celular ? <CatalogDetailField icon={Phone} label="Teléfono fijo">{facility.telefono || "Sin registrar"}</CatalogDetailField> : null}
+        {facility.celular ? <CatalogDetailField icon={Phone} label="Celular">{facility.celular}</CatalogDetailField> : null}
         <CatalogDetailField icon={Info} label="Observaciones">{facility.observacion || "Sin observaciones"}</CatalogDetailField>
       </dl></Section>
     </>

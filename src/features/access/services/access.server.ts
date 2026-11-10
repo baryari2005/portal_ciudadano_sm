@@ -1,9 +1,11 @@
+import { establishmentAddress } from "@/features/workspace-establishment/establishment-address";
 import { ensureActivitySessions } from "@/features/activity-sessions/services/activity-sessions.server";
 import { z } from "zod";
 import { AccesoMotivo, AccesoOrigen, AccesoResultado, Prisma } from "@prisma/client";
 import { createAuditLogTx } from "@/features/audit-log/services/audit-log.server";
 import { hashDigitalAccessQrToken } from "./digital-access-qr.server";
 import { prisma } from "@/lib/db";
+import { serializableTransaction } from "@/lib/db/serializable-transaction";
 import { CatalogConflictError, CatalogNotFoundError, CatalogValidationError } from "@/lib/errors/catalog-errors";
 import { manualRegisterSchema } from "../schemas/access.schema";
 import type { AccessEvaluation, AccessOrigin, AccessPerson, AccessReason, AccessValidationResponse } from "../types/access.types";
@@ -215,7 +217,7 @@ async function validatePhysicalCardAccess(tx: Tx, establishmentId: string, paylo
 
 export async function validateQrAccess(establishmentId: string, qrToken: string, actorId: string, requestContext?: RequestContext): Promise<AccessValidationResponse> {
   await ensureAccessSessions(establishmentId);
-  return prisma.$transaction(async (tx) => {
+  return serializableTransaction(prisma, async (tx) => {
     await activeEstablishment(establishmentId, tx);
     const physicalCard = parsePhysicalCardPayload(qrToken);
     if (physicalCard) return validatePhysicalCardAccess(tx, establishmentId, physicalCard, actorId, requestContext);
@@ -240,7 +242,7 @@ export async function validateQrAccess(establishmentId: string, qrToken: string,
     if (credential.estado === "ACTIVO" && exceptionalReasons.has(result.reason)) return pendingQrDecision(tx, { user: accessPerson, establishmentId, result, origin: "QR_DIGITAL", credential: { kind: "DIGITAL", id: credential.id, usedAt: consumedAt.toISOString() }, actorId, requestContext });
     const record = await saveAccess(tx, { user: accessPerson, establishmentId, evaluation: result, origin: "QR_DIGITAL", actorId, requestContext });
     return { ...result, accessRecordId: record.id, occurredAt: record.fechaHora.toISOString(), user: accessPerson };
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  });
 }
 
 export async function searchAccessUsers(query: string, establishmentId: string, page = 1, pageSize = 8) {
@@ -313,5 +315,5 @@ export async function getAccessHome(establishmentId: string) {
     updatedAt: now.toISOString(),
   };
 }
-export async function listActiveEstablishments() { return prisma.establecimiento.findMany({ where: { activo: true, estado: { not: "inactivo" } }, select: { id: true, nombre: true }, orderBy: { nombre: "asc" } }); }
+export async function listActiveEstablishments() { const rows = await prisma.establecimiento.findMany({ where: { activo: true, estado: { not: "inactivo" } }, select: { id: true, nombre: true, direccion: true, localidad: true, provincia: true }, orderBy: { nombre: "asc" } }); return rows.map(row => ({ id: row.id, nombre: row.nombre, direccion: establishmentAddress(row) })); }
 export async function findAccessUserByDni(dni: string) { const user = await prisma.usuario.findFirst({ where: { documento: dni.replace(/\D/g, ""), deletedAt: null }, select: { id: true, nombre: true, apellido: true, documento: true, avatarUrl: true, fotoPerfilUrl: true } }); return user ? person(user) : null; }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/stores/auth";
 import { NOTIFICATIONS_CHANGED_EVENT } from "@/features/notifications/services/notifications.service";
@@ -28,8 +28,10 @@ export function usePendingUsersAlert(includePendingUsers = true) {
   const [pendingCount, setPendingCount] = useState(0);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const requestVersion = useRef(0);
 
   const fetchPendingCount = useCallback(async () => {
+    const version = ++requestVersion.current;
     if (!hasHydrated || !token || !user) {
       setPendingCount(0);
       setUnreadNotificationCount(0);
@@ -60,19 +62,22 @@ export function usePendingUsersAlert(includePendingUsers = true) {
         ? ((await notificationsResponse.json()) as OwnNotificationsResponse)
         : null;
 
+      if (version !== requestVersion.current) return;
       setPendingCount(pendingData?.meta?.total ?? 0);
       setUnreadNotificationCount(
         notificationsData?.data?.meta?.unreadCount ?? 0,
       );
     } catch {
+      if (version !== requestVersion.current) return;
       setPendingCount(0);
       setUnreadNotificationCount(0);
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
   }, [includePendingUsers, hasHydrated, token, user]);
 
   useEffect(() => {
+    const versionCounter = requestVersion;
     void fetchPendingCount();
 
     const interval = window.setInterval(fetchPendingCount, POLL_INTERVAL_MS);
@@ -80,6 +85,7 @@ export function usePendingUsersAlert(includePendingUsers = true) {
     window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, refresh);
 
     return () => {
+      versionCounter.current++;
       window.clearInterval(interval);
       window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, refresh);
     };

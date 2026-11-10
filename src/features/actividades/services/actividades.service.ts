@@ -83,6 +83,6 @@ export async function archiveActivityClient(id: string, reason: string) {
   return data.data;
 }
 
-export async function purgeActivityClient(id: string, confirmation: string) {
-  await axiosInstance.delete(`/actividades/${id}/lifecycle`, { data: { confirmation } });
+export async function purgeActivityClient(id: string) {
+  await axiosInstance.delete(`/actividades/${id}/lifecycle`);
 }

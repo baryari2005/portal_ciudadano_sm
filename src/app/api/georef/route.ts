@@ -22,6 +22,6 @@ export async function GET(request: NextRequest) {
             : await searchGeorefAddresses(query);
     return NextResponse.json({ data });
   } catch {
-    return NextResponse.json({ message: "No pudimos consultar API Georef." }, { status: 502 });
+    return NextResponse.json({ message: "No pudimos consultar los servicios de ubicaciones. Podés seleccionar el punto manualmente." }, { status: 502 });
   }
 }

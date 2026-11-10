@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/stores/auth";
+import { useUserImages } from "@/features/users/hooks/useUserImages";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +20,7 @@ import { ChangeAvatarDialog } from "./ChangeAvatarDialog";
 
 export function UserMenu() {
   const user = useAuth((state) => state.user);
+  const images = useUserImages(user?.id, user?.avatarUrl);
   const logout = useAuth((state) => state.logout);
 
   const [openPwd, setOpenPwd] = useState(false);
@@ -31,7 +33,7 @@ export function UserMenu() {
     "Usuario";
 
   const email = user?.email || "";
-  const avatarUrl = user?.avatarUrl ?? undefined;
+  const avatarUrl = (images ? images.avatarUrl : user?.avatarUrl) ?? undefined;
 
   return (
     <>

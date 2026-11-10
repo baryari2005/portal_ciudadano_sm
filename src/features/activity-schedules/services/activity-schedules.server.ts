@@ -22,10 +22,10 @@ function map(item: any) {
 }
 
 async function validateRelations(tx: Prisma.TransactionClient, input: any, current?: any) {
-  const activity = await tx.actividad.findUnique({ where:{ id:input.actividadId }, select:{ id:true, estado:true } });
+  const activity = await tx.actividad.findUnique({ where:{ id:input.actividadId }, select:{ id:true, nombre:true, estado:true } });
   if (!activity) throw new CatalogValidationError("La actividad seleccionada no existe.");
   if ((!current || current.actividadId !== input.actividadId) && ["CANCELADA","FINALIZADA"].includes(activity.estado)) throw new CatalogValidationError("La actividad seleccionada no admite nuevos horarios.");
-  const establishment = await tx.establecimiento.findUnique({ where:{ id:input.establecimientoId }, select:{ id:true, activo:true } });
+  const establishment = await tx.establecimiento.findUnique({ where:{ id:input.establecimientoId }, select:{ id:true, nombre:true, direccion:true, activo:true } });
   if (!establishment) throw new CatalogValidationError("El establecimiento seleccionado no existe.");
   if ((!current || current.establecimientoId !== input.establecimientoId) && !establishment.activo) throw new CatalogValidationError("El establecimiento seleccionado está inactivo.");
   const oldIds = new Set(current?.profesores.map((x:any)=>x.profesorId) ?? []);
@@ -33,7 +33,7 @@ async function validateRelations(tx: Prisma.TransactionClient, input: any, curre
   if (professors.length !== input.profesoresIds.length) throw new CatalogValidationError("Uno o más profesores no existen.");
   const invalid = professors.find((p)=>p.estado !== "ACTIVO" && !oldIds.has(p.id));
   if (invalid) throw new CatalogValidationError(`No se puede asignar a ${invalid.usuario.nombre} ${invalid.usuario.apellido} porque no está activo.`);
-  return professors;
+  return { activity, establishment, professors };
 }
 
 async function validateConflicts(tx: Prisma.TransactionClient, input:any, excludeId?:string, options:{ignoreProfessorConflicts?:boolean}={}) {
@@ -65,8 +65,8 @@ export async function assertActivityScheduleAvailability(input: {
   recursos: Array<{ recursoId: string; cantidadReservada: number; exclusivo: boolean }>;
   excludeId?: string;
 }, client: DatabaseClient = prisma) {
-  const { excludeId, ...schedule } = input;
-  return inTransaction(client,(tx) => validateConflicts(tx, { ...schedule, estado: "ACTIVO" }, excludeId));
+  const { excludeId, establishmentId, ...schedule } = input;
+  return inTransaction(client,(tx) => validateConflicts(tx, { ...schedule, establecimientoId: establishmentId, estado: "ACTIVO" }, excludeId));
 }
 
 export async function listActivitySchedules(filters:ActivityScheduleFilters={}) {
@@ -76,9 +76,11 @@ export async function listActivitySchedules(filters:ActivityScheduleFilters={}) 
 }
 export async function getActivitySchedule(id:string) { const row=await prisma.horarioActividad.findUnique({where:{id},include}); return row?map(row):null; }
 
-export async function createActivitySchedule(raw:CreateActivityScheduleInput, audit?:ScheduleAudit, client: DatabaseClient = prisma) {
+// Publication can reuse the relation snapshots validated in this same transaction,
+// avoiding a second set of reads solely to construct the identical response DTO.
+export async function createActivitySchedule(raw:CreateActivityScheduleInput, audit?:ScheduleAudit, client: DatabaseClient = prisma, options:{reuseValidatedRelations?:boolean}={}) {
   const parsed=createActivityScheduleSchema.parse(raw); const input={...parsed, espacio:clean(parsed.espacio), observaciones:clean(parsed.observaciones), sobrecupoMaximo:parsed.permiteSobrecupo?parsed.sobrecupoMaximo:null};
-  return inTransaction(client,async tx=>{ await validateRelations(tx,input); await validateConflicts(tx,input); const row=await tx.horarioActividad.create({data:{actividadId:input.actividadId,establecimientoId:input.establecimientoId,diaSemana:input.diaSemana,horaInicio:input.horaInicio,horaFin:input.horaFin,espacio:input.espacio,observaciones:input.observaciones,cupoMaximo:input.cupoMaximo,permiteListaEspera:input.permiteListaEspera,permiteSobrecupo:input.permiteSobrecupo,sobrecupoMaximo:input.sobrecupoMaximo,estado:input.estado,duracionTurnoMinutos:input.duracionTurnoMinutos,intervaloTurnoMinutos:input.intervaloTurnoMinutos,profesores:{create:input.profesoresIds.map(id=>({profesorId:id,esPrincipal:id===input.profesorPrincipalId}))},recursos:{create:input.recursos.map(item=>({recursoId:item.recursoId,cantidadReservada:item.cantidadReservada,estrategiaAsignacion:item.estrategiaAsignacion,exclusivo:item.exclusivo}))}},include});if(audit)await createAuditLogTx(tx,{...audit,action:"CREAR",entityType:"HORARIO_ACTIVIDAD",entityId:row.id,entityName:`${row.actividad.nombre} · ${row.diaSemana} ${row.horaInicio}`});return map(row); });
+  return inTransaction(client,async tx=>{ const validated=await validateRelations(tx,input); await validateConflicts(tx,input); const row:any=await tx.horarioActividad.create({data:{actividadId:input.actividadId,establecimientoId:input.establecimientoId,diaSemana:input.diaSemana,horaInicio:input.horaInicio,horaFin:input.horaFin,espacio:input.espacio,observaciones:input.observaciones,cupoMaximo:input.cupoMaximo,permiteListaEspera:input.permiteListaEspera,permiteSobrecupo:input.permiteSobrecupo,sobrecupoMaximo:input.sobrecupoMaximo,estado:input.estado,duracionTurnoMinutos:input.duracionTurnoMinutos,intervaloTurnoMinutos:input.intervaloTurnoMinutos,profesores:{create:input.profesoresIds.map(id=>({profesorId:id,esPrincipal:id===input.profesorPrincipalId}))},recursos:{create:input.recursos.map(item=>({recursoId:item.recursoId,cantidadReservada:item.cantidadReservada,estrategiaAsignacion:item.estrategiaAsignacion,exclusivo:item.exclusivo}))}},...(options.reuseValidatedRelations ? (input.recursos.length ? {include:{recursos:include.recursos}} : {}) : {include})});if(options.reuseValidatedRelations){row.actividad=validated.activity;row.establecimiento=validated.establishment;row.profesores=input.profesoresIds.map(id=>({profesor:validated.professors.find(item=>item.id===id)!,esPrincipal:id===input.profesorPrincipalId}));row.recursos??=[];}if(audit)await createAuditLogTx(tx,{...audit,action:"CREAR",entityType:"HORARIO_ACTIVIDAD",entityId:row.id,entityName:`${row.actividad.nombre} · ${row.diaSemana} ${row.horaInicio}`});return map(row); });
 }
 export async function updateActivitySchedule(id:string, patch:UpdateActivityScheduleInput, audit?:ScheduleAudit, options:{ignoreProfessorConflicts?:boolean}={}, client: DatabaseClient = prisma) {
   return inTransaction(client,async tx=>{

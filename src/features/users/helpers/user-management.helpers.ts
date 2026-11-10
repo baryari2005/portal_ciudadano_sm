@@ -1,3 +1,4 @@
+import { ARGENTINA_TIME_ZONE } from "@/constants/time-zone";
 import type { ManagedUser, ManagedUserStatus } from "../types/management.types";
 
 export const USER_STATUS_LABELS: Record<ManagedUserStatus, string> = {
@@ -63,7 +64,7 @@ export function buildUserInitials(user: {
     .toUpperCase();
 }
 
-export function formatDateTime(value?: string | Date | null) {
+export function formatDateTime(value?: string | Date | null, timeZone = ARGENTINA_TIME_ZONE) {
   if (!value) {
     return "Sin registrar";
   }
@@ -80,5 +81,6 @@ export function formatDateTime(value?: string | Date | null) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone,
   }).format(date);
 }

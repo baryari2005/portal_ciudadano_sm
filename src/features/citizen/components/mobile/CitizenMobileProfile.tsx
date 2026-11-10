@@ -35,7 +35,7 @@ export function CitizenMobileProfile({ data, onEdit, onChangePassword, experienc
   const address = [data.domicilio, data.localidad, data.provincia, data.codigoPostal].filter(Boolean).join(", ");
   const birthDate = data.fechaNacimiento ? format(new Date(`${String(data.fechaNacimiento).slice(0, 10)}T12:00:00`), "d 'de' MMMM 'de' yyyy", { locale: es }) : null;
   const age = data.fechaNacimiento ? Math.max(0, new Date(Date.now() - new Date(`${String(data.fechaNacimiento).slice(0, 10)}T12:00:00`).getTime()).getUTCFullYear() - 1970) : null;
-  const avatar = data.avatarUrl || data.fotoPerfilUrl;
+  const avatar = data.avatarUrl;
   const mobileOnlyClass = experience === "teacher" ? "md:hidden" : "lg:hidden";
   const navigationHeight = experience === "teacher" ? "calc(72px + env(safe-area-inset-bottom))" : "var(--citizen-mobile-nav-h)";
 

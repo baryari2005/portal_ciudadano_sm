@@ -375,7 +375,7 @@ export async function manageEntityNotifications(
 
 export async function markAllAsRead(userId: string, origin?: NotificacionOrigen) {
   return prisma.entregaNotificacion.updateMany({
-    where: { usuarioId: userId, estado: "NO_LEIDA", origen: origin ?? { not: "ROL" } },
+    where: { usuarioId: userId, estado: "NO_LEIDA", origen: origin },
     data: { estado: "LEIDA", leidaAt: new Date() },
   });
 }

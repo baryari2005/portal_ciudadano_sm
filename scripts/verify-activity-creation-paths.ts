@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Sandbox loader mirrors scripts/test-activity-drafts.ts. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -54,7 +53,7 @@ function buildSchedule(modalidad: (typeof MODALIDADES)[number], overrides: Parti
 }
 
 function buildPayload(modalidad: (typeof MODALIDADES)[number], schedules: Schedule[], dateOverrides: Partial<ActivityDraftPayload> = {}): ActivityDraftPayload {
-  const desde = modalidad === "ACCESO_LIBRE" ? null : "2026-10-01";
+  const desde = "2026-10-01";
   const hasta = modalidad === "ACCESO_LIBRE" ? null : modalidad === "EVENTO_UNICO" ? "2026-10-01" : "2026-10-15";
   return activityDraftPayloadSchema.parse({
     modalidadOperacion: modalidad,
@@ -147,18 +146,18 @@ for (const modalidad of MODALIDADES) {
   expectPending("evento único con rango de fechas", payload, "evento-fecha");
 }
 
-// 8) Rango de generación mayor a 6 meses -> debe bloquear.
+// 8) Activity validity may exceed six months; materialization is batched on demand.
 {
   const payload = buildPayload("HORARIO_FIJO", [buildSchedule("HORARIO_FIJO")], { generacionClasesDesde: "2026-01-01", generacionClasesHasta: "2026-12-31" });
-  expectPending("rango de generación excesivo", payload, "generacion-maxima");
+  expectEmpty("vigencia de un año", payload);
 }
 
-// 9) Turno recurrente con un turno sin profesor asignado -> debe bloquear.
+// 9) Teacher coverage is optional, including individual slots.
 {
   const schedule = buildSchedule("TURNO_RECURRENTE");
   schedule.teacherAssignments = schedule.teacherAssignments.map((assignment) => ({ ...assignment, professorIds: [] }));
   const payload = buildPayload("TURNO_RECURRENTE", [schedule]);
-  expectPending("turno recurrente sin cobertura docente", payload, "profesor-turno");
+  expectEmpty("turno recurrente sin cobertura docente", payload);
 }
 
 // 10) Turno puntual sin profesores preasignados -> publicable (asignación posterior por turno).
@@ -167,4 +166,18 @@ for (const modalidad of MODALIDADES) {
   expectEmpty("turno puntual sin profesor preasignado", payload);
 }
 
+for (const modalidad of ["HORARIO_FIJO", "TURNO_RECURRENTE", "ACCESO_LIBRE"] as const) {
+  const indefinite=buildPayload(modalidad,[buildSchedule(modalidad)],{generacionClasesHasta:null});
+  expectEmpty(`indefinite ${modalidad}`,indefinite);
+  expectPending(`missing start ${modalidad}`,{...indefinite,generacionClasesDesde:null},"generacion");
+}
+for (const modalidad of MODALIDADES) {
+  const schedule=buildSchedule(modalidad,{profesorIds:[],teacherAssignments:[]});
+  expectEmpty(`without teachers ${modalidad}`,buildPayload(modalidad,[schedule]));
+}
+for(const end of ["2026-12-01","2027-05-01","2027-11-01","2028-11-01","2031-11-01",null]) {
+  for(const modalidad of ["HORARIO_FIJO","TURNO_RECURRENTE","ACCESO_LIBRE"] as const) {
+    expectEmpty(`duration ${end??"indefinite"} without teacher ${modalidad}`,buildPayload(modalidad,[buildSchedule(modalidad,{profesorIds:[],teacherAssignments:[]})],{generacionClasesDesde:"2026-11-01",generacionClasesHasta:end}));
+  }
+}
 console.log(`OK: ${checks} verificaciones sobre activityDraftPending cubriendo las 6 modalidades, multi-sede y los conflictos de horario/profesor.`);
