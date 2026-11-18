@@ -29,7 +29,8 @@ function equal(actual: unknown, expected: unknown, message?: string) {
 }
 
 const oldContract = {
-  nombre: "Actividad de compatibilidad",
+  nombre: "QA_TEST Actividad de compatibilidad",
+  fechaInicio: "2026-11-01",
   establecimientoId: establishmentId,
   cupo: null,
   estadoTexto: "activa",
@@ -44,6 +45,10 @@ function parses(overrides: Record<string, unknown> = {}) {
 }
 
 async function main() {
+  const [identity] = await prisma.$queryRaw<Array<{ database: string; port: number }>>`SELECT current_database() AS database, inet_server_port() AS port`;
+  assert.equal(identity.database, "mas_sanmiguel_qa");
+  assert.equal(identity.port, 55432);
+  const qaActor = await prisma.usuario.findFirstOrThrow({ where: { userId: { startsWith: "QA_TEST" }, rol: { codigo: "admin" } }, select: { id: true } });
   // Descripciones, nivel, edades, imagen y color.
   ok(parses().success, "El contrato anterior debe seguir siendo válido");
   ok(parses({ descripcionCorta: "Movilidad y respiración" }).success);
@@ -103,13 +108,13 @@ async function main() {
   await prisma.establecimiento.create({
     data: {
       id: establishmentId,
-      nombre: "Establecimiento temporal - prueba actividad",
+      nombre: "QA_TEST Establecimiento temporal - prueba actividad",
       direccion: "Dirección temporal",
     },
   });
 
   const legacyInput = actividadSchema.parse(oldContract);
-  const legacy = await createActividad(legacyInput);
+  const legacy = await createActividad(legacyInput, qaActor.id);
   createdIds.push(legacy.id);
   equal(legacy.descripcionCorta, null);
   equal(legacy.nivel, null);
@@ -128,7 +133,7 @@ async function main() {
   });
   const detailedInput = actividadSchema.parse({
     ...oldContract,
-    nombre: "Actividad paga temporal",
+    nombre: "QA_TEST Actividad paga temporal",
     descripcionCorta: "Descripción breve",
     descripcion: "Descripción completa inicial",
     imagenUrl: "/uploads/actividades/prueba.jpg",
@@ -143,7 +148,7 @@ async function main() {
     categoriaActividadId: category?.id ?? null,
     publicosObjetivoIds: targetPublic ? [targetPublic.id] : [],
   });
-  let detailed = await createActividad(detailedInput);
+  let detailed = await createActividad(detailedInput, qaActor.id);
   createdIds.push(detailed.id);
   equal(detailed.precio, "15000.00", "Decimal debe serializarse como string");
   equal(detailed.color, "#819B56");
@@ -170,14 +175,8 @@ async function main() {
   );
   equal(detailed.descripcion, "Descripción completa editada");
 
-  await assert.rejects(
-    () =>
-      patchActividad(
-        detailed.id,
-        updateActividadSchema.parse({ edadMinima: 18 }),
-      ),
-    /edad máxima/i,
-  );
+  // Ages are derived from target audiences, rather than edited independently.
+  equal(updateActividadSchema.safeParse({ edadMinima: 18 }).success, false);
   assertions += 1;
 
   detailed = await patchActividad(
@@ -185,7 +184,7 @@ async function main() {
     updateActividadSchema.parse({ requiereCertificadoMedico: false }),
   );
   equal(detailed.requiereCertificadoMedico, false);
-  equal(detailed.requiereAutorizacion, true);
+  equal(detailed.requiereAutorizacion, false, "Sin requisitos de autorización asignados, el indicador derivado debe permanecer desactivado");
   detailed = await patchActividad(
     detailed.id,
     updateActividadSchema.parse({ esGratuita: true }),
@@ -268,6 +267,12 @@ async function main() {
 
   console.log(`OK: ${assertions} verificaciones funcionales superadas.`);
 }
+
+// Refuse every non-QA connection before main or its cleanup can run.
+const qaConnection = new URL(process.env.DATABASE_URL ?? "postgresql://invalid/invalid");
+assert.equal(qaConnection.hostname, "127.0.0.1", "Use only the independent local QA database");
+assert.equal(qaConnection.port, "55432", "Use only the independent local QA port");
+assert.equal(qaConnection.pathname, "/mas_sanmiguel_qa", "Use only the independent local QA database");
 
 main()
   .catch((error) => {

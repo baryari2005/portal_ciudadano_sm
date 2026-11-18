@@ -19,6 +19,7 @@ const profileSchema = z.object({
   addressLat: z.number().finite().nullable().optional(),
   addressLng: z.number().finite().nullable().optional(),
   profilePhotoUrl: z.string().url().nullable().optional(),
+  avatarUrl: z.string().url().nullable().optional(),
   emergencyContactName: z.string().trim().min(1).max(120),
   emergencyContactPhone: z.string().trim().refine(isValidPhone,"El teléfono de emergencia no es válido."),
   medicalCoverageId: z.string().uuid().nullable().optional(),

@@ -24,6 +24,8 @@ export function activityDraftPending(payload: ActivityDraftPayload) {
   const pending: Array<{ step: number; key: string; label: string }> = [];
   if (!payload.modalidadOperacion) pending.push({ step: 1, key: "modalidad", label: "Elegir una modalidad" });
   if (!payload.nombre.trim()) pending.push({ step: 2, key: "nombre", label: "Indicar el nombre de la actividad" });
+  const shortDescription = actividadSchema.shape.descripcionCorta.safeParse(payload.descripcionCorta);
+  if (!shortDescription.success) pending.push({ step: 2, key: "descripcion-corta", label: `Descripción corta: ${shortDescription.error.issues[0].message}` });
   if (!payload.categoriaActividadId) pending.push({ step: 2, key: "categoria", label: "Seleccionar una categoría" });
   if (!payload.schedules.length) pending.push({ step: 3, key: "horarios", label: "Configurar al menos un horario" });
   if (payload.schedules.some((schedule) => !schedule.establecimientoId)) pending.push({ step: 3, key: "establecimiento-horario", label: "Asignar una sede a cada horario" });

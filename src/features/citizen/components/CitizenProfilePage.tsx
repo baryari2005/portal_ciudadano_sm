@@ -36,6 +36,7 @@ import { changeMyAvatar } from "@/lib/api/account";
 import { isValidPhone, PHONE_VALIDATION_MESSAGE } from "@/lib/validation/phone";
 import { useAuth } from "@/stores/auth";
 import { citizenPatch } from "../services/citizen.service";
+import { prepareProfilePhotoReferences, type ProfilePhotoCommitCache } from "../services/profile-photo-staging";
 import { useCitizenData } from "./CitizenPrimitives";
 import { CitizenMobileProfile } from "./mobile/CitizenMobileProfile";
 import type { PersonalProfile } from "@/features/shared-account/profile/personal-profile.types";
@@ -78,16 +79,33 @@ export function PersonalProfilePage({ workspace = "citizen",renderMobileProfile 
   const [draftId, setDraftId] = useState<string>();
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [mobileEditing, setMobileEditing] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState({ avatar: false, identity: false });
+  const uploadingPhotos = useRef({ avatar: false, identity: false });
+  const saveInFlight = useRef(false);
+  const committedPhotos = useRef<ProfilePhotoCommitCache>({});
   const loadedDraftFor = useRef<string | undefined>(undefined);
   const { tmpPath: avatarTmpPath, setTmpPath: setAvatarTmpPath, commit: commitAvatar } = useAvatarStaging();
   const { tmpPath: identityTmpPath, setTmpPath: setIdentityTmpPath, commit: commitIdentity } = useAvatarStaging();
   const fetchMe = useAuth((state) => state.fetchMe);
   const workflow = viewMode === "workflow";
+  const citizenProfile = workspace === "citizen";
+  const profileBusy = savingDraft || saving || (citizenProfile && (photoUploading.avatar || photoUploading.identity));
   const usesMobileProfile = workspace === "citizen" || workspace === "teacher" || Boolean(renderMobileProfile);
   const mobileOnlyClass = workspace === "teacher" || workspace === "reception" ? "md:hidden" : "lg:hidden";
   const desktopOnlyClass = workspace === "teacher" || workspace === "reception" ? "hidden md:block" : "hidden lg:block";
   const mobileNavigationHeight = workspace === "teacher" ? "calc(72px + env(safe-area-inset-bottom))" : "var(--citizen-mobile-nav-h)";
   const show = (number: number) => !workflow || section === number;
+
+  const photoUploadChanged = (kind: "avatar" | "identity", uploading: boolean) => {
+    uploadingPhotos.current[kind] = uploading;
+    setPhotoUploading(current => ({ ...current, [kind]: uploading }));
+  };
+  const stagePhoto = (kind: "avatar" | "identity", tmpPath: string | null) => {
+    delete committedPhotos.current[kind];
+    if (kind === "avatar") setAvatarTmpPath(tmpPath);
+    else setIdentityTmpPath(tmpPath);
+    markUnsaved(6);
+  };
 
   useEffect(() => {
     if (!data || loadedDraftFor.current === data.id) return;
@@ -152,20 +170,33 @@ export function PersonalProfilePage({ workspace = "citizen",renderMobileProfile 
 
   async function save() {
     if (!data) return;
+    if (citizenProfile && (saveInFlight.current || savingDraft || uploadingPhotos.current.avatar || uploadingPhotos.current.identity)) return;
     if (!form.nationality || !form.gender || !form.firstName.trim() || !form.lastName.trim() || !form.birthDate) { setSection(1); toast.error("Completá todos los datos personales."); return; }
     if (!form.address.trim() || !form.locality.trim() || !form.province || !form.postalCode.trim()) { setSection(3); toast.error("Completá todos los datos del domicilio."); return; }
     if (!form.addressPlaceId || form.addressLat == null || form.addressLng == null) { setSection(3); toast.error("Buscá la dirección y seleccioná una ubicación válida en el mapa."); return; }
     if (!isValidPhone(form.phone)) { setSection(4); toast.error(PHONE_VALIDATION_MESSAGE); return; }
     if (!form.emergencyContactName.trim() || !isValidPhone(form.emergencyContactPhone)) { setSection(4); toast.error("Completá correctamente el contacto de emergencia."); return; }
+    saveInFlight.current = true;
     setSaving(true);
     try {
-      let profilePhotoUrl: string | undefined;
-      if (identityTmpPath) { const committed = await commitIdentity(`identity-photos/${data.id}`, pathFromPublicUrl(data.fotoPerfilUrl)); profilePhotoUrl = committed.publicUrl; }
-      let updated = await citizenPatch<PersonalProfile>("/profile", { ...form, firstName: titleCase(form.firstName), lastName: titleCase(form.lastName), address: titleCase(form.address), ...(profilePhotoUrl ? { profilePhotoUrl } : {}) });
-      if (avatarTmpPath) { const committed = await commitAvatar(`users/${data.id}`, pathFromPublicUrl(data.avatarUrl)); await changeMyAvatar({ avatarUrl: committed.publicUrl }); updated = { ...updated, avatarUrl: committed.publicUrl }; }
+      let updated: PersonalProfile;
+      if (citizenProfile) {
+        const photos = await prepareProfilePhotoReferences({
+          userId: data.id, avatarTmpPath, identityTmpPath, cache: committedPhotos.current,
+          commitAvatar: () => commitAvatar(`users/${data.id}`, pathFromPublicUrl(data.avatarUrl)),
+          commitIdentity: () => commitIdentity(`identity-photos/${data.id}`, pathFromPublicUrl(data.fotoPerfilUrl)),
+        });
+        updated = await citizenPatch<PersonalProfile>("/profile", { ...form, firstName: titleCase(form.firstName), lastName: titleCase(form.lastName), address: titleCase(form.address), ...photos });
+        committedPhotos.current = {};
+      } else {
+        let profilePhotoUrl: string | undefined;
+        if (identityTmpPath) { const committed = await commitIdentity(`identity-photos/${data.id}`, pathFromPublicUrl(data.fotoPerfilUrl)); profilePhotoUrl = committed.publicUrl; }
+        updated = await citizenPatch<PersonalProfile>("/profile", { ...form, firstName: titleCase(form.firstName), lastName: titleCase(form.lastName), address: titleCase(form.address), ...(profilePhotoUrl ? { profilePhotoUrl } : {}) });
+        if (avatarTmpPath) { const committed = await commitAvatar(`users/${data.id}`, pathFromPublicUrl(data.avatarUrl)); await changeMyAvatar({ avatarUrl: committed.publicUrl }); updated = { ...updated, avatarUrl: committed.publicUrl }; }
+      }
       setData(updated); if (draftId) await deleteUserDraft(draftId); setDraftId(undefined); setStepStatus({ 1: "valid", 2: "valid", 3: "valid", 4: "valid", 5: "valid", 6: "valid" }); await fetchMe(true); setMobileEditing(false); toast.success("Perfil actualizado.");
     } catch { toast.error("No pudimos actualizar tu perfil."); }
-    finally { setSaving(false); }
+    finally { saveInFlight.current = false; setSaving(false); }
   }
 
   async function discardDraft() { if (!draftId) return; await deleteUserDraft(draftId); window.location.reload(); }
@@ -178,12 +209,12 @@ export function PersonalProfilePage({ workspace = "citizen",renderMobileProfile 
   const actions = <div className={`${usesMobileProfile && mobileEditing ? workspace === "teacher" ? "hidden md:flex" : "hidden lg:flex" : "flex"} mt-8 flex-col-reverse gap-3 border-t border-[var(--brand-border)] pt-5 sm:flex-row sm:flex-wrap sm:justify-between`}>
     {workflow && section > 1 ? <Button type="button" variant="outline" className={`${adminSecondaryButtonClass} w-full justify-center gap-3 sm:w-auto`} onClick={() => setSection((current) => current - 1)}><ArrowLeft className="size-5" />Anterior</Button> : <Button asChild type="button" variant="outline" className={`${adminSecondaryButtonClass} w-full justify-center gap-3 sm:w-auto`}><Link href={backHref}><ArrowLeft className="size-5" />Volver</Link></Button>}
     <div className="flex flex-col gap-3 sm:flex-row">
-      {draftId ? <Button type="button" variant="ghost" className="h-12 gap-2 rounded-xl text-red-700 hover:bg-red-50" disabled={savingDraft || saving} onClick={() => void discardDraft()}><Trash2 />Descartar borrador</Button> : null}
-      <Button type="button" variant="outline" className={`${adminSecondaryButtonClass} w-full justify-center gap-3 sm:w-auto`} disabled={savingDraft || saving} onClick={() => void saveDraft()}>{savingDraft ? <Loader2 className="animate-spin" /> : <Save />}Guardar borrador</Button>
-      {workflow && section < 6 ? <Button type="button" className={`${adminPrimaryButtonClass} w-full justify-center gap-3 sm:w-auto`} disabled={savingDraft || saving} onClick={() => void continueToNextStep()}>Guardar y continuar<ChevronRight className="size-5" /></Button> : <Button type="button" className={`${adminPrimaryButtonClass} w-full justify-center gap-3 sm:w-auto`} disabled={savingDraft || saving} onClick={() => void save()}>{saving ? <Loader2 className="animate-spin" /> : null}Guardar cambios<Save /></Button>}
+      {draftId ? <Button type="button" variant="ghost" className="h-12 gap-2 rounded-xl text-red-700 hover:bg-red-50" disabled={profileBusy} onClick={() => void discardDraft()}><Trash2 />Descartar borrador</Button> : null}
+      <Button type="button" variant="outline" className={`${adminSecondaryButtonClass} w-full justify-center gap-3 sm:w-auto`} disabled={profileBusy} onClick={() => void saveDraft()}>{savingDraft ? <Loader2 className="animate-spin" /> : <Save />}Guardar borrador</Button>
+      {workflow && section < 6 ? <Button type="button" className={`${adminPrimaryButtonClass} w-full justify-center gap-3 sm:w-auto`} disabled={profileBusy} onClick={() => void continueToNextStep()}>Guardar y continuar<ChevronRight className="size-5" /></Button> : <Button type="button" className={`${adminPrimaryButtonClass} w-full justify-center gap-3 sm:w-auto`} disabled={profileBusy} onClick={() => void save()}>{saving ? <Loader2 className="animate-spin" /> : null}Guardar cambios<Save /></Button>}
     </div>
   </div>;
-  const mobileEditActions = usesMobileProfile && mobileEditing ? <footer className={`fixed inset-x-0 bottom-[var(--mobile-profile-nav-h)] z-30 grid grid-cols-2 gap-2 border-t border-[var(--brand-border-soft)] bg-[#F9FAF5]/95 p-3 shadow-[0_-8px_24px_rgba(29,79,54,0.10)] backdrop-blur ${mobileOnlyClass}`} style={{ "--mobile-profile-nav-h": mobileNavigationHeight } as React.CSSProperties}><Button type="button" variant="outline" className="h-8 rounded-lg border-[var(--brand-primary)] bg-transparent px-2 text-xs font-bold text-[var(--brand-primary)]" disabled={savingDraft || saving} onClick={() => void saveDraft()}>{savingDraft ? <Loader2 className="size-3 animate-spin" /> : <Save className="size-3" />}Guardar borrador</Button><Button type="button" className="h-8 rounded-lg bg-[var(--brand-primary)] px-2 text-xs font-bold hover:bg-[var(--brand-primary-hover)]" disabled={savingDraft || saving} onClick={() => void save()}>{saving ? <Loader2 className="size-3 animate-spin" /> : <Save className="size-3" />}Guardar cambios</Button></footer> : null;
+  const mobileEditActions = usesMobileProfile && mobileEditing ? citizenProfile ? <div data-profile-save-actions className="mt-4 grid gap-3 border-t border-[var(--brand-border-soft)] pt-4"><Button type="button" variant="outline" className="h-12 w-full rounded-xl border-[var(--brand-primary)] font-bold text-[var(--brand-primary)]" disabled={profileBusy} onClick={() => void saveDraft()}>{savingDraft ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}Guardar borrador</Button><Button type="button" className="h-12 w-full rounded-xl bg-[var(--brand-primary)] font-bold hover:bg-[var(--brand-primary-hover)]" disabled={profileBusy} aria-busy={saving} onClick={() => void save()}>{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}{saving ? "Guardando..." : "Guardar cambios"}</Button></div> : <footer className={`fixed inset-x-0 bottom-[var(--mobile-profile-nav-h)] z-30 grid grid-cols-2 gap-2 border-t border-[var(--brand-border-soft)] bg-[#F9FAF5]/95 p-3 shadow-[0_-8px_24px_rgba(29,79,54,0.10)] backdrop-blur ${mobileOnlyClass}`} style={{ "--mobile-profile-nav-h": mobileNavigationHeight } as React.CSSProperties}><Button type="button" variant="outline" className="h-8 rounded-lg border-[var(--brand-primary)] bg-transparent px-2 text-xs font-bold text-[var(--brand-primary)]" disabled={profileBusy} onClick={() => void saveDraft()}>{savingDraft ? <Loader2 className="size-3 animate-spin" /> : <Save className="size-3" />}Guardar borrador</Button><Button type="button" className="h-8 rounded-lg bg-[var(--brand-primary)] px-2 text-xs font-bold hover:bg-[var(--brand-primary-hover)]" disabled={profileBusy} onClick={() => void save()}>{saving ? <Loader2 className="size-3 animate-spin" /> : <Save className="size-3" />}Guardar cambios</Button></footer> : null;
   const mobileEditor = usesMobileProfile && mobileEditing ? <main className={`min-h-full bg-[var(--brand-page)] px-3 pb-[calc(var(--mobile-profile-nav-h)+88px)] pt-4 ${mobileOnlyClass}`} style={{ "--mobile-profile-nav-h": mobileNavigationHeight } as React.CSSProperties}>
     <header className="mb-4 flex items-start gap-3"><span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[var(--brand-panel)] text-[var(--brand-primary)]"><UserCog className="size-6" /></span><div><h1 className="text-2xl font-extrabold text-[var(--brand-primary)]">Mi perfil</h1><p className="mt-1 text-xs leading-5 text-[var(--brand-muted)]">Consultá y mantené actualizada tu información personal.</p></div></header>
     <AdminFormViewToggle value={viewMode} onChange={setViewMode} compactOnMobile />
@@ -194,8 +225,9 @@ export function PersonalProfilePage({ workspace = "citizen",renderMobileProfile 
       {show(4) ? <div className="grid grid-cols-2 gap-3"><MobileEditCard number={4} title="Contacto"><div className="space-y-3"><Field label="Email"><IconInput id="mobile-profile-email" leftIcon={<Mail className="size-4 text-[var(--brand-primary)]" />} input={<Input value={data.email} readOnly className={readOnlyClass}/>} /></Field><Field label="Teléfono *"><PhoneInput id="mobile-profile-phone" value={form.phone} onChange={(value)=>setValue("phone",value)} className={controlClass} required/></Field></div></MobileEditCard><MobileEditCard number={5} title="Emergencia"><div className="space-y-3"><Field label="Persona de contacto"><IconInput id="mobile-profile-emergency-name" leftIcon={<Contact className="size-4 text-[var(--brand-primary)]" />} input={<Input value={form.emergencyContactName} onChange={(event)=>setValue("emergencyContactName",event.target.value)} className={controlClass}/>} /></Field><Field label="Teléfono de emergencia"><PhoneInput id="mobile-profile-emergency-phone" value={form.emergencyContactPhone} onChange={(value)=>setValue("emergencyContactPhone",value)} className={controlClass} required/></Field></div></MobileEditCard></div> : null}
       {show(5) ? <MobileEditCard number={6} title="Cobertura"><div className="grid grid-cols-2 gap-3"><Field label="Obra social o prepaga"><MedicalCoverageSelect value={form.medicalCoverageId} onChange={(medicalCoverageId)=>{setForm(current=>({...current,medicalCoverageId}));markUnsaved(5)}} /></Field><Field label="Número de afiliado"><IconInput id="mobile-profile-affiliate" leftIcon={<IdCard className="size-4 text-[var(--brand-primary)]" />} input={<Input value={form.affiliateNumber} onChange={(event)=>setValue("affiliateNumber",event.target.value)} className={controlClass}/>} /></Field></div></MobileEditCard> : null}
       {show(2) ? <MobileEditCard number={7} title="Seguridad"><Button type="button" onClick={()=>setPasswordDialogOpen(true)} className="h-8 rounded-lg bg-[var(--brand-primary)] px-3 text-xs font-bold"><KeyRound className="size-3"/>Cambiar contraseña</Button></MobileEditCard> : null}
-      {show(6) ? <MobileEditCard number={8} title="Imágenes"><div className="grid gap-3"><RequestAccessPhotoField sidePreview title="Avatar" description="Imagen que se mostrará en el portal." allowCamera={false} currentUrl={imageUrls ? imageUrls.avatarUrl : data.avatarUrl} disabled={saving} onUploaded={({tmpPath})=>{setAvatarTmpPath(tmpPath);markUnsaved(6)}} onClear={()=>{setAvatarTmpPath(null);markUnsaved(6)}}/><RequestAccessPhotoField sidePreview title="Foto de identidad" description="Referencia visual para comprobar tu identidad." currentUrl={imageUrls ? imageUrls.identityPhotoUrl : data.fotoPerfilUrl} disabled={saving} onUploaded={({tmpPath})=>{setIdentityTmpPath(tmpPath);markUnsaved(6)}} onClear={()=>{setIdentityTmpPath(null);markUnsaved(6)}}/></div></MobileEditCard> : null}
+      {show(6) ? <MobileEditCard number={8} title="Imágenes"><div className="grid gap-3"><RequestAccessPhotoField sidePreview title="Avatar" description="Imagen que se mostrará en el portal." allowCamera={false} currentUrl={imageUrls ? imageUrls.avatarUrl : data.avatarUrl} disabled={saving || (citizenProfile && photoUploading.identity)} onUploadingChange={citizenProfile ? value => photoUploadChanged("avatar", value) : undefined} uploadSuccessMessage={citizenProfile ? "Foto preparada. Presioná Guardar cambios para conservarla." : undefined} onUploaded={({tmpPath})=>stagePhoto("avatar",tmpPath)} onClear={()=>stagePhoto("avatar",null)}/><RequestAccessPhotoField sidePreview title="Foto de identidad" description="Referencia visual para comprobar tu identidad." currentUrl={imageUrls ? imageUrls.identityPhotoUrl : data.fotoPerfilUrl} disabled={saving || (citizenProfile && photoUploading.avatar)} onUploadingChange={citizenProfile ? value => photoUploadChanged("identity", value) : undefined} uploadSuccessMessage={citizenProfile ? "Foto preparada. Presioná Guardar cambios para conservarla." : undefined} onUploaded={({tmpPath})=>stagePhoto("identity",tmpPath)} onClear={()=>stagePhoto("identity",null)}/></div></MobileEditCard> : null}
     </div>
+    {citizenProfile ? mobileEditActions : null}
   </main> : null;
 
   const mobileProfileProps={data:{...data,avatarUrl:imageUrls ? imageUrls.avatarUrl : data.avatarUrl,fotoPerfilUrl:imageUrls ? imageUrls.identityPhotoUrl : data.fotoPerfilUrl},onEdit:()=>setMobileEditing(true),onChangePassword:()=>setPasswordDialogOpen(true)};
@@ -219,13 +251,13 @@ export function PersonalProfilePage({ workspace = "citizen",renderMobileProfile 
           {show(3) ? <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] lg:items-stretch"><div className="grid content-start gap-x-8 gap-y-4 sm:grid-cols-2"><div className="sm:col-span-2"><GoogleAddressInput display="input" id="profile-address" value={form.address} placeId={form.addressPlaceId} lat={form.addressLat} lng={form.addressLng} locality={form.locality} province={form.province} postalCode={form.postalCode} onChange={(location) => { setForm((current) => ({ ...current, address: location.address, addressPlaceId: location.placeId, addressLat: location.lat, addressLng: location.lng, locality: location.locality ?? current.locality, province: location.province ?? current.province, postalCode: location.postalCode ?? current.postalCode })); markUnsaved(3); }} className={controlClass} placeholder="Ej: Av. Presidente Perón 1234" /></div><div className="sm:col-span-2 grid gap-x-8 gap-y-4 sm:grid-cols-2"><GeorefTerritoryFields province={form.province} locality={form.locality} onProvinceChange={(value)=>setValue("province",value)} onLocalityChange={(value)=>setValue("locality",value)} onLocationInvalidated={()=>setForm(current=>({...current,addressPlaceId:null,addressLat:null,addressLng:null}))} className={controlClass}/></div><Field label="Código postal *"><IconInput id="profile-postal-code" leftIcon={<IdCard className="size-4 text-[var(--brand-primary)]" />} input={<Input value={form.postalCode} onChange={(event) => setValue("postalCode", event.target.value)} className={controlClass} />} /></Field></div><div className="min-w-0"><GoogleAddressInput display="map" id="profile-address-map" value={form.address} placeId={form.addressPlaceId} lat={form.addressLat} lng={form.addressLng} locality={form.locality} province={form.province} postalCode={form.postalCode} onChange={(location) => { setForm((current) => ({ ...current, address: location.address, addressPlaceId: location.placeId, addressLat: location.lat, addressLng: location.lng, locality: location.locality ?? current.locality, province: location.province ?? current.province, postalCode: location.postalCode ?? current.postalCode })); markUnsaved(3); }} /></div></div> : null}
           {show(4) ? <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2"><Field label="Email"><IconInput id="profile-email" leftIcon={<Mail className="size-4 text-[var(--brand-primary)]" />} input={<Input value={data.email} readOnly aria-readonly className={readOnlyClass} />} /></Field><Field label="Teléfono *"><PhoneInput id="profile-phone" value={form.phone} onChange={(value) => setValue("phone", value)} className={controlClass} required /></Field><Field label="Persona de contacto de emergencia *"><IconInput id="profile-emergency-name" leftIcon={<Contact className="size-4 text-[var(--brand-primary)]" />} input={<Input value={form.emergencyContactName} onChange={(event) => setValue("emergencyContactName", event.target.value)} className={controlClass} />} /></Field><Field label="Teléfono de emergencia *"><PhoneInput id="profile-emergency-phone" value={form.emergencyContactPhone} onChange={(value) => setValue("emergencyContactPhone", value)} className={controlClass} required /></Field></div> : null}
           {show(5) ? <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2"><Field label="Obra social o prepaga" className="sm:col-span-2"><IconInput id="profile-coverage" leftIcon={<HeartPulse className="size-4 text-[var(--brand-primary)]" />} input={<MedicalCoverageSelect value={form.medicalCoverageId} onChange={(medicalCoverageId) => { setForm((current) => ({ ...current, medicalCoverageId })); markUnsaved(5); }} triggerClassName="pl-9" />} /></Field><Field label="Número de afiliado" className="sm:col-span-2"><IconInput id="profile-affiliate" leftIcon={<IdCard className="size-4 text-[var(--brand-primary)]" />} input={<Input value={form.affiliateNumber} onChange={(event) => setValue("affiliateNumber", event.target.value)} className={controlClass} />} /></Field></div> : null}
-          {show(6) ? <><RequestAccessPhotoField sidePreview title="Avatar" description="Imagen que se mostrará en todo el portal." allowCamera={false} currentUrl={imageUrls ? imageUrls.avatarUrl : data.avatarUrl} disabled={saving} onUploaded={({ tmpPath }) => { setAvatarTmpPath(tmpPath); markUnsaved(6); }} onClear={() => { setAvatarTmpPath(null); markUnsaved(6); }} /><RequestAccessPhotoField sidePreview title="Foto de identidad" description="Referencia visual utilizada para comprobar tu identidad." currentUrl={imageUrls ? imageUrls.identityPhotoUrl : data.fotoPerfilUrl} disabled={saving} onUploaded={({ tmpPath }) => { setIdentityTmpPath(tmpPath); markUnsaved(6); }} onClear={() => { setIdentityTmpPath(null); markUnsaved(6); }} /></> : null}
+          {show(6) ? <><RequestAccessPhotoField sidePreview title="Avatar" description="Imagen que se mostrará en todo el portal." allowCamera={false} currentUrl={imageUrls ? imageUrls.avatarUrl : data.avatarUrl} disabled={saving || (citizenProfile && photoUploading.identity)} onUploadingChange={citizenProfile ? value => photoUploadChanged("avatar", value) : undefined} uploadSuccessMessage={citizenProfile ? "Foto preparada. Presioná Guardar cambios para conservarla." : undefined} onUploaded={({ tmpPath }) => stagePhoto("avatar", tmpPath)} onClear={() => stagePhoto("avatar", null)} /><RequestAccessPhotoField sidePreview title="Foto de identidad" description="Referencia visual utilizada para comprobar tu identidad." currentUrl={imageUrls ? imageUrls.identityPhotoUrl : data.fotoPerfilUrl} disabled={saving || (citizenProfile && photoUploading.avatar)} onUploadingChange={citizenProfile ? value => photoUploadChanged("identity", value) : undefined} uploadSuccessMessage={citizenProfile ? "Foto preparada. Presioná Guardar cambios para conservarla." : undefined} onUploaded={({ tmpPath }) => stagePhoto("identity", tmpPath)} onClear={() => stagePhoto("identity", null)} /></> : null}
         </div>
         {actions}
       </div>
     </AdminWorkflowLayout>
     <ChangePasswordDialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen} />
-  </div></div>{mobileEditActions}</>;
+  </div></div>{!citizenProfile ? mobileEditActions : null}</>;
 }
 
 export function CitizenProfilePage({workspace="citizen"}:{workspace?:"citizen"|"teacher"}={}){return <PersonalProfilePage workspace={workspace}/>}

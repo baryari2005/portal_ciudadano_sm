@@ -22,6 +22,7 @@ type RequestAccessPhotoFieldProps = {
   onUploadingChange?: (uploading: boolean) => void;
   sidePreview?: boolean;
   uploadEndpoint?: string;
+  uploadSuccessMessage?: string;
 };
 
 const MAX_KB = 200;
@@ -94,6 +95,7 @@ export function RequestAccessPhotoField({
   onUploadingChange,
   sidePreview = true,
   uploadEndpoint = "/api/media/avatars/upload",
+  uploadSuccessMessage = "Foto cargada correctamente.",
 }: RequestAccessPhotoFieldProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -198,7 +200,7 @@ export function RequestAccessPhotoField({
       stagedPreview.current = true;
       setPreviewUrl(localPreview);
       onUploaded({ tmpPath: data.tmpPath ?? data.publicUrl, publicUrl: data.publicUrl });
-      toast.success("Foto cargada correctamente.");
+      toast.success(uploadSuccessMessage);
     } catch (error) {
       toast.error(error instanceof Error && !error.name.includes("Axios") ? error.message : getAxiosMessage(error, "No pudimos cargar la foto."));
     } finally {

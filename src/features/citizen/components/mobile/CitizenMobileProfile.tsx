@@ -5,6 +5,7 @@ import { es } from "date-fns/locale";
 import { CakeSlice, CalendarDays, HeartPulse, IdCard, KeyRound, Mail, MapPin, Pencil, Phone, ShieldPlus, UserRound } from "lucide-react";
 import Image from "next/image";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MobileProfileLogoutButton } from "@/features/shared-account/components/MobileProfileLogoutButton";
@@ -51,7 +52,7 @@ export function CitizenMobileProfile({ data, onEdit, onChangePassword, experienc
 
     <div className="relative -mt-14 space-y-3 px-4">
       <section className="flex items-center gap-3 rounded-3xl border border-[var(--brand-border-soft)] bg-[#F9FAF5] p-4 shadow-[0_8px_24px_rgba(29,79,54,0.12)]">
-        <span className="grid size-14 shrink-0 place-items-center rounded-full bg-[var(--brand-panel)] text-[var(--brand-primary)]"><UserRound className="size-7" /></span>
+        {experience === "citizen" ? <Avatar className="grid size-14 shrink-0 place-items-center rounded-full bg-[var(--brand-panel)] text-[var(--brand-primary)]"><AvatarImage src={avatar ?? undefined} alt={`Avatar de ${fullName}`} className="object-cover" /><AvatarFallback className="bg-transparent"><UserRound className="size-7" /></AvatarFallback></Avatar> : <span className="grid size-14 shrink-0 place-items-center rounded-full bg-[var(--brand-panel)] text-[var(--brand-primary)]"><UserRound className="size-7" /></span>}
         <div className="min-w-0"><h2 className="truncate text-lg font-extrabold text-[var(--brand-primary)]">{fullName}</h2><p className="mt-1 flex items-center gap-2 truncate text-xs text-[var(--brand-muted)]"><Mail className="size-4 shrink-0" />{data.email}</p><p className="mt-1 flex items-center gap-2 text-xs text-[var(--brand-muted)]"><IdCard className="size-4 shrink-0" />DNI {data.documento || "Sin informar"}</p></div>
       </section>
 
